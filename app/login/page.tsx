@@ -17,9 +17,8 @@ export default function LoginPage() {
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+     email,password,
+      });
 
     setLoading(false);
 
@@ -28,7 +27,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/my");
+    router.push("/home");
   }
 
   return (
@@ -37,7 +36,7 @@ export default function LoginPage() {
         Entrar
       </h1>
       <p style={{ opacity: 0.7, marginBottom: 16 }}>
-        Acesse sua conta do EscalaMed
+        Acesse sua conta EscalaMed
       </p>
 
       <form onSubmit={onLogin} style={{ display: "grid", gap: 12 }}>
@@ -78,6 +77,32 @@ export default function LoginPage() {
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
+        <p style={{ marginTop: 16, textAlign: "center", fontSize: 14 }}>
+         Ainda não tem conta?{" "}
+        <span
+        style={{ color: "#2563eb", cursor: "pointer", fontWeight: 600 }}
+         onClick={() => router.push("/register")}
+         >
+          Criar conta
+         </span>
+          </p>
+          <button
+        type="button"
+        onClick={() => router.push("/contato")}
+        style={{
+        marginTop: 20,
+        padding: 14,
+        borderRadius: 10,
+        border: "none",
+        backgroundColor: "#111111",
+        color: "#fff",
+        fontWeight: 700,
+        width: "100%",
+        cursor: "pointer",
+        }}
+>
+       É médico? Solicitar visita do representante
+      </button>
 
         {msg && (
           <div style={{ color: "crimson", fontSize: 14 }}>
