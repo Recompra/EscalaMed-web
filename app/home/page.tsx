@@ -275,73 +275,150 @@ setLoading(false);
 >
 
   {/* LINHA 1 */}
+<div
+  style={{
+    display: "grid",
+    gap: 16,
+    padding: 20,
+    border: "1px solid #eee",
+    borderRadius: 16,
+    background: "#fff",
+  }}
+>
   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-    
-    <label style={{display: "grid",gap: 6,padding: 12,border: "1px solid #eee",borderRadius: 12,
-    background: "#fff",}}
->
-    <span style={{ fontSize: 12, color: "#666" }}>UF</span>
+    <label
+      style={{
+        display: "grid",
+        gap: 6,
+        padding: 12,
+        border: "1px solid #eee",
+        borderRadius: 12,
+        background: "#fff",
+      }}
+    >
+      <span style={{ fontSize: 12, color: "#666" }}>UF</span>
       <select
-  value={uf} onChange={(e) => onChangeUF(e.target.value as typeof UFS[number])} style={{padding: "8px 10px",borderRadius: 8,
-    border: "1px solid #ddd",fontSize: 14,outline: "none", }}
->
+        value={uf}
+        onChange={(e) => onChangeUF(e.target.value as typeof UFS[number])}
+        style={{
+          padding: "8px 10px",
+          borderRadius: 8,
+          border: "1px solid #ddd",
+          fontSize: 14,
+          outline: "none",
+        }}
+      >
         {UFS.map((u) => (
-          <option key={u} value={u}>{u}</option>
+          <option key={u} value={u}>
+            {u}
+          </option>
         ))}
       </select>
     </label>
 
-    <label style={{display: "grid",gap: 6,padding: 12,border: "1px solid #eee",borderRadius: 12,
-    background: "#fff",}}
->
+    <label
+      style={{
+        display: "grid",
+        gap: 6,
+        padding: 12,
+        border: "1px solid #eee",
+        borderRadius: 12,
+        background: "#fff",
+      }}
+    >
       <span style={{ fontSize: 12, color: "#666" }}>Cidade</span>
       <select
-    value={city} onChange={(e) => setCity(e.target.value)} style={{ padding: "8px 10px",
-    borderRadius: 8,border: "1px solid #ddd",fontSize: 14,outline: "none",}}
->
+        value={city}
+        onChange={(e) => setCity(e.target.value)}
+        style={{
+          padding: "8px 10px",
+          borderRadius: 8,
+          border: "1px solid #ddd",
+          fontSize: 14,
+          outline: "none",
+        }}
+      >
         {cities.map((c) => (
-          <option key={c} value={c}>{c}</option>
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+    </label>
+  </div>
+</div>
+
+{/* LINHA 2 */}
+<div
+  style={{
+    display: "grid",
+    gap: 16,
+    padding: 20,
+    border: "1px solid #eee",
+    borderRadius: 16,
+    background: "#fff",
+  }}
+>
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+    <label
+      style={{
+        display: "grid",
+        gap: 6,
+        padding: 12,
+        border: "1px solid #eee",
+        borderRadius: 12,
+        background: "#fff",
+      }}
+    >
+      <span style={{ fontSize: 12, color: "#666" }}>Dia da semana</span>
+      <select
+        value={weekday}
+        onChange={(e) => setWeekday(e.target.value as Weekday)}
+        style={{
+          padding: "8px 10px",
+          borderRadius: 8,
+          border: "1px solid #ddd",
+          fontSize: 14,
+          outline: "none",
+        }}
+      >
+        {WEEKDAYS.map((d) => (
+          <option key={d} value={d}>
+            {d}
+          </option>
         ))}
       </select>
     </label>
 
-  </div>
-
-  {/* LINHA 2 */}
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-
-    <label style={{display: "grid",gap: 6,padding: 12,border: "1px solid #eee",borderRadius: 12,
-    background: "#fff",}}
->
-      <span style={{ fontSize: 12, color: "#666" }}>Dia da semana</span>
-      <select
-       value={weekday} onChange={(e) => setWeekday(e.target.value as Weekday)} style={{padding: "8px 10px",borderRadius: 8,
-    border: "1px solid #ddd",fontSize: 14,outline: "none",}}
->
-       {WEEKDAYS.map((d) => (
-       <option key={d} value={d}>
-       {d}
-       </option>
-      ))}
-      </select>
-    </label>
-
-    <label style={{display: "grid",gap: 6,padding: 12,border: "1px solid #eee",borderRadius: 12,
-    background: "#fff", }}
->
+    <label
+      style={{
+        display: "grid",
+        gap: 6,
+        padding: 12,
+        border: "1px solid #eee",
+        borderRadius: 12,
+        background: "#fff",
+      }}
+    >
       <span style={{ fontSize: 12, color: "#666" }}>Período</span>
       <select
-     value={period} onChange={(e) => setPeriod(e.target.value as Period)} style={{padding: "8px 10px",
-    borderRadius: 8,border: "1px solid #ddd",fontSize: 14, outline: "none",}}
->
+        value={period}
+        onChange={(e) => setPeriod(e.target.value as Period)}
+        style={{
+          padding: "8px 10px",
+          borderRadius: 8,
+          border: "1px solid #ddd",
+          fontSize: 14,
+          outline: "none",
+        }}
+      >
         <option value="Manhã">Manhã</option>
-        <option value="Tarde">Tarde</option> 
-
+        <option value="Tarde">Tarde</option>
       </select>
     </label>
-
   </div>
-  </div>
+</div>
+   </div>
       {/* RESULTADO */}
       <h2 style={{ marginTop: 18 }}>{title}</h2>
 
