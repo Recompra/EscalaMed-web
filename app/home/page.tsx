@@ -168,65 +168,71 @@ setLoading(false);
 </p>
   
       {/* FILTROS */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          flexWrap: "wrap",
-          alignItems: "end",
-          marginTop: 16,
-          padding: 12,
-          border: "1px solid #eee",
-          borderRadius: 10,
-          background: "#fff",
-        }}
+<div
+  style={{
+    display: "grid",
+    gap: 16,
+    marginTop: 16,
+    padding: 16,
+    border: "1px solid #eee",
+    borderRadius: 12,
+    background: "#fff"
+  }}
+>
+
+  {/* LINHA 1 */}
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
+    
+    <label style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 12, color: "#666" }}>UF</span>
+      <select value={uf} onChange={(e) => onChangeUF(e.target.value as (typeof UFS)[number])}>
+        {UFS.map((u) => (
+          <option key={u} value={u}>{u}</option>
+        ))}
+      </select>
+    </label>
+
+    <label style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 12, color: "#666" }}>Cidade</span>
+      <select value={city} onChange={(e) => setCity(e.target.value)}>
+        {cities.map((c) => (
+          <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
+    </label>
+
+  </div>
+
+  {/* LINHA 2 */}
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+    <label style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 12, color: "#666" }}>Dia da semana</span>
+      <select
+        value={weekday}
+        onChange={(e) => setWeekday(e.target.value as Weekday)}
+>
+       {WEEKDAYS.map((d) => (
+       <option key={d} value={d}>
+       {d}
+       </option>
+      ))}
+      </select>
+    </label>
+
+    <label style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 12, color: "#666" }}>Período</span>
+      <select value={period}
+      onChange={(e) => setPeriod(e.target.value as Period)}
       >
-        <label style={{ display: "grid", gap: 6, width: 920, margin: "0 auto" }}>
-  <span style={{ fontSize: 12, color: "#666" }}>UF</span>
+        <option value="Manhã">Manhã</option>
+        <option value="Tarde">Tarde</option> 
 
-  <select
-    value={uf}
-    onChange={(e) => onChangeUF(e.target.value as (typeof UFS)[number])}
-  >
-    {UFS.map((u) => (
-      <option key={u} value={u}>
-        {u}
-      </option>
-    ))}
-  </select>
-</label>
+      </select>
+    </label>
 
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontSize: 12, color: "#666" }}>Cidade</span>
-          <select value={city} onChange={(e) => setCity(e.target.value)}>
-            {cities.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontSize: 12, color: "#666" }}>Dia da semana</span>
-          <select value={weekday} onChange={(e) => setWeekday(e.target.value as Weekday)}>
-            {WEEKDAYS.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontSize: 12, color: "#666" }}>Período</span>
-          <select value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
-            <option value="Manhã">Manhã</option>
-            <option value="Tarde">Tarde</option>
-          </select>
-        </label>
-      </div>
-
+  </div>
+  </div>
       {/* RESULTADO */}
       <h2 style={{ marginTop: 18 }}>{title}</h2>
 
