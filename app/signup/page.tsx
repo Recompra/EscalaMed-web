@@ -80,6 +80,7 @@ export default function Page() {
   const [state, setState] = useState<(typeof UFS)[number] | "">("");
   const [lab, setLab] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const phoneDigits = useMemo(() => onlyDigits(phone), [phone]);
@@ -97,8 +98,11 @@ export default function Page() {
     if (!lab) return setMsg("Informe o LABORATÓRIO.");
     if (password.length !== 8) return setMsg("SENHA deve ter exatamente 8 caracteres.");
 
-    setLoading(true);
+    setMsg("");
 
+  setLoading(true);
+
+  try {
     const redirectTo =
       typeof window !== "undefined"
         ? `${window.location.origin}/login`
@@ -113,22 +117,35 @@ export default function Page() {
           name: normalizeUpper(name),
           phone: formatPhoneBR(phone),
           address: normalizeUpper(address),
-          birthday, // DD/MM
-          lab: normalizeUpper(lab),
+          birthday,
+          lab,
+          state, // UF (se existir no seu código)
         },
       },
     });
 
-    setLoading(false);
-
     if (error) {
-      setMsg(error.message);
+      setMsg(`ERRO: ${error.message}`);
       return;
     }
 
-    setMsg("Conta criada. Confira seu e-mail para confirmar o cadastro.");
-  }
+    setMsg("CADASTRADO");
+    setName("");
+    setPhone("");
+    setEmail("");
+    setAddress("");
+    setBirthday("");
+    setLab("");
+    setPassword("");
+    // se tiver UF:
+    // setState("");
 
+  } catch (err: any) {
+    setMsg(`ERRO: ${err?.message || String(err)}`);
+  } finally {
+    setLoading(false);
+  }
+  }
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className={cardBase}>
@@ -243,18 +260,52 @@ export default function Page() {
           </div>
 
           <div className="grid gap-2">
-            <label className={labelBase}>SENHA (8 CARACTERES)</label>
-            <input
-              className={inputBase}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
-              type="password"
-              minLength={8}
-              maxLength={8}
-              autoComplete="new-password"
-            />
+  <label className={labelBase}>SENHA (8 CARACTERES)</label>
+
+      <div style={{ position: "relative" }}>
+        <input
+        className={inputBase}
+        type={showPassword ? "text" : "password"}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        minLength={8}
+        maxLength={8}
+        autoComplete="new-password"
+        placeholder="********"
+        />
+
+    <button
+      type="button"
+      onClick={() => setShowPassword((v) => !v)}
+      style={{
+        position: "absolute",
+        right: 12,
+        top: "50%",
+        transform: "translateY(-50%)",
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
+        fontWeight: 700,
+      }}
+      aria-label="Mostrar/ocultar senha"
+      title="Mostrar/ocultar senha"
+    >
+      {showPassword ? "🙈" : "👁️"}
+    </button>
+  </div>
           </div>
+          {msg && (
+           <p
+          style={{
+          marginTop: 12,
+          color: msg === "CADASTRADO" ? "green" : "red",
+          fontWeight: 700,
+          textAlign: "center",
+           }}
+  >
+          {msg}
+          </p>
+           )}
 
           <button
             disabled={loading}
