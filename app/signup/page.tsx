@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { UFS } from "@/data/cities";
 
 const LABS = [
   "ABBOTT",
@@ -76,6 +77,7 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [birthday, setBirthday] = useState(""); // DD/MM
+  const [state, setState] = useState<(typeof UFS)[number] | "">("");
   const [lab, setLab] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -175,16 +177,38 @@ export default function Page() {
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ENDEREÇO */}
           <div className="grid gap-2">
             <label className={labelBase}>ENDEREÇO</label>
-            <input
-              className={inputBase}
+           <input
+            className={`${inputBase} uppercase`}
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Rua, Número, Bairro,"
-              autoComplete="street-address"
+             onChange={(e) => setAddress(e.target.value)}
+             placeholder="Rua, número, bairro, cidade"
+            autoComplete="street-address"
             />
-          </div>
+             </div>
+
+          {/* UF */}
+           <div className="grid gap-2">
+             <label className={labelBase}>UF</label>
+          <select
+             className={`${inputBase} uppercase`}
+             value={state}
+             onChange={(e) => setState(e.target.value as (typeof UFS)[number] | "")}
+    >
+           <option value="" disabled>
+             SELECIONE
+            </option>
+             {UFS.map((uf) => (
+             <option key={uf} value={uf}>
+               {uf}
+             </option>
+               ))}
+             </select>
+            </div>
+         </div>
 
           <div className="grid gap-2">
             <label className={labelBase}>ANIVERSÁRIO (DD/MM)</label>
