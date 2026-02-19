@@ -46,6 +46,7 @@ export default function Page() {
   const [city, setCity] = useState(cities[0] ?? "");
   const [weekday, setWeekday] = useState<Weekday>("Terça");
   const [period, setPeriod] = useState<Period>("Manhã");
+  const [menuOpen, setMenuOpen] = useState(false);
 
 useEffect(() => {
   setLoading(true);
@@ -135,14 +136,37 @@ setLoading(false);
   return (
   <main className="p-6 max-w-[920px] mx-auto">
 
-  <div className="mb-8">
-    <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 tracking-tight">
-      EscalaMed
-    </h1>
-    <p className="mt-2 text-xl text-gray-600">
-      Médicos disponíveis por região e período
-    </p>
+  {/* TOP BAR */}
+<div className="mb-6 flex items-center justify-between">
+  {/* Menu */}
+  <button
+    type="button"
+    aria-label="Abrir menu"
+    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-900"
+    onClick={() => setMenuOpen(true)}
+  >
+    ☰
+  </button>
+
+  {/* Título central */}
+  <div className="text-2xl font-bold text-gray-900">
+    EscalaMed
   </div>
+
+  {/* Novo médico */}
+  <a
+    href="/admin"
+    aria-label="Novo cadastro"
+    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-900"
+  >
+    +
+  </a>
+</div>
+
+<p className="mb-6 text-gray-600">
+  Médicos disponíveis por região e período
+</p>
+  
       {/* FILTROS */}
       <div
         style={{
