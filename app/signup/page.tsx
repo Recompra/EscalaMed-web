@@ -192,12 +192,13 @@ export default function Page() {
           <div className="grid gap-2">
             <label className={labelBase}>E-MAIL</label>
             <input
-              onChange={(e) => setEmail(e.target.value.toUpperCase())}
-              value={(email ?? "").toUpperCase()}
-              placeholder="@email.com"
-              type="email"
-              autoComplete="email"
-            />
+            className={inputBase}
+            onChange={(e) => setEmail(e.target.value.toUpperCase())}
+            value={(email ?? "").toUpperCase()}
+            placeholder="@email.com"
+            type="email"
+           autoComplete="email"
+           />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
