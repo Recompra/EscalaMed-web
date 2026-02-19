@@ -47,6 +47,7 @@ export default function Page() {
   const [weekday, setWeekday] = useState<Weekday>("Terça");
   const [period, setPeriod] = useState<Period>("Manhã");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [visitRequestsCount, setVisitRequestsCount] = useState(0);
 
 useEffect(() => {
   setLoading(true);
@@ -132,9 +133,106 @@ setLoading(false);
     () => `${uf} · ${city} · ${weekday} · ${period}`,
     [uf, city, weekday, period]
   );
+  
+  const menuItemStyle: React.CSSProperties = {
+  padding: "12px 12px",
+  borderRadius: 12,
+  border: "1px solid #eee",
+  textDecoration: "none",
+  color: "#111827",
+  fontWeight: 600,
+};
 
   return (
   <main className="p-6 max-w-[920px] mx-auto">
+    {/* MENU (drawer) */}
+{menuOpen && (
+  <div
+    onClick={() => setMenuOpen(false)}
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.35)",
+      zIndex: 50,
+    }}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        width: 300,
+        maxWidth: "85vw",
+        height: "100%",
+        background: "#fff",
+        padding: 16,
+        boxShadow: "2px 0 12px rgba(0,0,0,0.15)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontWeight: 800, fontSize: 18 }}>Menu</div>
+        <button
+          type="button"
+          aria-label="Fechar menu"
+          onClick={() => setMenuOpen(false)}
+          style={{
+            height: 36,
+            width: 36,
+            borderRadius: 10,
+            border: "1px solid #e5e7eb",
+            background: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div style={{ height: 1, background: "#eee", margin: "6px 0" }} />
+
+      <a style={menuItemStyle}>
+  Médicos cadastrados ({doctors.length})
+</a>
+
+<a style={menuItemStyle}>
+  Buscar médico
+</a>
+
+<a style={menuItemStyle}>
+  Médico solicitou visita
+</a>
+
+<a style={menuItemStyle}>
+  Plano Premium
+</a>
+
+<hr style={{ height: 1, background: "#eee", margin: "6px 0" }} />
+
+<a style={menuItemStyle}>
+  Minha conta
+</a>
+
+<a style={menuItemStyle}>
+  Suporte / Feedback
+</a>
+
+<hr style={{ height: 1, background: "#eee", margin: "6px 0" }} />
+
+<a style={{ ...menuItemStyle, color: "#b91c1c" }}>
+  Sair
+</a>
+      <div style={{ flex: 1 }} />
+
+      <a href="/login" style={{ ...menuItemStyle, color: "#b91c1c" }}>Sair</a>
+    </div>
+  </div>
+)}
+
+{/* estilos simples do item */}
+{/*
+  NÃO mover isso de lugar. Fica dentro do componente.
+*/}
 
   {/* TOP BAR */}
 <div className="mb-6 flex items-center justify-between">
