@@ -81,7 +81,7 @@ export default function LoginPage() {
          Ainda não tem conta?{" "}
         <span
         style={{ color: "#2563eb", cursor: "pointer", fontWeight: 600 }}
-         onClick={() => router.push("/register")}
+         onClick={() => router.push("/signup")}
          >
           Criar conta
          </span>
