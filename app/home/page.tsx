@@ -318,7 +318,6 @@ setLoading(false);
        value={weekday} onChange={(e) => setWeekday(e.target.value as Weekday)} style={{padding: "8px 10px",borderRadius: 8,
     border: "1px solid #ddd",fontSize: 14,outline: "none",}}
 >
->
        {WEEKDAYS.map((d) => (
        <option key={d} value={d}>
        {d}
