@@ -420,7 +420,9 @@ setLoading(false);
 </div>
    </div>
       {/* RESULTADO */}
-      <h2 style={{ marginTop: 18 }}>{title}</h2>
+      <div style={{marginTop: 18,border: "1px solid #ccc",borderRadius: 8,padding: "12px 16px",background: "#fff", }}
+>     • {title}
+</div>
 
       <section style={{ marginTop: 12 }}>
         {doctors.length === 0 ? (
