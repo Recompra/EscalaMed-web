@@ -84,6 +84,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const phoneDigits = useMemo(() => onlyDigits(phone), [phone]);
+  const [success, setSuccess] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -130,6 +131,12 @@ export default function Page() {
     }
 
     setMsg("CADASTRADO");
+
+     setSuccess(true)
+
+    setTimeout(() => {
+    setSuccess(false)
+    }, 1500)
     setName("");
     setPhone("");
     setEmail("");
@@ -215,7 +222,7 @@ export default function Page() {
              onChange={(e) => setState(e.target.value as (typeof UFS)[number] | "")}
     >
            <option value="" disabled>
-             SELECIONE
+             Selecione
             </option>
              {UFS.map((uf) => (
              <option key={uf} value={uf}>
@@ -308,8 +315,9 @@ export default function Page() {
 
           <button
             disabled={loading}
-            className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-900 px-4 py-3 font-semibold text-white disabled:opacity-60"
-            type="submit"
+            className={`mt-2 w-full rounded-xl border border-gray-300 px-4 py-2 font-semibold transition
+            ${success ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-900"}
+`           }
           >
             {loading ? "CRIANDO..." : "CRIAR CONTA"}
           </button>
