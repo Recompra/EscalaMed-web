@@ -163,8 +163,8 @@ export default function Page() {
             <label className={labelBase}>NOME</label>
             <input
               className={inputBase}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={(name ?? "").toUpperCase()}
+              onChange={(e) => setName(e.target.value.toUpperCase())}
               placeholder="Digite o Nome"
               autoComplete="name"
             />
@@ -185,9 +185,8 @@ export default function Page() {
           <div className="grid gap-2">
             <label className={labelBase}>E-MAIL</label>
             <input
-              className={inputBase}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.toUpperCase())}
+              value={(email ?? "").toUpperCase()}
               placeholder="@email.com"
               type="email"
               autoComplete="email"
@@ -199,9 +198,9 @@ export default function Page() {
           <div className="grid gap-2">
             <label className={labelBase}>ENDEREÇO</label>
            <input
-            className={`${inputBase} uppercase`}
-              value={address}
-             onChange={(e) => setAddress(e.target.value)}
+            className={inputBase}
+              value={(address ?? "").toUpperCase()}
+              onChange={(e) => setAddress(e.target.value.toUpperCase())}
              placeholder="Rua, número, bairro, cidade"
             autoComplete="street-address"
             />
