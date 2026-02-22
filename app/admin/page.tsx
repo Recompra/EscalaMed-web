@@ -542,7 +542,7 @@ useEffect(() => {
 <div
   style={{
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "1fr",
     gap: 12,
     width: "100%",
     alignItems: "end",
@@ -566,6 +566,8 @@ useEffect(() => {
     </select>
   </label>
 
+</div>
+
   {/* Clínica */}
   <label style={{ display: "grid", gap: 6, width: "100%", minWidth: 0 }}>
     <span style={{ fontSize: 13, fontWeight: 700 }}>Clínica</span>
@@ -576,8 +578,7 @@ useEffect(() => {
       style={{ ...inputStyle, width: "100%", maxWidth: "none" }}
     />
   </label>
-</div>
-
+  
 </div>
 {/* Endereço */}
 <label style={{ display: "grid", gap: 6 }}>
