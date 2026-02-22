@@ -81,7 +81,8 @@ export default function AdminPage() {
 async function loadMyDoctors() {
   setMsg("");
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const auth = await supabase.auth.getUser();
+  const user = auth?.data?.user;
   setLoadError(null);
 
   if (!user) {
@@ -176,7 +177,8 @@ useEffect(() => {
   async function handleDelete(doctorId: string) {
     setMsg("");
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const auth = await supabase.auth.getUser();
+    const user = auth?.data?.user;
     if (!user) {
       setMsg("Usuário não autenticado.");
       return;
@@ -249,7 +251,9 @@ useEffect(() => {
   }
 
   // Pegar usuário logado PRIMEIRO (para evitar erro de uso antes da declaração)
-  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  const authUser = await supabase.auth.getUser();
+  user = authUser?.data?.user;
+  const userErr = authUser?.error;
 
   if (userErr || !user) {
     setMsg("Usuário não autenticado. Faça login.");
@@ -340,7 +344,7 @@ if (existingDoctor && existingDoctor.id) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        doctor_id: existingDoctor.id,
+        doctor_id: existingDoctor?.id,
         new_uf: uf,
         new_city: city,
       }),
@@ -770,4 +774,5 @@ return;
         </div>
      </main>
   );
+}
 }
