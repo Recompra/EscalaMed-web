@@ -202,15 +202,31 @@ useEffect(() => {
   console.log("CLICOU NO SALVAR");
   setMsg("");
 
-  const { data: existingDoctor } = await supabase
-  .from("doctors")
-  .select("*")
-  .eq("name", name)
-  .eq("phone", phone)
-  .neq("uf", uf)
-  .maybeSingle();
+  let existingDoctor: any = null;
+  let doc: any = null;
+  let user: any = null;
 
-   if (slotsSelected.length === 0) {
+  try {
+    const resExisting = await supabase
+      .from("doctors")
+      .select("*")
+      .eq("name", name)
+      .eq("phone", phone)
+      .eq("uf", uf)
+      .maybeSingle();
+
+    existingDoctor = resExisting.data;
+
+    if (!existingDoctor) {
+      console.log("Médico não encontrado com nome, telefone e UF informados.");
+      setMsg("Médico não encontrado. Verifique os dados ou cadastre um novo médico primeiro.");
+      setMsgType("error");
+      return; // Impede que continue e tente usar existingDoctor.id
+    }
+
+    console.log("Médico encontrado, ID:", existingDoctor.id);
+
+    if (slotsSelected.length === 0) {
     setMsg("Selecione pelo menos 1 slot.");
     setMsgType("warning");
     return;
@@ -314,53 +330,70 @@ if (duplicatesInOtherUF.length > 0) {
 
 }
 }
-await fetch(
-  "https://ukfeskhdbbgngkrjrpas.supabase.co/functions/v1/notify-duplicate",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      doctor_id: existingDoctor.id,
-      new_uf: uf,
-      new_city: city,
-    }),
-  }
-);
-  // INSERT simples
-  const { data: doc, error: docErr } = await supabase
-    .from("doctors")
-    .insert(doctorData)
-    .select("id")
-    .single();
+// Se existingDoctor existir, notifica duplicate; caso contrário apenas loga
+if (existingDoctor && existingDoctor.id) {
+  await fetch(
+    "https://ukfeskhdbbgngkrjrpas.supabase.co/functions/v1/notify-duplicate",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        doctor_id: existingDoctor.id,
+        new_uf: uf,
+        new_city: city,
+      }),
+    }
+  );
+} else {
+  console.warn("notify-duplicate skipped: existingDoctor missing id", existingDoctor);
+}
+  console.log("Iniciando insert no doctors...");
 
-  if (docErr) {
-  if (docErr.code === "23505") {
-    setMsg("Médico já cadastrado.");
-    setMsgType("error");
-  } else {
-    setMsg("Erro ao salvar médico: " + docErr.message);
-    setMsgType("error");
-  }
+// 1) força o tenant_id ir certo (igual ao usuário logado)
+const payload = { ...doctorData, tenant_id: user.id };
+
+const { data: doc, error: docErr } = await supabase
+  .from("doctors")
+  .insert(payload)
+  .select("id, tenant_id")
+  .maybeSingle();
+
+// 2) LOG OBRIGATÓRIO (antes de QUALQUER doc.id)
+console.log("RESULT INSERT doctors -> docErr:", docErr);
+console.log("RESULT INSERT doctors -> doc:", doc);
+
+// 3) se deu erro, para aqui
+if (docErr) {
+  console.error("ERRO REAL DO SUPABASE NO INSERT:", docErr);
+  setMsg(docErr.message ?? "Erro ao cadastrar médico.");
+  setMsgType("error");
   return;
 }
 
-  // Link na user_doctors
-  const { error: linkErr } = await supabase
-    .from("user_doctors")
-    .insert({
-      user_id: user.id,
-      doctor_id: doc.id,
-    });
+// 4) se não veio id, para aqui (e NÃO tenta doc.id)
+if (!doc?.id) {
+  console.error("INSERT OK mas sem retorno de id. doc:", doc);
+  setMsg("Inseriu, mas não retornou ID. (provável RLS no SELECT).");
+  setMsgType("error");
+  return;
+}
 
-  if (linkErr) {
-    console.error("Erro ao linkar:", linkErr);
-    setMsg("Médico salvo, mas já estava no seu painel.");
-    setMsgType("warning");
-    // continue ou return, depende
-  }
+console.log("Insert sucesso! ID:", doc.id, "tenant:", doc.tenant_id);
 
+const { error: linkErr } = await supabase
+  .from("user_doctors")
+  .insert({
+    user_id: user.id,
+    doctor_id: doc.id,
+  });
+
+if (linkErr) {
+  console.error("Erro no link user_doctors:", linkErr);
+  setMsg("Médico cadastrado, mas falhou vincular ao seu perfil.");
+  setMsgType("warning");
+}
   const availabilityRows = slotsSelected.map((s) => ({
     doctor_id: doc.id,
     slot: s,
@@ -409,7 +442,12 @@ setTimeout(() => {
 
 return;
 
+} catch (err) {
+  console.error("onSave error:", err, { existingDoctor, doc, user });
+  setMsg("Erro interno ao salvar. Veja console.");
+  setMsgType("error");
 }
+
   return (
     <main
       style={{
