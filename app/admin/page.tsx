@@ -337,7 +337,7 @@ if (duplicatesInOtherUF.length > 0) {
 }
 }
 // Se existingDoctor existir, notifica duplicate; caso contrário apenas loga
-if (existingDoctor && existingDoctor.id) {
+if (existingDoctor?.id) {
   await fetch(
     "https://ukfeskhdbbgngkrjrpas.supabase.co/functions/v1/notify-duplicate",
     {
