@@ -426,7 +426,9 @@ useEffect(() => {
   />
 
 </label>
-<div style={{ display: "grid", gridTemplateColumns: "1.4fr 120px 1.6fr", gap: 12 }}>
+<div style={{display: "grid",gridTemplateColumns:typeof window !== "undefined" && window.innerWidth >= 768 ? "1.4fr 120px 1.6fr": "1fr",gap: 12, }}
+>
+
 {/* CRM */}
 <label style={{ display: "grid", gap: 6 }}>
   <span style={{ fontSize: 13, fontWeight: 700 }}>CRM</span>
@@ -450,6 +452,8 @@ useEffect(() => {
   </select>
 </label>
 
+</div>
+
 {/* Telefone (por enquanto normal; máscara no passo 2) */}
 <label style={{ display: "grid", gap: 6 }}>
   <span style={{ fontSize: 13, fontWeight: 700 }}>Telefone</span>
@@ -460,7 +464,6 @@ useEffect(() => {
     style={inputStyle}
   />
 </label>
-</div>
 
 <div style={{ display: "grid", gridTemplateColumns: "2fr 120px", gap: 12, alignItems: "end" }}>
  <label style={{ display: "grid", gap: 6, position: "relative" }}>
@@ -539,7 +542,7 @@ useEffect(() => {
 <div
   style={{
     display: "grid",
-    gridTemplateColumns: "minmax( 0,8fr) minmax( 0,9fr)",
+    gridTemplateColumns: "1fr 1fr",
     gap: 12,
     width: "100%",
     alignItems: "end",
