@@ -203,255 +203,193 @@ useEffect(() => {
   async function onSave() {
   console.log("CLICOU NO SALVAR");
   setMsg("");
-
-  let existingDoctor: any = null;
-  let doc: any = null;
-  let user: any = null;
+  setMsgType(null);
 
   try {
-    // duplicidade: mesmo nome+telefone+UF
-const { data: existingDoctor, error: existingErr } = await supabase
-  .from("doctors")
-  .select("id, name, phone, uf, city")
-  .eq("name", name)
-  .eq("phone", phone)
-  .eq("uf", uf)
-  .maybeSingle();
+    // 1) Validar usuário
+    const { data: authData, error: authErr } = await supabase.auth.getUser();
+    const user = authData?.user;
 
-if (existingErr) {
-  console.error("Erro ao checar duplicidade:", existingErr);
-}
-
-// Se já existe, pergunta se quer continuar mesmo assim
-if (existingDoctor?.id) {
-  const ok = confirm(
-    `⚠️ Já existe médico com mesmo Nome+Telefone+UF.\n\nContinuar e cadastrar outro mesmo assim?`
-  );
-  if (!ok) return;
-}
-
-    if (slotsSelected.length === 0) {
-    setMsg("Selecione pelo menos 1 slot.");
-    setMsgType("warning");
-    return;
-  }
-
-  if (!citySelected) {
-    setMsg("SELECIONE UMA CIDADE DA LISTA.");
-    return;
-  }
-
-  const specOk = SPECIALTIES.includes((specialty || "").toUpperCase() as any);
-  if (!specOk) {
-    setMsg("ESCOLHA UMA ESPECIALIDADE DA LISTA (OU OUTRAS).");
-    return;
-  }
-
-  if (!name || !specialty || !phone || !address || !uf || !city) {
-    setMsg("Preencha nome, especialidade, telefone, endereço, UF e cidade.");
-    return;
-  }
-
-  // Pegar usuário logado PRIMEIRO (para evitar erro de uso antes da declaração)
-  const authUser = await supabase.auth.getUser();
-  user = authUser?.data?.user;
-  const userErr = authUser?.error;
-
-  if (userErr || !user) {
-    setMsg("Usuário não autenticado. Faça login.");
-    console.error("Erro ao pegar usuário:", userErr);
-    return;
-  }
-
-  console.log("Usuário logado:", user.id); // debug: veja se o ID aparece
-
-  // Dados do médico
-  const doctorData = {
-    name,
-    crm: crm || null,
-    crm_uf: crmUf || null,
-    phone,
-    city,
-    state: uf,
-    uf: uf,
-    specialty,
-    clinic: clinic || null,
-    address,
-    secretary_name: secretaryName || null,
-    secretary_phone: secretaryPhone || null,
-    notes: notes || null,
-    tenant_id: user.id,       // agora seguro: user já foi checado
-    is_active: true,
-  };
-
-  console.log("Tentando inserir médico:", doctorData);
-
-  // 1) normaliza
-const phoneDigits = onlyDigits(phone);
-const nameUp = (name || "").trim().toUpperCase();
-
-// 2) procura duplicidade por telefone em outra UF
-const { data: dupPhone, error: dupErr } = await supabase
-  .from("doctors")
-  .select("id,name,phone,city,state,crm,crm_uf,tenant_id")
-  .eq("phone", phoneDigits)     // se seu banco salva phone só dígitos
-  .neq("state", uf)             // UF diferente
-  .limit(5);
-
-if (dupErr) {
-  console.log(dupErr);
-} else if (dupPhone && dupPhone.length > 0) {
-  const d = dupPhone[0];
-  const place = `${(d.city || "—").toUpperCase()}/${(d.state || "—").toUpperCase()}`;
-
-  // 🔎 Verifica possível duplicidade em UF diferente
-const { data: possibleDup } = await supabase
-  .from("doctors")
-  .select("id, name, phone, city, uf")
-  .or(`name.eq.${doctorData.name},phone.eq.${doctorData.phone}`);
-
-const duplicatesInOtherUF = (possibleDup || []).filter(
-  (d) =>
-    d.uf &&
-    doctorData.uf &&
-    d.uf.toUpperCase() !== doctorData.uf.toUpperCase()
-);
-
-if (duplicatesInOtherUF.length > 0) {
-  const info = duplicatesInOtherUF
-    .map((d) => `${d.city || "Sem cidade"} / ${d.uf}`)
-    .join(", ");
-
-  const confirmSave = confirm(
-    `⚠️ Já existe médico com mesmo nome ou telefone em:\n\n${info}\n\nDeseja continuar mesmo assim?`
-  );
-
-  if (!confirmSave) return;
-
-  await supabase.from("notifications").insert({
-  user_id: (duplicatesInOtherUF[0] as any).user_id, // quem já tem o cadastro
-  title: "Possível duplicidade de UF",
-  message: `O médico ${doctorData.name} foi cadastrado em outra UF (${doctorData.uf}).`,
-});
-
-}
-}
-// Se existingDoctor existir, notifica duplicate; caso contrário apenas loga
-if (existingDoctor?.id) {
-  await fetch(
-    "https://ukfeskhdbbgngkrjrpas.supabase.co/functions/v1/notify-duplicate",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        doctor_id: existingDoctor?.id,
-        new_uf: uf,
-        new_city: city,
-      }),
+    if (authErr || !user) {
+      setMsg("Usuário não autenticado. Faça login.");
+      setMsgType("error");
+      return;
     }
-  );
-} else {
-  console.warn("notify-duplicate skipped: existingDoctor missing id", existingDoctor);
-}
-  console.log("Iniciando insert no doctors...");
 
-// 1) força o tenant_id ir certo (igual ao usuário logado)
-const payload = { ...doctorData, tenant_id: user.id };
+    // 2) Validações de campos
+    if (slotsSelected.length === 0) {
+      setMsg("Selecione pelo menos 1 slot.");
+      setMsgType("warning");
+      return;
+    }
 
-const { data: doc, error: docErr } = await supabase
-  .from("doctors")
-  .insert(payload)
-  .select("id, tenant_id")
-  .maybeSingle();
+    if (!citySelected) {
+      setMsg("SELECIONE UMA CIDADE DA LISTA.");
+      setMsgType("warning");
+      return;
+    }
 
-// 2) LOG OBRIGATÓRIO (antes de QUALQUER doc.id)
-console.log("RESULT INSERT doctors -> docErr:", docErr);
-console.log("RESULT INSERT doctors -> doc:", doc);
+    const specOk = SPECIALTIES.includes((specialty || "").toUpperCase() as any);
+    if (!specOk) {
+      setMsg("ESCOLHA UMA ESPECIALIDADE DA LISTA (OU OUTRAS).");
+      setMsgType("warning");
+      return;
+    }
 
-// 3) se deu erro, para aqui
-if (docErr) {
-  console.error("ERRO REAL DO SUPABASE NO INSERT:", docErr);
-  setMsg(docErr.message ?? "Erro ao cadastrar médico.");
-  setMsgType("error");
-  return;
-}
+    if (!name || !specialty || !phone || !address || !uf || !city) {
+      setMsg("Preencha nome, especialidade, telefone, endereço, UF e cidade.");
+      setMsgType("warning");
+      return;
+    }
 
-// 4) se não veio id, para aqui (e NÃO tenta doc.id)
-if (!doc?.id) {
-  console.error("INSERT OK mas sem retorno de id. doc:", doc);
-  setMsg("Inseriu, mas não retornou ID. (provável RLS no SELECT).");
-  setMsgType("error");
-  return;
-}
+    // Normalizações (mantenha simples e consistente)
+    const nameNorm = (name || "").trim().toUpperCase();
+    const phoneNorm = onlyDigits(phone); // seu input já guarda dígitos, mas garante
+    const ufNorm = uf;
 
-console.log("Insert sucesso! ID:", doc.id, "tenant:", doc.tenant_id);
+    // 3) Verificar se já existe (Nome + Telefone + UF)
+    const { data: existingDoctor, error: existingErr } = await supabase
+      .from("doctors")
+      .select("id")
+      .eq("name", nameNorm)
+      .eq("phone", phoneNorm)
+      .eq("uf", ufNorm)
+      .maybeSingle();
 
-const { error: linkErr } = await supabase
-  .from("user_doctors")
-  .insert({
-    user_id: user.id,
-    doctor_id: doc.id,
-  });
+    if (existingErr) {
+      console.error("Erro ao checar duplicidade:", existingErr);
+      setMsg(existingErr.message ?? "Erro ao checar duplicidade.");
+      setMsgType("error");
+      return;
+    }
 
-if (linkErr) {
-  console.error("Erro no link user_doctors:", linkErr);
-  setMsg("Médico cadastrado, mas falhou vincular ao seu perfil.");
-  setMsgType("warning");
-}
-  const availabilityRows = slotsSelected.map((s) => ({
-    doctor_id: doc.id,
-    slot: s,
-  }));
+    // 3A) Se já existe: só vincula ao usuário e salva horários
+    if (existingDoctor?.id) {
+      const { error: linkErr } = await supabase
+        .from("user_doctors")
+        .upsert({ user_id: user.id, doctor_id: existingDoctor.id }, { onConflict: "user_id,doctor_id" });
 
-  const { error: avErr } = await supabase
-    .from("doctor_availability")
-    .insert(availabilityRows);
+      if (linkErr) {
+        console.error("Erro ao vincular médico:", linkErr);
+        setMsg(linkErr.message ?? "Erro ao vincular médico ao seu perfil.");
+        setMsgType("error");
+        return;
+      }
 
-  if (avErr) {
-    console.error("Erro nos slots:", avErr);
-    setMsg("Erro ao salvar horários: " + (avErr.message || "Tente novamente"));
+      const availabilityRows = slotsSelected.map((s) => ({
+        doctor_id: existingDoctor.id,
+        slot: s,
+      }));
+
+      const { error: avErr } = await supabase
+        .from("doctor_availability")
+        .insert(availabilityRows);
+
+      if (avErr) {
+        console.error("Erro ao salvar horários:", avErr);
+        setMsg(avErr.message ?? "Erro ao salvar horários.");
+        setMsgType("error");
+        return;
+      }
+
+      setMsg("Este médico já existia e foi vinculado ao seu perfil ✅");
+      setMsgType("success");
+
+      setTimeout(() => loadMyDoctors(), 1500);
+      return;
+    }
+
+    // 4) Inserir novo médico
+    const payload = {
+      name: nameNorm,
+      crm: crm || null,
+      crm_uf: crmUf || null,
+      phone: phoneNorm,
+      city: (city || "").toUpperCase(),
+      uf: ufNorm,
+      state: ufNorm, // se você usa os dois no banco
+      specialty: (specialty || "").toUpperCase(),
+      clinic: clinic ? clinic.toUpperCase() : null,
+      address: (address || "").toUpperCase(),
+      secretary_name: secretaryName ? secretaryName.toUpperCase() : null,
+      secretary_phone: secretaryPhone ? onlyDigits(secretaryPhone) : null,
+      notes: notes || null,
+      tenant_id: user.id,
+      is_active: true,
+    };
+
+    const { data: newDoc, error: docErr } = await supabase
+      .from("doctors")
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (docErr || !newDoc?.id) {
+      console.error("Erro ao criar médico:", docErr, newDoc);
+      setMsg(docErr?.message ?? "Erro ao criar médico. (Possível RLS bloqueando retorno do SELECT)");
+      setMsgType("error");
+      return;
+    }
+
+    // 5) Vincular ao usuário + salvar horários
+    const { error: linkErr2 } = await supabase
+      .from("user_doctors")
+      .insert({ user_id: user.id, doctor_id: newDoc.id });
+
+    if (linkErr2) {
+      console.error("Erro ao vincular médico:", linkErr2);
+      setMsg("Médico criado, mas falhou vincular ao seu perfil.");
+      setMsgType("warning");
+      // continua mesmo assim para salvar horários? (opcional)
+      // return;
+    }
+
+    const availabilityRows = slotsSelected.map((s) => ({
+      doctor_id: newDoc.id,
+      slot: s,
+    }));
+
+    const { error: avErr2 } = await supabase
+      .from("doctor_availability")
+      .insert(availabilityRows);
+
+    if (avErr2) {
+      console.error("Erro ao salvar horários:", avErr2);
+      setMsg(avErr2.message ?? "Erro ao salvar horários.");
+      setMsgType("error");
+      return;
+    }
+
+    // 6) Sucesso + limpeza
+    setMsg("Cadastrado ✅");
+    setMsgType("success");
+
+    setName("");
+    setCrm("");
+    setCrmUf("DF");
+    setPhone("");
+    setUf("DF");
+    setCity("");
+    setCityQuery("");
+    setCitySelected(false);
+    setCityOpen(false);
+    setSpecialty("");
+    setClinic("");
+    setAddress("");
+    setSecretaryName("");
+    setSecretaryPhone("");
+    setNotes("");
+    setSlotsSelected([]);
+    setSlotsOpen(false);
+
+    setTimeout(() => loadMyDoctors(), 1500);
+    return;
+  } catch (err) {
+    console.error("onSave error:", err);
+    setMsg("Erro interno ao salvar. Veja console.");
     setMsgType("error");
     return;
   }
-
-setMsgType("success");
-setMsg("Cadastrado ✅");
-
-setName("");
-setCrm("");
-setCrmUf("");         
-setPhone("");
-
-setUf("DF");            
-setCity("");
-setCityQuery("");
-setCitySelected(false);
-setCityOpen(false);
-
-setSpecialty("");
-setClinic("");
-setAddress("");
-setSecretaryName("");
-setSecretaryPhone("");
-setNotes("");
-setSlotsSelected([]);
-setSlotsOpen(false);
-
-setMsgType("success");
-setMsg("Cadastrado ✅");
-
-setTimeout(() => {
-  loadMyDoctors();
-}, 1500);
-
-return;
-
-} catch (err) {
-  console.error("onSave error:", err, { existingDoctor, doc, user });
-  setMsg("Erro interno ao salvar. Veja console.");
-  setMsgType("error");
 }
 
   return (
@@ -776,5 +714,4 @@ return;
         </div>
      </main>
   );
-}
 }
