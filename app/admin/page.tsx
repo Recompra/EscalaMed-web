@@ -293,7 +293,7 @@ const nameUp = (name || "").trim().toUpperCase();
 // 2) procura duplicidade por telefone em outra UF
 const { data: dupPhone, error: dupErr } = await supabase
   .from("doctors")
-  .select("id,name,phone,city,state,crm,crm_uf")
+  .select("id,name,phone,city,state,crm,crm_uf,tenant_id")
   .eq("phone", phoneDigits)     // se seu banco salva phone só dígitos
   .neq("state", uf)             // UF diferente
   .limit(5);
