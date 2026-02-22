@@ -209,24 +209,26 @@ useEffect(() => {
   let user: any = null;
 
   try {
-    const resExisting = await supabase
-      .from("doctors")
-      .select("*")
-      .eq("name", name)
-      .eq("phone", phone)
-      .eq("uf", uf)
-      .maybeSingle();
+    // duplicidade: mesmo nome+telefone+UF
+const { data: existingDoctor, error: existingErr } = await supabase
+  .from("doctors")
+  .select("id, name, phone, uf, city")
+  .eq("name", name)
+  .eq("phone", phone)
+  .eq("uf", uf)
+  .maybeSingle();
 
-    existingDoctor = resExisting.data;
+if (existingErr) {
+  console.error("Erro ao checar duplicidade:", existingErr);
+}
 
-    if (!existingDoctor) {
-      console.log("Médico não encontrado com nome, telefone e UF informados.");
-      setMsg("Médico não encontrado. Verifique os dados ou cadastre um novo médico primeiro.");
-      setMsgType("error");
-      return; // Impede que continue e tente usar existingDoctor.id
-    }
-
-    console.log("Médico encontrado, ID:", existingDoctor.id);
+// Se já existe, pergunta se quer continuar mesmo assim
+if (existingDoctor?.id) {
+  const ok = confirm(
+    `⚠️ Já existe médico com mesmo Nome+Telefone+UF.\n\nContinuar e cadastrar outro mesmo assim?`
+  );
+  if (!ok) return;
+}
 
     if (slotsSelected.length === 0) {
     setMsg("Selecione pelo menos 1 slot.");
