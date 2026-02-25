@@ -49,6 +49,8 @@ const SPECIALTIES = [
 ] as const;
 
 export default function AdminPage() {
+  const router = useRouter();
+  
   console.log("ADMIN PAGE OK - ACCORDION TEST");
   const inputStyle = {padding: 10,borderRadius: 8,border: "1px solid #ddd",fontSize: 14,};
   const [name, setName] = useState("");
@@ -149,7 +151,7 @@ useEffect(() => {
   setCity("");
   setCityQuery("");
 }, [uf]);
-  const router = useRouter();
+  
   function onlyDigits(v: string) {
   return v.replace(/\D/g, "");}
   function formatPhoneBR(digits: string) {
@@ -437,7 +439,24 @@ if (dupOtherUFErr) {
           backdropFilter: "blur(6px)",
         }}
       >
-        <h2 style={{ marginBottom: 16 }}>Cadastrar Médico</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+  <h2 style={{ margin: 0 }}>Cadastrar Médico</h2>
+
+  <button
+    type="button"
+    onClick={() => router.push("/")}
+    style={{
+      background: "#111827",
+      color: "white",
+      border: "none",
+      padding: "8px 12px",
+      borderRadius: 10,
+      cursor: "pointer",
+    }}
+  >
+    Voltar
+  </button>
+</div>
 
         {/* Nome */}
 <label style={{ display: "grid", gap: 6 }}>
