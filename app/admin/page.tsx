@@ -299,6 +299,30 @@ useEffect(() => {
       return;
     }
 
+    // 3B) Aviso: já existe em OUTRA UF (NUNCA avisar se for a mesma UF)
+const { data: dupOtherUF, error: dupOtherUFErr } = await supabase
+  .from("doctors")
+  .select("id, uf, state, crm_uf")
+  .or(phoneNorm ? `phone.eq.${phoneNorm},name.eq.${nameNorm}` : `name.eq.${nameNorm}`)
+  .neq("uf", ufNorm)          // se no seu banco o campo for "state", troque esta linha
+  .limit(1)
+  .maybeSingle();
+
+if (dupOtherUFErr) {
+  console.error("Erro ao checar duplicidade (outra UF):", dupOtherUFErr);
+  // não trava o cadastro por causa do aviso
+} else if (dupOtherUF?.id) {
+  const ufExistente = (dupOtherUF.uf || dupOtherUF.state || dupOtherUF.crm_uf || "").toString();
+  const ok = window.confirm(
+    `Atenção: este médico já está cadastrado na UF ${ufExistente}. Deseja continuar mesmo assim?`
+  );
+  if (!ok) {
+    setMsg("Cadastro cancelado.");
+    setMsgType("error");
+    return;
+  }
+}
+
     // 4) Inserir novo médico
     const payload = {
       name: nameNorm,
