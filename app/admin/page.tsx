@@ -443,19 +443,12 @@ if (dupOtherUFErr) {
   <h2 style={{ margin: 0 }}>Cadastrar Médico</h2>
 
   <button
-    type="button"
-    onClick={() => router.push("/")}
-    style={{
-      background: "#111827",
-      color: "white",
-      border: "none",
-      padding: "8px 12px",
-      borderRadius: 10,
-      cursor: "pointer",
-    }}
-  >
-    Voltar
-  </button>
+  type="button"
+  onClick={() => router.push("/")}
+  className="bg-[#111827] text-white px-3 py-2 rounded-lg cursor-pointer hover:bg-[#0f172a] transition"
+>
+  Voltar
+</button>
 </div>
 
         {/* Nome */}
