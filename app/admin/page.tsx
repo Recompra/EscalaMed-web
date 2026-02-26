@@ -444,7 +444,7 @@ if (dupOtherUFErr) {
 
   <button
     type="button"
-    onClick={() => router.push("/")}
+    onClick={() => router.push("/home")}
     style={{
       backgroundColor: "#111827",
       color: "white",
