@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { UFS, CITIES_BY_UF } from "@/data/cities";
@@ -38,6 +39,7 @@ type Doctor = {
 };
 
 export default function Page() {
+  const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -466,14 +468,16 @@ setLoading(false);
                 </div>
 
                 <button
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Ver detalhes
-                </button>
+               onClick={() => router.push(`/admin?id=${d.id}`)}
+               style={{
+                padding: "8px 12px",
+               borderRadius: 8,
+               border: "1px solid #ddd",
+               cursor: "pointer"
+               }}
+              >
+              Editar
+           </button>
               </div>
             ))}
           </div>

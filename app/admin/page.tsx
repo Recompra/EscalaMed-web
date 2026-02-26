@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
@@ -49,6 +50,8 @@ const SPECIALTIES = [
 ] as const;
 
 export default function AdminPage() {
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
   const router = useRouter();
   
   console.log("ADMIN PAGE OK - ACCORDION TEST");
@@ -75,6 +78,8 @@ export default function AdminPage() {
   const [cityQuery, setCityQuery] = useState("");
   const [citySelected, setCitySelected] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
+  const [weekday, setWeekday] = useState("");
+  const [period, setPeriod] = useState("");
   function formatCRM(raw: string, ufValue: string) {
   const digits = raw.replace(/\D/g, "").slice(0, 6); // até 6 dígitos
   const padded = digits.padStart(6, "0");
@@ -168,6 +173,38 @@ useEffect(() => {
   });
 
 }, [router]);
+useEffect(() => {
+  if (!editId) return;
+
+  async function loadDoctorForEdit() {
+    const { data, error } = await supabase
+      .from("doctors")
+      .select("*")
+      .eq("id", editId)
+      .single();
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    if (data) {
+      setName(data.name || "");
+      setCrm(data.crm || "");
+      setCrmUf(data.crm_uf || "DF");
+      setPhone(data.phone || "");
+      setClinic(data.clinic || "");
+      setAddress(data.address || "");
+      setSpecialty(data.specialty || "");
+      setUf(data.uf || "DF");
+      setCity(data.city || "");
+      setWeekday(data.weekday || "Segunda");
+      setPeriod(data.period || "Manhã");
+    }
+  }
+
+  loadDoctorForEdit();
+}, [editId]);
   useEffect(() => {
   const list = CITIES_BY_UF[uf] ?? [];
   setCity("");
