@@ -383,6 +383,24 @@ if (dupOtherUFErr) {
       is_active: true,
     };
 
+    // ===== MODO EDIÇÃO =====
+if (editId) {
+  const { error: updErr } = await supabase
+    .from("doctors")
+    .update(payload)
+    .eq("id", editId);
+
+  if (updErr) {
+    console.error("Erro ao atualizar médico:", updErr);
+    setMsg("Erro ao atualizar médico.");
+    setMsgType("error");
+    return;
+  }
+
+  setMsg("Médico atualizado com sucesso.");
+  setMsgType("success");
+  return; // IMPORTANTE: impede cair no INSERT
+}
     const { data: newDoc, error: docErr } = await supabase
       .from("doctors")
       .insert(payload)
