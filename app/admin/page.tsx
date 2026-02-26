@@ -353,7 +353,7 @@ if (dupOtherUFErr) {
   // não trava o cadastro por causa do aviso
 } else if (dupOtherUF?.id) {
   const ufExistente = dupOtherUF.uf
-  const ok = window.confirm(
+  const ok = confirm(
     `Atenção: este médico já está cadastrado na UF ${ufExistente}. Deseja continuar mesmo assim?`
   );
   if (!ok) {
