@@ -1,6 +1,7 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -50,7 +51,7 @@ const SPECIALTIES = [
   "OUTRAS",
 ] as const;
 
-export default function AdminPage() {
+function AdminContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
   const router = useRouter();
@@ -806,5 +807,12 @@ if (dupOtherUFErr) {
 
         </div>
      </main>
+  );
+}
+export default function AdminPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminContent />
+    </Suspense>
   );
 }
