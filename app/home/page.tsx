@@ -219,9 +219,6 @@ setLoading(false);
 
 <hr style={{ height: 1, background: "#eee", margin: "6px 0" }} />
 
-<a style={{ ...menuItemStyle, color: "#b91c1c" }}>
-  Sair
-</a>
       <div style={{ flex: 1 }} />
 
       <a href="/login" style={{ ...menuItemStyle, color: "#b91c1c" }}>Sair</a>
