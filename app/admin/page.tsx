@@ -202,6 +202,17 @@ useEffect(() => {
       setCity(data.city || "");
       setWeekday(data.weekday || "Segunda");
       setPeriod(data.period || "Manhã");
+
+      // carregar horários previamente selecionados
+      const { data: avail, error: avErr } = await supabase
+        .from("doctor_availability")
+        .select("slot")
+        .eq("doctor_id", editId);
+      if (avErr) {
+        console.log("erro ao buscar disponibilidade:", avErr);
+      } else if (avail) {
+        setSlotsSelected(avail.map((row: any) => row.slot));
+      }
     }
   }
 
@@ -242,7 +253,7 @@ useEffect(() => {
   }
 
   async function onSave() {
-  console.log("CLICOU NO SALVAR");
+  console.log("CLICOU NO SALVAR editId=", editId);
   setMsg("");
   setMsgType(null);
 
@@ -288,14 +299,17 @@ useEffect(() => {
     const phoneNorm = onlyDigits(phone); // seu input já guarda dígitos, mas garante
     const ufNorm = uf;
 
-    // 3) Verificar se já existe (Nome + Telefone + UF)
-    const { data: existingDoctor, error: existingErr } = await supabase
+    // 3) Verificar se já existe (Nome + Telefone + UF) - ignore o próprio registro quando em edição
+    let existingDoctorQuery = supabase
       .from("doctors")
       .select("id")
       .eq("name", nameNorm)
       .eq("phone", phoneNorm)
-      .eq("uf", ufNorm)
-      .maybeSingle();
+      .eq("uf", ufNorm);
+    if (editId) {
+      existingDoctorQuery = existingDoctorQuery.neq("id", editId);
+    }
+    const { data: existingDoctor, error: existingErr } = await existingDoctorQuery.maybeSingle();
 
     if (existingErr) {
       console.error("Erro ao checar duplicidade:", existingErr);
@@ -305,7 +319,8 @@ useEffect(() => {
     }
 
     // 3A) Se já existe: só vincula ao usuário e salva horários
-    if (existingDoctor?.id) {
+    // se estamos editando, não queremos tratar o próprio registro como duplicato
+    if (existingDoctor?.id && existingDoctor.id !== editId) {
       const { error: linkErr } = await supabase
         .from("user_doctors")
         .upsert({ user_id: user.id, doctor_id: existingDoctor.id }, { onConflict: "user_id,doctor_id" });
@@ -397,8 +412,30 @@ if (editId) {
     return;
   }
 
+  // se o usuário alterou os horários, podemos recadastrar a disponibilidade
+  try {
+    await supabase.from("doctor_availability").delete().eq("doctor_id", editId);
+    if (slotsSelected.length > 0) {
+      const availabilityRows = slotsSelected.map((s) => ({
+        doctor_id: editId,
+        slot: s,
+      }));
+      const { error: avErr } = await supabase
+        .from("doctor_availability")
+        .insert(availabilityRows);
+      if (avErr) {
+        console.error("Erro ao atualizar horários:", avErr);
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao recadastrar disponibilidade:", e);
+  }
+
   setMsg("Médico atualizado com sucesso.");
   setMsgType("success");
+  setTimeout(() => {
+    router.push("/home");
+  }, 1500);
   return; // IMPORTANTE: impede cair no INSERT
 }
     const { data: newDoc, error: docErr } = await supabase
