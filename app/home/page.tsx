@@ -51,6 +51,24 @@ export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [visitRequestsCount, setVisitRequestsCount] = useState(0);
 
+  async function handleDelete(doctorId: string) {
+  const confirmDelete = confirm("Deseja excluir este médico?");
+  if (!confirmDelete) return;
+
+  const { error } = await supabase
+    .from("user_doctors")
+    .delete()
+    .eq("doctor_id", doctorId);
+
+  if (error) {
+    alert("Erro ao excluir.");
+    return;
+  }
+
+  // recarrega lista
+  window.location.reload();
+}
+
 useEffect(() => {
   setLoading(true);
   setErrorMsg("");
@@ -478,6 +496,22 @@ setLoading(false);
               >
               Editar
            </button>
+           <button
+  type="button"
+  onClick={() => handleDelete(d.id)}
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: "1px solid #ddd",
+    cursor: "pointer",
+    background: "#b91c1c",
+    color: "white",
+    marginTop: 8,
+  }}
+>
+  Excluir
+</button>
               </div>
             ))}
           </div>
