@@ -118,6 +118,32 @@ useEffect(() => {
 const weekdayLabel = weekday;
   const run = async () => {
     setErrorMsg("");
+    // 0) pegar usuário logado
+const { data: authData, error: authError } = await supabase.auth.getUser();
+const user = authData?.user;
+
+if (authError || !user) {
+  setDoctors([]);
+  setLoading(false);
+  setErrorMsg("Usuário não autenticado");
+  return;
+}
+
+// 0.1) buscar IDs da MINHA LISTA
+const { data: myLinks, error: myError } = await supabase
+  .from("user_doctors")
+  .select("doctor_id")
+  .eq("user_id", user.id)
+  .limit(2000);
+
+if (myError) {
+  console.log("MY LIST ERROR:", myError);
+  setDoctors([]);
+  setLoading(false);
+  return;
+}
+
+const myDoctorIds = (myLinks ?? []).map((x: any) => x.doctor_id);
     // 1) Buscar disponibilidades (dia + período)
 const { data: availability, error: availError } = await supabase
   .from("doctor_availability")
@@ -132,7 +158,8 @@ if (availError) {
   return;
 }
 
-const doctorIds = availability?.map((a) => a.doctor_id) ?? [];
+const availabilityIds = availability?.map((a) => a.doctor_id) ?? [];
+const doctorIds = availabilityIds.filter((id) => myDoctorIds.includes(id));
 
 
 if (doctorIds.length === 0) {
