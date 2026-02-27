@@ -69,8 +69,6 @@ export default function Page() {
   };
 
   async function handleDelete(doctorId: string) {
-    const ok = window.confirm("Deseja excluir este médico da sua lista?");
-    if (!ok) return;
 
     // obter usuário autenticado (padrão usado em outras páginas)
     const { data: authData } = await supabase.auth.getUser();
@@ -82,11 +80,13 @@ export default function Page() {
     }
 
     // deletar apenas a relação do usuário com o médico
-    const { error } = await supabase
-      .from("user_doctors")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("doctor_id", doctorId);
+    const { data, error } = await supabase
+    .from("user_doctors")
+    .delete()
+    .eq("doctor_id", doctorId)
+    .eq("user_id", user.id)
+    .select();
+    console.log("DELETE user_doctors:", { data, error });
 
     if (error) {
       console.error("erro ao remover relação user_doctors:", error);
