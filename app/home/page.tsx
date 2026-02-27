@@ -69,35 +69,34 @@ export default function Page() {
   };
 
   async function handleDelete(doctorId: string) {
-  const ok = window.confirm("Deseja excluir este médico permanentemente?");
-  if (!ok) return;
+    const ok = window.confirm("Deseja excluir este médico da sua lista?");
+    if (!ok) return;
 
-  // ensure user is authenticated (optional for admin purposes)
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
+    // obter usuário autenticado (padrão usado em outras páginas)
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
 
-  if (authErr || !user) {
-    alert("Usuário não autenticado.");
-    return;
+    if (!user) {
+      alert("Usuário não autenticado.");
+      return;
+    }
+
+    // deletar apenas a relação do usuário com o médico
+    const { error } = await supabase
+      .from("user_doctors")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("doctor_id", doctorId);
+
+    if (error) {
+      console.error("erro ao remover relação user_doctors:", error);
+      alert("Erro ao excluir.");
+      return;
+    }
+
+    // atualiza estado local para remover o cartão imediatamente
+    setDoctors((prev) => prev.filter((d) => d.id !== doctorId));
   }
-
-  // delete the doctor record itself from the doctors table
-  const { error } = await supabase
-    .from("doctors")
-    .delete()
-    .eq("id", doctorId);
-
-  if (error) {
-    console.error("erro ao excluir médico:", error);
-    alert("Erro ao excluir.");
-    return;
-  }
-
-  // remove from local state so the card disappears immediately
-  setDoctors((prev) => prev.filter((d) => d.id !== doctorId));
-}
 
 useEffect(() => {
   setLoading(true);
