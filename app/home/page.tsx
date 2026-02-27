@@ -51,22 +51,52 @@ export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [visitRequestsCount, setVisitRequestsCount] = useState(0);
 
-  async function handleDelete(doctorId: string) {
-  const confirmDelete = confirm("Deseja excluir este médico?");
-  if (!confirmDelete) return;
+  // reusable button styles (matches styles used in /my page)
+  const btnStyle: React.CSSProperties = {
+    width: "100%",
+    height: 40,
+    padding: "0 14px",
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    cursor: "pointer",
+  };
 
+  const deleteBtnStyle: React.CSSProperties = {
+    ...btnStyle,
+    background: "#b91c1c",
+    color: "white",
+    marginTop: 8,
+  };
+
+  async function handleDelete(doctorId: string) {
+  const ok = window.confirm("Deseja excluir este médico permanentemente?");
+  if (!ok) return;
+
+  // ensure user is authenticated (optional for admin purposes)
+  const {
+    data: { user },
+    error: authErr,
+  } = await supabase.auth.getUser();
+
+  if (authErr || !user) {
+    alert("Usuário não autenticado.");
+    return;
+  }
+
+  // delete the doctor record itself from the doctors table
   const { error } = await supabase
-    .from("user_doctors")
+    .from("doctors")
     .delete()
-    .eq("doctor_id", doctorId);
+    .eq("id", doctorId);
 
   if (error) {
+    console.error("erro ao excluir médico:", error);
     alert("Erro ao excluir.");
     return;
   }
 
-  // recarrega lista
-  window.location.reload();
+  // remove from local state so the card disappears immediately
+  setDoctors((prev) => prev.filter((d) => d.id !== doctorId));
 }
 
 useEffect(() => {
@@ -485,33 +515,21 @@ setLoading(false);
                   </div>
                 </div>
 
-                <button
-               onClick={() => router.push(`/admin?id=${d.id}`)}
-               style={{
-                padding: "8px 12px",
-               borderRadius: 8,
-               border: "1px solid #ddd",
-               cursor: "pointer"
-               }}
-              >
-              Editar
-           </button>
-           <button
-  type="button"
-  onClick={() => handleDelete(d.id)}
-  style={{
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid #ddd",
-    cursor: "pointer",
-    background: "#b91c1c",
-    color: "white",
-    marginTop: 8,
-  }}
->
-  Excluir
-</button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <button
+                    onClick={() => router.push(`/admin?id=${d.id}`)}
+                    style={btnStyle}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(d.id)}
+                    style={deleteBtnStyle}
+                  >
+                    Excluir
+                  </button>
+                </div>
               </div>
             ))}
           </div>
