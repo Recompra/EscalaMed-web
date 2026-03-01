@@ -289,6 +289,10 @@ setLoading(false);
   Minha conta
 </a>
 
+<a href="/import" style={menuItemStyle}>
+  Importar escala (Excel)
+</a>
+
 <a style={menuItemStyle}>
   Suporte / Feedback
 </a>
