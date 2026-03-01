@@ -271,6 +271,10 @@ setLoading(false);
   Médicos cadastrados ({doctors.length})
 </a>
 
+<a href="/import" style={menuItemStyle}>
+  Importar escala (Excel)
+</a>
+
 <a style={menuItemStyle}>
   Buscar médico
 </a>
@@ -287,10 +291,6 @@ setLoading(false);
 
 <a style={menuItemStyle}>
   Minha conta
-</a>
-
-<a href="/import" style={menuItemStyle}>
-  Importar escala (Excel)
 </a>
 
 <a style={menuItemStyle}>
