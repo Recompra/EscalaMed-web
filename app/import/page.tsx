@@ -228,64 +228,79 @@ setRows(normalized);
   }
 
   return (
-    <main style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
-      <h1>Importar Médicos via Excel</h1>
+  <main
+    style={{
+      maxWidth: 720,
+      margin: "0 auto",
+      padding: 16,
+      fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial",
+    }}
+  >
+    <h1 style={{ fontSize: 22, fontWeight: 700, margin: "8px 0 4px" }}>
+      Importar Médicos via Excel
+    </h1>
 
-      <input
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={handleFile}
-        disabled={loading}
-        style={{ marginTop: 12 }}
-      />
+    <p style={{ margin: "0 0 16px", opacity: 0.75, fontSize: 14 }}>
+      Selecione um arquivo
+    </p>
 
-      {loading && <p style={{ marginTop: 12 }}>Lendo planilha...</p>}
-      {!!errorMsg && <p style={{ marginTop: 12, color: "red" }}>{errorMsg}</p>}
+    <section
+      style={{
+    border: "1px solid #e5e7eb",
+    borderRadius: 10,
+    padding: 12,
+    background: "#fff",
+    maxWidth: 260,
+    }}
+    >
+      <div style={{ marginTop: 16 }}>
+  <input
+    id="fileUpload"
+    type="file"
+    accept=".xlsx"
+    onChange={handleFile}
+    style={{ display: "none" }}
+  />
 
-      {headers.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <h3>Cabeçalhos detectados ({headers.length})</h3>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {headers.map((h) => (
-              <span
-                key={h}
-                style={{
-                  border: "1px solid #ddd",
-                  padding: "4px 8px",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              >
-                {h}
-              </span>
-            ))}
-          </div>
+  <label
+    htmlFor="fileUpload"
+    style={{
+      display: "inline-block",
+      padding: "10px 18px",
+      borderRadius: 8,
+      border: "1px solid #111",
+      background: "#111",
+      color: "#fff",
+      fontSize: 14,
+      fontWeight: 600,
+      cursor: "pointer",
+      transition: "0.2s ease",
+    }}
+  >
+    IMPORTAR
+  </label>
+</div>
+
+      {errorMsg && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 10,
+            border: "1px solid #fecaca",
+            background: "#fff1f2",
+            color: "#991b1b",
+            fontSize: 13,
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {errorMsg}
         </div>
       )}
+    </section>
 
-      {rows.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <h3>Pré-visualização (primeiras {Math.min(rows.length, 20)} linhas)</h3>
-          <pre
-            style={{
-              marginTop: 8,
-              background: "#0b1020",
-              color: "#e6e6e6",
-              padding: 12,
-              borderRadius: 8,
-              overflow: "auto",
-              maxHeight: 360,
-              fontSize: 12,
-            }}
-          >
-            {JSON.stringify(rows.slice(0, 20), null, 2)}
-          </pre>
-
-          <p style={{ marginTop: 8, opacity: 0.8 }}>
-            Linhas lidas: <b>{rows.length}</b> (limite atual: 2000)
-          </p>
-        </div>
-      )}
-    </main>
+    {/* O resto da sua tela (chips, preview, etc) fica abaixo */}
+    {/* NÃO apague seu conteúdo atual de headers/preview; só cole ele aqui embaixo depois */}
+  </main>
   );
 }
