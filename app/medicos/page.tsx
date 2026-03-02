@@ -166,7 +166,7 @@ export default function MedicosPage() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                  <button
-               onClick={() => alert("Editar depois")}
+               onClick={() => router.push(`/admin?id=${doc.id}`)}
                style={{
                padding: "8px 12px",
                borderRadius: 10,
