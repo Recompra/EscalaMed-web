@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,6 +49,7 @@ const SPECIALTIES = [
 ] as const;
 
 export default function MedicosPage() {
+  const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [filtered, setFiltered] = useState<Doctor[]>([]);
   const [nameFilter, setNameFilter] = useState("");
@@ -137,63 +139,60 @@ export default function MedicosPage() {
       <div style={{ marginTop: 20, display: "grid", gap: 14 }}>
         {filtered.map((doc) => (
           <div
-            key={doc.id}
-            style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: 14,
-              padding: 16,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              background: "#fff",
-            }}
-          >
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 18 }}>
-                {doc.name}
-              </div>
-
-              <div style={{ marginTop: 4 }}>
-                {doc.specialty} • {doc.phone}
-              </div>
-
-              <div style={{ marginTop: 4 }}>
-                {doc.address}
-              </div>
-
-              <div style={{ marginTop: 4 }}>
-                {doc.city}
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
+                key={doc.id}
                 style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
+                  padding: 14,
+                  border: "1px solid #e6e6e6",
+                  borderRadius: 12,
                   background: "#fff",
-                  cursor: "pointer",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  alignItems: "center",
                 }}
               >
-                Editar
-              </button>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <strong style={{ fontSize: 16 }}>{doc.name}</strong>
 
-              <button
-                onClick={() => handleDelete(doc.id)}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#dc2626",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Excluir
+                  <div style={{ fontSize: 12, color: "#666" }}>
+                    {doc.specialty} · {doc.phone}
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "#666" }}>
+                    
+                  </div>
+
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                 <button
+               onClick={() => alert("Editar depois")}
+               style={{
+               padding: "8px 12px",
+               borderRadius: 10,
+               border: "1px solid #ddd",
+              background: "#fff",
+              cursor: "pointer",
+             }}
+             >
+              Editar
               </button>
-            </div>
-          </div>
+                  <button
+                       type="button"
+                      onClick={() => handleDelete(doc.id)}
+                     style={{
+                     padding: "8px 12px",
+                       borderRadius: 10,
+                      border: "none",
+                      background: "#dc2626",
+                       color: "#fff",
+                    cursor: "pointer",
+                         }}
+                            >
+                    Excluir
+                  </button>
+                </div>
+              </div>
         ))}
       </div>
     </main>
