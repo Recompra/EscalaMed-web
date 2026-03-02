@@ -16,6 +16,8 @@ type Doctor = {
   phone: string;
   city: string;
   address: string;
+  uf?: string;
+  clinic?: string;
   weekday?: string;
   period?: string;
 };
@@ -158,10 +160,13 @@ export default function MedicosPage() {
                     {doc.specialty} · {doc.phone}
                   </div>
 
-                  <div style={{ fontSize: 12, color: "#666" }}>
-                    
-                  </div>
+                <div style={{ fontSize: 12, color: "#666" }}>
+                  {doc.clinic ?? "—"} — {doc.address ?? "—"}
+              </div>
 
+            <div style={{ fontSize: 12, color: "#888" }}>
+                {doc.uf} · {doc.city} · {doc.weekday} · {doc.period}
+              </div>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
