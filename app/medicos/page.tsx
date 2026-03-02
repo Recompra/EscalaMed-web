@@ -90,12 +90,26 @@ export default function MedicosPage() {
   }, [nameFilter, specialtyFilter, doctors]);
 
   async function handleDelete(id: string) {
-    if (!confirm("Deseja realmente excluir?")) return;
+  if (!confirm("Deseja realmente excluir?")) return;
 
-    await supabase.from("doctors").delete().eq("id", id);
-    loadDoctors();
+  const { error } = await supabase
+    .from("doctors")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Erro ao excluir (provável RLS). Veja o console.");
+    console.error(error);
+    return;
   }
 
+  // remove da tela na hora
+  setDoctors((prev) => prev.filter((doc) => doc.id !== id));
+  setFiltered((prev) => prev.filter((doc) => doc.id !== id));
+
+  // backup pra garantir
+  loadDoctors();
+}
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
       <h1 style={{ fontSize: 22, fontWeight: 800 }}>
