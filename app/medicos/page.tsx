@@ -99,7 +99,7 @@ export default function MedicosPage() {
     </h1>
 
       {/* FILTROS */}
-      <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
         <input
           placeholder="Nome"
           value={nameFilter}
@@ -110,7 +110,7 @@ export default function MedicosPage() {
             padding: 8,
             borderRadius: 8,
             border: "1px solid #ddd",
-            flex: 1,
+            width: "100%",
           }}
         />
 
@@ -121,13 +121,14 @@ export default function MedicosPage() {
             padding: 8,
             borderRadius: 8,
             border: "1px solid #ddd",
+            width: "100%",
           }}
         >
           <option value="">Especialidade</option>
           {SPECIALTIES.map((s: string) => (
-          <option key={s} value={s}>
+         <option key={s} value={s}>
           {s}
-          </option>
+        </option>
          ))}
         </select>
       </div>
