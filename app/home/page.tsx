@@ -267,7 +267,7 @@ setLoading(false);
 
       <div style={{ height: 1, background: "#eee", margin: "6px 0" }} />
 
-      <a style={menuItemStyle}>
+  <a href="/medicos" style={menuItemStyle}>
   Médicos cadastrados ({doctors.length})
 </a>
 
