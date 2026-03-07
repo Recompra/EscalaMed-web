@@ -90,7 +90,7 @@ export default function MedicosPage() {
   }, [nameFilter, specialtyFilter, doctors]);
 
   async function handleDelete(id: string) {
-    alert("CLICOU EM EXCLUIR");
+  
   if (!confirm("Deseja realmente excluir?")) return;
 
   const { error } = await supabase
