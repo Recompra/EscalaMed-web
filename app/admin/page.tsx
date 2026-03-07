@@ -195,6 +195,9 @@ useEffect(() => {
       setAddress(data.address || "");
       setSpecialty(data.specialty || "");
       setUf(data.uf || "DF");
+      setSecretaryName(data.secretary_name || "");
+      setSecretaryPhone(data.secretary_phone || "");
+      setNotes(data.notes || "");
       const loadedCity = (data.city || "").toUpperCase();
       setCity(loadedCity);
       setCityQuery(loadedCity);

@@ -159,7 +159,7 @@ if (availError) {
 }
 
 const availabilityIds = availability?.map((a) => a.doctor_id) ?? [];
-const doctorIds = availabilityIds.filter((id) => myDoctorIds.includes(id));
+const doctorIds = availabilityIds;
 
 
 if (doctorIds.length === 0) {
