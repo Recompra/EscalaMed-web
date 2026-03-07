@@ -154,7 +154,7 @@ useEffect(() => {
   return cities.filter((c) => norm(c).startsWith(q)).slice(0, 30);}
   return cities.filter((c) => norm(c).includes(q)).slice(0, 30);}, [cities, cityQuery]);
 
-  
+
   function onlyDigits(v: string) {
   return v.replace(/\D/g, "");}
   function formatPhoneBR(digits: string) {
@@ -195,7 +195,11 @@ useEffect(() => {
       setAddress(data.address || "");
       setSpecialty(data.specialty || "");
       setUf(data.uf || "DF");
-      setCity(data.city || "");
+      const loadedCity = (data.city || "").toUpperCase();
+      setCity(loadedCity);
+      setCityQuery(loadedCity);
+      setCitySelected(!!loadedCity);
+      setCityOpen(false);
       setWeekday(data.weekday || "Segunda");
       setPeriod(data.period || "Manhã");
 
