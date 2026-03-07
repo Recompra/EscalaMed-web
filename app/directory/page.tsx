@@ -49,7 +49,7 @@ export default function PremiumPage() {
     setLoading(true);
 
     let query = supabase
-  .from("doctors")
+  .from("doctors_directory")
   .select("*");
 
 if (qName.trim().length >= 2) {
@@ -95,7 +95,9 @@ const { data, error } = await query.limit(50);
 
     const { error } = await supabase
       .from("user_doctors")
-      .insert([{ user_id: user.id, doctor_id: doctorId }]);
+      .upsert([{ user_id: user.id, doctor_id: doctorId }],
+       { onConflict: "user_id,doctor_id" }
+        );
 
    if (error) {
   if ((error as any).code === "23505") {
@@ -228,7 +230,8 @@ const { data, error } = await query.limit(50);
         {rows.map((r) => (
   <div
     key={r.id}
-    onClick={() => router.push(`/doctor/${r.id}`)}
+    onClick={(e) => {if ((e.target as HTMLElement).tagName !== "BUTTON") {router.push(`/doctor/${r.id}`) }
+     }}
     style={{
       border: "1px solid #e5e7eb",
       borderRadius: 12,
@@ -264,7 +267,10 @@ const { data, error } = await query.limit(50);
 
               <button
                 type="button"
-                onClick={(e) => {e.stopPropagation();addToMyList(r.id);}}
+                onClick={(e) => {e.stopPropagation();const ok = window.confirm("Deseja adicionar este médico à sua escala?");
+               if (!ok) return;
+               addToMyList(r.id);
+               }}
                 style={{ height: 40,padding: "0 14px",borderRadius: 12,border: "1px solid #d1d5db",background: "#ffffff",boxShadow: "0 2px 8px rgba(0,0,0,0.10)",fontWeight: 700,whiteSpace: "nowrap",cursor: "pointer"}}
               >
                 Adicionar
