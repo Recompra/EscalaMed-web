@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@supabase/supabase-js";
+import { useParams } from "next/navigation";
 
 type Doctor = {
   id: string;
@@ -20,12 +21,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default async function DoctorPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default async function DoctorPage() {
+  const params = useParams();
+  const id = params?.id as string;
 
   const { data, error } = await supabase
     .from("doctors_directory")
