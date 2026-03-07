@@ -263,6 +263,7 @@ const { error } = await supabase
 
 if (error) throw error;
 
+setErrorMsg("");
 setSuccessMsg("Planilha importada com sucesso.");
 
     } catch (err: any) {
@@ -325,6 +326,18 @@ setSuccessMsg("Planilha importada com sucesso.");
     IMPORTAR
   </label>
 </div>
+
+{successMsg && (
+  <div style={{
+    background: "#d1fae5",
+    color: "#065f46",
+    padding: "12px",
+    borderRadius: "8px",
+    marginTop: "12px"
+  }}>
+    {successMsg}
+  </div>
+)}
 
       {errorMsg && (
         <div
