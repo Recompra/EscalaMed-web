@@ -229,6 +229,9 @@ if (specialtyKey)
 if (cityUfKey)
   out["UF Cidade"] = String(row[cityUfKey] ?? "").trim().toUpperCase();
 
+if (cityKey)
+  out["Cidade"] = String(row[cityKey] ?? "").trim().toUpperCase();
+
   return out;
 });
 setRows(normalized);
@@ -238,7 +241,7 @@ const { error } = await supabase
   normalized.map((r) => ({
     name: r["Nome"],
     specialty: r["Especialidade"],
-    state: r["UF"],
+    state: r["UF Cidade"],
     city: r["Cidade"],
   }))
 );
