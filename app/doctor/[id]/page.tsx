@@ -26,7 +26,7 @@ export default async function DoctorPage({
   const { id } = await params;
 
   const { data, error } = await supabase
-    .from("doctors")
+    .from("doctors_directory")
     .select("id,name,specialty,phone,clinic,address,city,uf,crm,crm_uf")
     .eq("id", id)
     .single();

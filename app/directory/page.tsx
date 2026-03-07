@@ -264,8 +264,8 @@ const { data, error } = await query.limit(50);
 
               <button
                 type="button"
-                onClick={() => addToMyList(r.id)}
-                style={{height: 40,padding: "0 12px",borderRadius: 8,whiteSpace: "nowrap"}}
+                onClick={(e) => {e.stopPropagation();addToMyList(r.id);}}
+                style={{ height: 40,padding: "0 14px",borderRadius: 12,border: "1px solid #d1d5db",background: "#ffffff",boxShadow: "0 2px 8px rgba(0,0,0,0.10)",fontWeight: 700,whiteSpace: "nowrap",cursor: "pointer"}}
               >
                 Adicionar
               </button>
