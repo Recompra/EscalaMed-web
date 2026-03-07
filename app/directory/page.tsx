@@ -118,10 +118,10 @@ const { data, error } = await query.limit(50);
 
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
-      <h2 style={{ marginBottom: 6, textAlign: "center", color: "#15803d" }}>Busca Médico
+      <h2 style={{ marginBottom: 6, textAlign: "center", color: "#15803d" }}>Buscar Médico
 </h2>
       <p style={{ marginTop: 0, opacity: 0.8, textAlign: "center" }}>
-  Busque médicos no diretório global
+  diretório
 </p>
 
       <div
@@ -265,7 +265,7 @@ const { data, error } = await query.limit(50);
               <button
                 type="button"
                 onClick={() => addToMyList(r.id)}
-                style={{ height: 40, padding: "0 12px", borderRadius: 10, border: "1px solid #111", background: "white" }}
+                style={{height: 40,padding: "0 12px",borderRadius: 8,whiteSpace: "nowrap"}}
               >
                 Adicionar à minha escala
               </button>
