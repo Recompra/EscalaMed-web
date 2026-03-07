@@ -120,27 +120,40 @@ const { data, error } = await query.limit(50);
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
       <h2 style={{ marginBottom: 6, textAlign: "center", color: "#15803d" }}>Busca Médico
 </h2>
-      <p style={{ marginTop: 0, opacity: 0.8 }}>
-        Base de Cadastro
-      </p>
+      <p style={{ marginTop: 0, opacity: 0.8, textAlign: "center" }}>
+  Busque médicos no diretório global
+</p>
 
       <div
   style={{
     display: "grid",
-    gridTemplateColumns: "1.5fr 1fr 0.5fr",
+    gridTemplateColumns: "1fr",
     gap: 10,
     marginTop: 16,
     alignItems: "center",
   }}
 >
-  <input
-    placeholder="NOME"
-    value={qName}
-    onChange={(e) => setQName(e.target.value.toUpperCase())}
-    style={{ padding: 10, borderRadius: 8, border: "1px solid #ddd", width: "100%" }}
-  />
 
-  <input
+  <select
+    value={qUf}
+    onChange={(e) => setQUf(e.target.value)}
+    style={{
+      padding: 10,
+      borderRadius: 8,
+      border: "1px solid #ddd",
+      textTransform: "uppercase",
+      width: "100%",
+    }}
+  >
+    <option value="">UF</option>
+    {UF_LIST.map((uf) => (
+      <option key={uf} value={uf}>
+        {uf}
+      </option>
+    ))}
+  </select>
+  
+ <input
     placeholder="CRM"
     value={qCrm}
     onChange={(e) => setQCrm(e.target.value.replace(/\D/g, ""))}
@@ -148,6 +161,14 @@ const { data, error } = await query.limit(50);
     inputMode="numeric"
     style={{ padding: 10, borderRadius: 8, border: "1px solid #ddd", width: "100%" }}
   />
+
+  <input
+    placeholder="NOME"
+    value={qName}
+    onChange={(e) => setQName(e.target.value.toUpperCase())}
+    style={{ padding: 10, borderRadius: 8, border: "1px solid #ddd", width: "100%" }}
+  />
+
 <select
   value={qSpec}
   onChange={(e) => setQSpec(e.target.value)}
@@ -186,24 +207,6 @@ const { data, error } = await query.limit(50);
   <option value="OUTRAS">OUTRAS</option>
 </select>
 
-  <select
-    value={qUf}
-    onChange={(e) => setQUf(e.target.value)}
-    style={{
-      padding: 10,
-      borderRadius: 8,
-      border: "1px solid #ddd",
-      textTransform: "uppercase",
-      width: "100%",
-    }}
-  >
-    <option value="">UF</option>
-    {UF_LIST.map((uf) => (
-      <option key={uf} value={uf}>
-        {uf}
-      </option>
-    ))}
-  </select>
 </div>
 
        <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center" }}>
