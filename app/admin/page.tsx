@@ -219,11 +219,13 @@ useEffect(() => {
   loadDoctorForEdit();
 }, [editId]);
   useEffect(() => {
+  if (editId) return;
+
   const list = CITIES_BY_UF[uf] ?? [];
   setCity("");
   setCityQuery("");
   setCitySelected(false);
-}, [uf]);
+}, [uf, editId]);
 
 
   async function handleDelete(doctorId: string) {
