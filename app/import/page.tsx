@@ -232,17 +232,34 @@ if (cityUfKey)
   return out;
 });
 setRows(normalized);
+const { data: authData } = await supabase.auth.getUser();
+const user = authData?.user;
+
+if (!user) {
+  throw new Error("Usuário não autenticado.");
+}
+
 const { error } = await supabase
   .from("doctors")
   .insert(
-  normalized.map((r) => ({
-    name: r["Nome"],
-    specialty: r["Especialidade"],
-    phone: "",
-    state: r["UF"],
-    city: r["Cidade"],
-  }))
-);
+    normalized.map((r) => ({
+      name: String(r["Nome"] ?? "").trim().toUpperCase(),
+      specialty: String(r["Especialidade"] ?? "").trim().toUpperCase(),
+      phone: "",
+      clinic: "",
+      address: "",
+      city: String(r["Cidade"] ?? "").trim().toUpperCase(),
+      uf: String(r["UF"] ?? "").trim().toUpperCase(),
+      state: String(r["UF"] ?? "").trim().toUpperCase(),
+      secretary_name: "",
+      secretary_phone: "",
+      notes: "",
+      crm: "",
+      crm_uf: "",
+      tenant_id: user.id,
+      is_active: true,
+    }))
+  );
 
 if (error) throw error;
 
