@@ -154,10 +154,6 @@ useEffect(() => {
   return cities.filter((c) => norm(c).startsWith(q)).slice(0, 30);}
   return cities.filter((c) => norm(c).includes(q)).slice(0, 30);}, [cities, cityQuery]);
 
-  useEffect(() => {
-  setCity("");
-  setCityQuery("");
-}, [uf]);
   
   function onlyDigits(v: string) {
   return v.replace(/\D/g, "");}
