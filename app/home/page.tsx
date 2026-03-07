@@ -275,8 +275,8 @@ setLoading(false);
   Importar escala (Excel)
 </a>
 
-<a style={menuItemStyle}>
-  Buscar médico
+<a href="/directory" style={menuItemStyle}>
+  Buscar médico (diretório)
 </a>
 
 <a style={menuItemStyle}>

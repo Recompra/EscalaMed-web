@@ -27,7 +27,7 @@ export default function PremiumPage() {
   const [qName, setQName] = useState("");
   const [qSpec, setQSpec] = useState("");
   const [qCrm, setQCrm] = useState("");
-  const [qCrmUf, setQCrmUf] = useState("");
+  const [qUf, setQUf] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function PremiumPage() {
   qName.trim().length >= 2 ||
   qSpec.trim().length >= 2 ||
   qCrm.trim().length >= 1 ||
-  qCrmUf.trim().length >= 2
+  qUf.trim().length >= 2
 );
   async function runSearch() {
 
@@ -64,8 +64,8 @@ if (qCrm.trim().length >= 1) {
   query = query.eq("crm", qCrm.trim());
 }
 
-if (qCrmUf.trim().length >= 2) {
-  query = query.eq("crm_uf", qCrmUf.trim().toUpperCase());
+if (qUf.trim().length >= 2) {
+  query = query.eq("crm_uf", qUf.trim().toUpperCase());
 }
 
 const { data, error } = await query.limit(50);
@@ -114,11 +114,12 @@ const { data, error } = await query.limit(50);
   // busca automática "leve" quando filtros mudarem
   const t = setTimeout(() => runSearch(), 350);
   return () => clearTimeout(t);
-}, [qName, qSpec, qCrm, qCrmUf]); 
+}, [qName, qSpec, qCrm, qUf]); 
 
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
-      <h2 style={{ marginBottom: 6 }}>EscalaMed</h2>
+      <h2 style={{ marginBottom: 6, textAlign: "center", color: "#15803d" }}>Busca Médico
+</h2>
       <p style={{ marginTop: 0, opacity: 0.8 }}>
         Base de Cadastro
       </p>
@@ -147,10 +148,47 @@ const { data, error } = await query.limit(50);
     inputMode="numeric"
     style={{ padding: 10, borderRadius: 8, border: "1px solid #ddd", width: "100%" }}
   />
+<select
+  value={qSpec}
+  onChange={(e) => setQSpec(e.target.value)}
+  style={{
+    padding: 10,
+    borderRadius: 8,
+    border: "1px solid #ddd",
+    width: "100%",
+  }}
+>
+  <option value="">Especialidade</option>
+  <option value="CLÍNICO GERAL">CLÍNICO GERAL</option>
+  <option value="GINECOLOGISTA">GINECOLOGISTA</option>
+  <option value="PEDIATRA">PEDIATRA</option>
+  <option value="CARDIOLOGISTA">CARDIOLOGISTA</option>
+  <option value="DERMATOLOGISTA">DERMATOLOGISTA</option>
+  <option value="ORTOPEDISTA">ORTOPEDISTA</option>
+  <option value="UROLOGISTA">UROLOGISTA</option>
+  <option value="ENDOCRINOLOGISTA">ENDOCRINOLOGISTA</option>
+  <option value="PSIQUIATRA">PSIQUIATRA</option>
+  <option value="NEUROLOGISTA">NEUROLOGISTA</option>
+  <option value="OFTALMOLOGISTA">OFTALMOLOGISTA</option>
+  <option value="OTORRINOLARINGOLOGISTA">OTORRINOLARINGOLOGISTA</option>
+  <option value="GASTROENTEROLOGISTA">GASTROENTEROLOGISTA</option>
+  <option value="MASTOLOGISTA">MASTOLOGISTA</option>
+  <option value="ONCOLOGISTA">ONCOLOGISTA</option>
+  <option value="CIRURGIÃO GERAL">CIRURGIÃO GERAL</option>
+  <option value="ANESTESIOLOGISTA">ANESTESIOLOGISTA</option>
+  <option value="OBSTETRA">OBSTETRA</option>
+  <option value="NUTROLOGO">NUTROLOGO</option>
+  <option value="NEFROLOGISTA">NEFROLOGISTA</option>
+  <option value="PNEUMOLOGISTA">PNEUMOLOGISTA</option>
+  <option value="REUMATOLOGISTA">REUMATOLOGISTA</option>
+  <option value="HEMATOLOGISTA">HEMATOLOGISTA</option>
+  <option value="INFECTOLOGISTA">INFECTOLOGISTA</option>
+  <option value="OUTRAS">OUTRAS</option>
+</select>
 
   <select
-    value={qCrmUf}
-    onChange={(e) => setQCrmUf(e.target.value)}
+    value={qUf}
+    onChange={(e) => setQUf(e.target.value)}
     style={{
       padding: 10,
       borderRadius: 8,
@@ -175,7 +213,7 @@ const { data, error } = await query.limit(50);
           disabled={loading}
           style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid #111", background: "#111", color: "white" }}
         >
-          {loading ? "Buscando..." : "Buscar"}
+          {loading ? "Buscando..." : "Pesquisar"}
         </button>
 
         {msg ? (
