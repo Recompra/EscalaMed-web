@@ -267,7 +267,7 @@ const { data, error } = await query.limit(50);
                 onClick={() => addToMyList(r.id)}
                 style={{height: 40,padding: "0 12px",borderRadius: 8,whiteSpace: "nowrap"}}
               >
-                Adicionar à minha escala
+                Adicionar
               </button>
             </div>
           </div>
