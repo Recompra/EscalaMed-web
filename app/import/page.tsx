@@ -2,6 +2,12 @@
 
 import * as XLSX from "xlsx";
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type Row = Record<string, any>;
 
@@ -154,13 +160,20 @@ export default function ImportPage() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const ok = confirm(`Deseja importar a planilha "${file.name}"?`);
+    if (!ok) {
+    e.target.value = "";
+     return;
+}
 
     setLoading(true);
     setErrorMsg("");
+    setSuccessMsg("");
     setHeaders([]);
     setRows([]);
 
@@ -219,6 +232,20 @@ if (cityUfKey)
   return out;
 });
 setRows(normalized);
+const { error } = await supabase
+  .from("doctors")
+  .insert(
+  normalized.map((r) => ({
+    name: r["Nome"],
+    specialty: r["Especialidade"],
+    state: r["UF"],
+    city: r["Cidade"],
+  }))
+);
+
+if (error) throw error;
+
+setSuccessMsg("Planilha importada com sucesso.");
 
     } catch (err: any) {
       setErrorMsg(err?.message || "Erro ao ler a planilha.");
@@ -254,14 +281,14 @@ setRows(normalized);
     }}
     >
       <div style={{ marginTop: 16 }}>
-  <input
-    id="fileUpload"
-    type="file"
-    accept=".xlsx"
-    onChange={handleFile}
-    style={{ display: "none" }}
-  />
 
+<input
+  id="fileUpload"
+  type="file"
+  accept=".xlsx,.xls"
+  onChange={handleFile}
+  style={{ display: "none" }}
+/>
   <label
     htmlFor="fileUpload"
     style={{
