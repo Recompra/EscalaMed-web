@@ -400,11 +400,7 @@ if (dupOtherUFErr) {
 
     // ===== MODO EDIÇÃO =====
 if (editId) {
-  const updatePayload = { ...payload };
-  delete updatePayload.tenant_id; // não alterar proprietário na edição
-  delete updatePayload.is_active; // não alterar status na edição
-  updatePayload.weekday = weekday || null;
-  updatePayload.period = period || null;
+  const { tenant_id, is_active, ...updatePayload } = payload;
 
   const { error: updErr } = await supabase
     .from("doctors")
