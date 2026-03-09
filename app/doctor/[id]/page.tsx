@@ -6,15 +6,13 @@ import { useParams } from "next/navigation";
 
 type Doctor = {
   doctor_key: string;
-  name: string;
+  name: string | null;
   specialty: string | null;
   phone: string | null;
   clinic: string | null;
   address: string | null;
   city: string | null;
   uf: string | null;
-  crm: string | null;
-  crm_uf: string | null;
 };
 
 export default function DoctorPage() {
@@ -27,15 +25,18 @@ export default function DoctorPage() {
 
   useEffect(() => {
     async function loadDoctor() {
-      if (!id) return;
+      if (!id) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("doctors_directory")
-        .select("doctor_key,name,specialty,phone,clinic,address,city,uf,crm,crm_uf")
-        .eq("id", id)
+        .select("doctor_key,name,specialty,phone,clinic,address,city,uf")
+        .eq("doctor_key", id)
         .single();
 
-      setData(data as Doctor | null);
+      setData((data as Doctor) ?? null);
       setError(error);
       setLoading(false);
     }
@@ -43,9 +44,9 @@ export default function DoctorPage() {
     loadDoctor();
   }, [id]);
 
-if (loading) {
-  return <div style={{ padding: 40 }}>Carregando...</div>;
-}
+  if (loading) {
+    return <div style={{ padding: 40 }}>Carregando...</div>;
+  }
 
   if (error || !data) {
     return (
@@ -57,7 +58,7 @@ if (loading) {
     );
   }
 
-  const d = data as Doctor;
+  const d = data;
 
   return (
     <div style={{ padding: 40, maxWidth: 900 }}>
@@ -66,10 +67,6 @@ if (loading) {
       <div style={{ opacity: 0.85, marginBottom: 12 }}>
         {(d.specialty ?? "-").toUpperCase()}
         {d.phone ? ` • ${d.phone}` : ""}
-      </div>
-
-      <div style={{ marginBottom: 10, opacity: 0.9 }}>
-        <strong>CRM:</strong> {d.crm ?? "-"} / {(d.crm_uf ?? "-").toUpperCase()}
       </div>
 
       <div style={{ opacity: 0.9, lineHeight: 1.6 }}>
