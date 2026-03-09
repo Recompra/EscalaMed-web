@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient";
 
 type Row = {
-  id: string;
+  doctor_key: string;
   name: string;
   specialty: string;
   phone: string;
@@ -65,7 +65,7 @@ if (qCrm.trim().length >= 1) {
 }
 
 if (qUf.trim().length >= 2) {
-  query = query.eq("crm_uf", qUf.trim().toUpperCase());
+  query = query.eq("uf", qUf.trim().toUpperCase());
 }
 
 const { data, error } = await query.limit(50);
@@ -229,8 +229,8 @@ const { data, error } = await query.limit(50);
       <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
         {rows.map((r) => (
   <div
-    key={r.id}
-    onClick={(e) => {if ((e.target as HTMLElement).tagName !== "BUTTON") {router.push(`/doctor/${r.id}`) }
+    key={r.doctor_key}
+    onClick={(e) => {if ((e.target as HTMLElement).tagName !== "BUTTON") {router.push(`/doctor/${r.doctor_key}`) }
      }}
     style={{
       border: "1px solid #e5e7eb",
@@ -269,7 +269,7 @@ const { data, error } = await query.limit(50);
                 type="button"
                 onClick={(e) => {e.stopPropagation();const ok = window.confirm("Deseja adicionar este médico à sua escala?");
                if (!ok) return;
-               addToMyList(r.id);
+               addToMyList(r.doctor_key);
                }}
                 style={{ height: 40,padding: "0 14px",borderRadius: 12,border: "1px solid #d1d5db",background: "#ffffff",boxShadow: "0 2px 8px rgba(0,0,0,0.10)",fontWeight: 700,whiteSpace: "nowrap",cursor: "pointer"}}
               >
