@@ -37,7 +37,7 @@ export default function DoctorPage() {
       const { data, error } = await supabase
         .from("doctors_directory")
         .select("doctor_key,name,specialty,phone,clinic,address,city,uf,crm,crm_uf")
-        .eq("doctor_key", id)
+        .eq("id", id)
         .single();
 
       setData(data as Doctor | null);
@@ -47,6 +47,10 @@ export default function DoctorPage() {
 
     loadDoctor();
   }, [id]);
+
+if (loading) {
+  return <div style={{ padding: 40 }}>Carregando...</div>;
+}
 
   if (error || !data) {
     return (
