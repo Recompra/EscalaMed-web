@@ -7,16 +7,14 @@ import { supabase } from "@/lib/supabaseClient";
 type Row = {
   doctor_key: string;
   name: string;
-  specialty: string;
-  phone: string;
+  specialty: string | null;
+  phone: string | null;
   clinic: string | null;
-  address: string;
-  city: string;
-  uf: string;
-
-  crm: string | null;
-  crm_uf: string | null;
+  address: string | null;
+  city: string | null;
+  uf: string | null;
 };
+
 const UF_LIST = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
   "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
@@ -50,7 +48,7 @@ export default function PremiumPage() {
 
     let query = supabase
   .from("doctors_directory")
-  .select("*");
+  .select("doctor_key,name,specialty,phone,clinic,address,city,uf");
 
 if (qName.trim().length >= 2) {
   query = query.ilike("name", `%${qName.trim()}%`);
@@ -74,7 +72,7 @@ const { data, error } = await query.limit(50);
 
     if (error) {
       console.log(error);
-      setMsg("Erro ao buscar no diretório.");
+      setMsg((error as any)?.message ?? "Erro ao buscar no diretório.");
       setRows([]);
       return;
     }
@@ -254,9 +252,6 @@ const { data, error } = await query.limit(50);
                 <div style={{ opacity: 0.85 }}>
                   {r.specialty} • {r.phone}
                 </div>
-                <div style={{ opacity: 0.85 }}>
-                 CRM: {r.crm ?? "-"} / {r.crm_uf ?? "-"}
-                 </div>
                 <div style={{ opacity: 0.85 }}>
                 {r.clinic ? `${r.clinic} • ` : ""}{r.address}
                 </div>
