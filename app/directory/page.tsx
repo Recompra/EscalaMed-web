@@ -121,7 +121,7 @@ const { data, error } = await query.limit(50);
       <h2 style={{ marginBottom: 6, textAlign: "center", color: "#15803d" }}>Buscar Médico
 </h2>
       <p style={{ marginTop: 0, opacity: 0.8, textAlign: "center" }}>
-  diretório
+  Diretório
 </p>
 
       <div
@@ -228,8 +228,10 @@ const { data, error } = await query.limit(50);
         {rows.map((r) => (
   <div
     key={r.doctor_key}
-    onClick={(e) => {if ((e.target as HTMLElement).tagName !== "BUTTON") {router.push(`/doctor/${r.doctor_key}`) }
-     }}
+    onClick={(e) => {
+  if ((e.target as HTMLElement).tagName !== "BUTTON") {
+    router.push(`/doctor/${r.doctor_key}`);}
+}}
     style={{
       border: "1px solid #e5e7eb",
       borderRadius: 12,
