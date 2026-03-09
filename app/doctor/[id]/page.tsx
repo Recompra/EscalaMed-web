@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 import { useParams } from "next/navigation";
 
 type Doctor = {
@@ -16,11 +16,6 @@ type Doctor = {
   crm: string | null;
   crm_uf: string | null;
 };
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function DoctorPage() {
   const params = useParams();
