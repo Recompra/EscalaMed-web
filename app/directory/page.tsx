@@ -248,7 +248,10 @@ const { data, error } = await query.limit(50);
   >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
               <div>
-                <div style={{ fontWeight: 800 }}>{r.name}</div>
+                <div
+              onClick={() => router.push(`/doctor/${r.doctor_key}`)}
+               style={{ fontWeight: 800, cursor: "pointer", textDecoration: "underline" }}>{r.name}
+                     </div>
                 <div style={{ opacity: 0.85 }}>
                   {r.specialty} • {r.phone}
                 </div>
