@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useParams } from "next/navigation";
 
 type Doctor = {
-  id: string;
+  doctor_key: string;
   name: string;
   specialty: string | null;
   phone: string | null;
@@ -21,15 +22,31 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default async function DoctorPage() {
+export default function DoctorPage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const { data, error } = await supabase
-    .from("doctors_directory")
-    .select("id,name,specialty,phone,clinic,address,city,uf,crm,crm_uf")
-    .eq("doctor_key", id)
-    .single();
+  const [data, setData] = useState<Doctor | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadDoctor() {
+      if (!id) return;
+
+      const { data, error } = await supabase
+        .from("doctors_directory")
+        .select("doctor_key,name,specialty,phone,clinic,address,city,uf,crm,crm_uf")
+        .eq("doctor_key", id)
+        .single();
+
+      setData(data as Doctor | null);
+      setError(error);
+      setLoading(false);
+    }
+
+    loadDoctor();
+  }, [id]);
 
   if (error || !data) {
     return (
@@ -70,7 +87,7 @@ export default async function DoctorPage() {
       </div>
 
       <div style={{ marginTop: 18, opacity: 0.6, fontSize: 12 }}>
-        ID: {d.id}
+        ID: {d.doctor_key}
       </div>
     </div>
   );

@@ -251,7 +251,8 @@ const { data, error } = await query.limit(50);
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
               <div>
                 <div
-              onClick={() => router.push(`/doctor/${r.doctor_key}`)}
+              onClick={(e) => {e.stopPropagation();window.location.href = `/doctor/${r.doctor_key}`;
+                              }}
                style={{ fontWeight: 800, cursor: "pointer", textDecoration: "underline" }}>{r.name}
                      </div>
                 <div style={{ opacity: 0.85 }}>
