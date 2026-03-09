@@ -32,7 +32,7 @@ export default function DoctorPage() {
 
       const { data, error } = await supabase
         .from("doctors_directory")
-        .select("doctor_key,name,specialty,phone,clinic,address,city,uf")
+        .select("doctor_key,name,crm,crm_uf,phone,city,uf,specialty,clinic,address,days_of_week,secretary_name,secretary_phone,notes")
         .eq("doctor_key", id)
         .single();
 
