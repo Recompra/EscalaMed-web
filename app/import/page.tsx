@@ -155,6 +155,48 @@ function findAddressKey(rawHeaders: string[]) {
   return null;
 }
 
+function findCrmKey(rawHeaders: string[]) {
+  const candidates = [
+    "crm",
+    "crm medico",
+    "crm_medico",
+    "crm do medico",
+    "registro",
+    "registro medico",
+    "registro_medico",
+    "numero crm",
+    "número crm",
+    "crm numero",
+    "crm número",
+    "doc",
+    "documento",
+    "conselho",
+    "licencas ativas",
+    "licenças ativas",
+    "licenca ativa",
+    "licença ativa",
+  ].map(normalizeKey);
+
+  const normHeaders = rawHeaders.map((h) => normalizeKey(h || ""));
+  for (let i = 0; i < normHeaders.length; i++) {
+    if (candidates.includes(normHeaders[i])) return rawHeaders[i];
+  }
+  return null;
+}
+
+function parseCrm(raw: string | number | null | undefined, fallbackUf = "") {
+  const value = String(raw ?? "").trim().toUpperCase();
+
+  const ufMatch = value.match(/^[A-Z]{2}/);
+  const onlyDigits = value.replace(/\D/g, "");
+  const crm = onlyDigits.slice(-6).padStart(6, "0");
+
+  return {
+    crm,
+    crm_uf: ufMatch ? ufMatch[0] : fallbackUf,
+  };
+}
+
 export default function ImportPage() {
   const [loading, setLoading] = useState(false);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -216,6 +258,7 @@ const specialtyKey = findSpecialtyKey(rawHeaders);
 const nameKey = findNameKey(rawHeaders);
 const cityKey = findCityKey(rawHeaders);
 const addressKey = findAddressKey(rawHeaders);
+const crmKey = findCrmKey(rawHeaders);
 
 const normalized = limited.map((row) => {
   const out: Row = { ...row };
@@ -228,6 +271,12 @@ if (specialtyKey)
 
 if (cityUfKey)
   out["UF Cidade"] = String(row[cityUfKey] ?? "").trim().toUpperCase();
+
+if (crmKey) {
+  const parsedCrm = parseCrm(row[crmKey], cityUfKey ? String(row[cityUfKey] ?? "").trim().toUpperCase() : "");
+  out["CRM"] = parsedCrm.crm;
+  out["CRM_UF"] = parsedCrm.crm_uf;
+}
 
   return out;
 });
@@ -254,8 +303,8 @@ const { error } = await supabase
       secretary_name: "",
       secretary_phone: "",
       notes: "",
-      crm: "",
-      crm_uf: "",
+      crm: String(r["CRM"] ?? "").trim(),
+      crm_uf: String(r["CRM_UF"] ?? "").trim().toUpperCase(),
       tenant_id: user.id,
       is_active: true,
     }))
