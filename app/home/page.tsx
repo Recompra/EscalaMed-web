@@ -26,9 +26,6 @@ const WEEKDAYS: Weekday[] = [
   "Sexta",
 ];
 
-
-
-// ===== MOCK (depois trocamos por Supabase) =====
 type Doctor = {
   id: string;
   name: string;
@@ -51,26 +48,70 @@ export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [visitRequestsCount, setVisitRequestsCount] = useState(0);
 
-  // reusable button styles (matches styles used in /my page)
+  // ── ALTERADO: estilos visuais ──
   const btnStyle: React.CSSProperties = {
     width: "100%",
-    height: 40,
+    height: 36,
     padding: "0 14px",
-    borderRadius: 10,
-    border: "1px solid #ddd",
+    borderRadius: 8,
+    border: "1.5px solid rgba(13,17,23,0.12)",
     cursor: "pointer",
+    background: "#fff",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#0D1117",
   };
 
   const deleteBtnStyle: React.CSSProperties = {
     ...btnStyle,
-    background: "#b91c1c",
-    color: "white",
-    marginTop: 8,
+    background: "#FFF0EE",
+    border: "1.5px solid rgba(192,57,43,0.20)",
+    color: "#C0392B",
+    marginTop: 6,
+  };
+
+  const selectStyle: React.CSSProperties = {
+    padding: "9px 12px",
+    borderRadius: 8,
+    border: "1.5px solid rgba(13,17,23,0.10)",
+    fontSize: 13,
+    outline: "none",
+    fontFamily: "'DM Sans', sans-serif",
+    background: "#fff",
+    color: "#0D1117",
+    width: "100%",
+  };
+
+  const filterLabelStyle: React.CSSProperties = {
+    display: "grid",
+    gap: 6,
+    padding: 12,
+    border: "1px solid rgba(13,17,23,0.08)",
+    borderRadius: 12,
+    background: "#fff",
+  };
+
+  const filterSpanStyle: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: "0.10em",
+    textTransform: "uppercase",
+    color: "#8A9BB0",
+  };
+
+  const menuItemStyle: React.CSSProperties = {
+    padding: "13px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(13,17,23,0.08)",
+    textDecoration: "none",
+    color: "#0D1117",
+    fontWeight: 600,
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
   };
 
   async function handleDelete(doctorId: string) {
-
-    // obter usuário autenticado (padrão usado em outras páginas)
     const { data: authData } = await supabase.auth.getUser();
     const user = authData?.user;
 
@@ -79,7 +120,6 @@ export default function Page() {
       return;
     }
 
-    // deletar apenas a relação do usuário com o médico
     const { data, error } = await supabase
     .from("user_doctors")
     .delete()
@@ -94,7 +134,6 @@ export default function Page() {
       return;
     }
 
-    // atualiza estado local para remover o cartão imediatamente
     setDoctors((prev) => prev.filter((d) => d.id !== doctorId));
   }
 
@@ -118,7 +157,6 @@ useEffect(() => {
 const weekdayLabel = weekday;
   const run = async () => {
     setErrorMsg("");
-    // 0) pegar usuário logado
 const { data: authData, error: authError } = await supabase.auth.getUser();
 const user = authData?.user;
 
@@ -129,7 +167,6 @@ if (authError || !user) {
   return;
 }
 
-// 0.1) buscar IDs da MINHA LISTA
 const { data: myLinks, error: myError } = await supabase
   .from("user_doctors")
   .select("doctor_id")
@@ -144,7 +181,7 @@ if (myError) {
 }
 
 const myDoctorIds = (myLinks ?? []).map((x: any) => x.doctor_id);
-    // 1) Buscar disponibilidades (dia + período)
+
 const { data: availability, error: availError } = await supabase
   .from("doctor_availability")
   .select("doctor_id")
@@ -161,14 +198,12 @@ if (availError) {
 const availabilityIds = availability?.map((a) => a.doctor_id) ?? [];
 const doctorIds = availabilityIds;
 
-
 if (doctorIds.length === 0) {
   setDoctors([]);
   setLoading(false);
   return;
 }
 
-// 2) Buscar médicos da cidade/UF filtrados pelos IDs
 const { data, error } = await supabase
   .from("doctors")
   .select("*")
@@ -187,7 +222,6 @@ const { data, error } = await supabase
 
  const rows = data ?? [];
 
-// dedupe por id
 const unique = Array.from(
   new Map(rows.map((d: any) => [d.id, d])).values()
 );
@@ -209,308 +243,339 @@ setLoading(false);
     () => `${uf} · ${city} · ${weekday} · ${period}`,
     [uf, city, weekday, period]
   );
-  
-  const menuItemStyle: React.CSSProperties = {
-  padding: "12px 12px",
-  borderRadius: 12,
-  border: "1px solid #eee",
-  textDecoration: "none",
-  color: "#111827",
-  fontWeight: 600,
-};
 
   return (
-  <main className="p-6 max-w-[920px] mx-auto">
-    {/* MENU (drawer) */}
-{menuOpen && (
-  <div
-    onClick={() => setMenuOpen(false)}
-    style={{
-      position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,0.35)",
-      zIndex: 50,
-    }}
-  >
-    <div
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        width: 300,
-        maxWidth: "85vw",
-        height: "100%",
-        background: "#fff",
-        padding: 16,
-        boxShadow: "2px 0 12px rgba(0,0,0,0.15)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontWeight: 800, fontSize: 18 }}>Menu</div>
-        <button
-          type="button"
-          aria-label="Fechar menu"
+    // ── ALTERADO: background e fonte ──
+    <main style={{
+      minHeight: "100vh",
+      background: "#F5F3EE",
+      fontFamily: "'DM Sans', sans-serif",
+      padding: "24px",
+      maxWidth: 920,
+      margin: "0 auto",
+    }}>
+
+      {/* MENU DRAWER */}
+      {menuOpen && (
+        <div
           onClick={() => setMenuOpen(false)}
           style={{
-            height: 36,
-            width: 36,
-            borderRadius: 10,
-            border: "1px solid #e5e7eb",
-            background: "#fff",
-            cursor: "pointer",
+            position: "fixed",
+            inset: 0,
+            background: "rgba(13,17,23,0.45)",
+            zIndex: 50,
           }}
         >
-          ✕
-        </button>
-      </div>
-
-      <div style={{ height: 1, background: "#eee", margin: "6px 0" }} />
-
-  <a href="/medicos" style={menuItemStyle}>
-  Médicos cadastrados ({doctors.length})
-</a>
-
-<a href="/import" style={menuItemStyle}>
-  Importar escala (Excel)
-</a>
-
-<a href="/directory" style={menuItemStyle}>
-  Buscar médico (diretório)
-</a>
-
-<a style={menuItemStyle}>
-  Médico solicitou visita
-</a>
-
-<a style={menuItemStyle}>
-  Plano Premium
-</a>
-
-<hr style={{ height: 1, background: "#eee", margin: "6px 0" }} />
-
-<a style={menuItemStyle}>
-  Minha conta
-</a>
-
-<a style={menuItemStyle}>
-  Suporte / Feedback
-</a>
-
-<hr style={{ height: 1, background: "#eee", margin: "6px 0" }} />
-
-      <div style={{ flex: 1 }} />
-
-      <a href="/login" style={{ ...menuItemStyle, color: "#b91c1c" }}>Sair</a>
-    </div>
-  </div>
-)}
-
-{/* estilos simples do item */}
-{/*
-  NÃO mover isso de lugar. Fica dentro do componente.
-*/}
-
-  {/* TOP BAR */}
-<div className="mb-6 flex items-center justify-between">
-  {/* Menu */}
-  <button
-    type="button"
-    aria-label="Abrir menu"
-    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-900"
-    onClick={() => setMenuOpen(true)}
-  >
-    ☰
-  </button>
-
-  {/* Título central */}
-  <div className="text-2xl font-bold text-gray-900">
-    EscalaMed
-  </div>
-
-  {/* Novo médico */}
-  <a
-    href="/admin"
-    aria-label="Novo cadastro"
-    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-900"
-  >
-    +
-  </a>
-</div>
-
-<p className="mb-6 text-gray-600">
-  Médicos disponíveis por região e período
-</p>
-  
-      {/* FILTROS */}
-<div
-  style={{
-    display: "grid",
-    gap: 16,
-    marginTop: 16,
-  }}
->
-
-  {/* LINHA 1 */}
-<div
-  style={{
-    display: "grid",
-    gap: 16,
-    padding: 20,
-    border: "1px solid #eee",
-    borderRadius: 16,
-    background: "#fff",
-  }}
->
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-    <label
-      style={{
-        display: "grid",
-        gap: 6,
-        padding: 12,
-        border: "1px solid #eee",
-        borderRadius: 12,
-        background: "#fff",
-      }}
-    >
-      <span style={{ fontSize: 12, color: "#666" }}>UF</span>
-      <select
-        value={uf}
-        onChange={(e) => onChangeUF(e.target.value as typeof UFS[number])}
-        style={{
-          padding: "8px 10px",
-          borderRadius: 8,
-          border: "1px solid #ddd",
-          fontSize: 14,
-          outline: "none",
-        }}
-      >
-        {UFS.map((u) => (
-          <option key={u} value={u}>
-            {u}
-          </option>
-        ))}
-      </select>
-    </label>
-
-    <label
-      style={{
-        display: "grid",
-        gap: 6,
-        padding: 12,
-        border: "1px solid #eee",
-        borderRadius: 12,
-        background: "#fff",
-      }}
-    >
-      <span style={{ fontSize: 12, color: "#666" }}>Cidade</span>
-      <select
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
-        style={{
-          padding: "8px 10px",
-          borderRadius: 8,
-          border: "1px solid #ddd",
-          fontSize: 14,
-          outline: "none",
-        }}
-      >
-        {cities.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-    </label>
-  </div>
-</div>
-
-{/* LINHA 2 */}
-<div
-  style={{
-    display: "grid",
-    gap: 16,
-    padding: 20,
-    border: "1px solid #eee",
-    borderRadius: 16,
-    background: "#fff",
-  }}
->
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-    <label
-      style={{
-        display: "grid",
-        gap: 6,
-        padding: 12,
-        border: "1px solid #eee",
-        borderRadius: 12,
-        background: "#fff",
-      }}
-    >
-      <span style={{ fontSize: 12, color: "#666" }}>Dia da semana</span>
-      <select
-        value={weekday}
-        onChange={(e) => setWeekday(e.target.value as Weekday)}
-        style={{
-          padding: "8px 10px",
-          borderRadius: 8,
-          border: "1px solid #ddd",
-          fontSize: 14,
-          outline: "none",
-        }}
-      >
-        {WEEKDAYS.map((d) => (
-          <option key={d} value={d}>
-            {d}
-          </option>
-        ))}
-      </select>
-    </label>
-
-    <label
-      style={{
-        display: "grid",
-        gap: 6,
-        padding: 12,
-        border: "1px solid #eee",
-        borderRadius: 12,
-        background: "#fff",
-      }}
-    >
-      <span style={{ fontSize: 12, color: "#666" }}>Período</span>
-      <select
-        value={period}
-        onChange={(e) => setPeriod(e.target.value as Period)}
-        style={{
-          padding: "8px 10px",
-          borderRadius: 8,
-          border: "1px solid #ddd",
-          fontSize: 14,
-          outline: "none",
-        }}
-      >
-        <option value="Manhã">Manhã</option>
-        <option value="Tarde">Tarde</option>
-      </select>
-    </label>
-  </div>
-</div>
-   </div>
-      {/* RESULTADO */}
-      <div style={{marginTop: 18,border: "1px solid #ccc",borderRadius: 8,padding: "12px 16px",background: "#fff", }}
->     • {title}
-</div>
-
-      <section style={{ marginTop: 12 }}>
-        {doctors.length === 0 ? (
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
-              padding: 12,
-              border: "1px solid #ffd7d7",
-              background: "#fff5f5",
-              borderRadius: 10,
+              width: 300,
+              maxWidth: "85vw",
+              height: "100%",
+              // ── ALTERADO: menu escuro ──
+              background: "#0D1117",
+              padding: 16,
+              boxShadow: "4px 0 24px rgba(0,0,0,0.25)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
             }}
           >
+            {/* Header do menu */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+              <div>
+                <div style={{
+                  fontFamily: "'Syne', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 20,
+                  color: "#fff",
+                }}>
+                  Escala<span style={{ color: "#2A8F62" }}>Med</span>
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2 }}>
+                  propagandista
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="Fechar menu"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  height: 30, width: 30,
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.6)",
+                  cursor: "pointer",
+                  fontSize: 13,
+                }}
+              >✕</button>
+            </div>
+
+            <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "8px 0" }} />
+
+            {/* Itens do menu */}
+            {[
+              { href: "/medicos", icon: "👥", label: "Médicos cadastrados", badge: String(doctors.length) },
+              { href: "/import",  icon: "⬆️", label: "Importar escala (Excel)" },
+              { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PAGO" },
+              { href: undefined,  icon: "📨", label: "Médico solicitou visita" },
+              { href: undefined,  icon: "⭐", label: "Plano Premium" },
+            ].map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                style={{
+                  padding: "12px 12px",
+                  borderRadius: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  textDecoration: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: "rgba(255,255,255,0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 15, flexShrink: 0,
+                }}>{item.icon}</div>
+                <span style={{
+                  flex: 1,
+                  fontFamily: "'Syne', sans-serif",
+                  fontSize: 13, fontWeight: 600,
+                  color: "rgba(255,255,255,0.88)",
+                }}>{item.label}</span>
+                {item.badge && (
+                  <span style={{
+                    background: item.badge === "PAGO" ? "rgba(212,130,10,0.25)" : "#1A6B4A",
+                    color: item.badge === "PAGO" ? "#D4820A" : "#fff",
+                    fontSize: 10, fontWeight: 700,
+                    fontFamily: "'Syne', sans-serif",
+                    padding: "2px 8px", borderRadius: 100,
+                  }}>{item.badge}</span>
+                )}
+              </a>
+            ))}
+
+            <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "8px 0" }} />
+
+            {[
+              { icon: "⚙️", label: "Minha conta" },
+              { icon: "💬", label: "Suporte / Feedback" },
+            ].map((item) => (
+              <a key={item.label} style={{
+                padding: "12px 12px", borderRadius: 10,
+                display: "flex", alignItems: "center", gap: 12,
+                textDecoration: "none", cursor: "pointer",
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: "rgba(255,255,255,0.06)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 15,
+                }}>{item.icon}</div>
+                <span style={{
+                  fontFamily: "'Syne', sans-serif",
+                  fontSize: 13, fontWeight: 600,
+                  color: "rgba(255,255,255,0.88)",
+                }}>{item.label}</span>
+              </a>
+            ))}
+
+            <div style={{ flex: 1 }} />
+
+            <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "8px 0" }} />
+
+            <a href="/login" style={{
+              padding: "12px 12px", borderRadius: 10,
+              display: "flex", alignItems: "center", gap: 12,
+              textDecoration: "none", cursor: "pointer",
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: "rgba(192,57,43,0.18)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 15,
+              }}>🚪</div>
+              <span style={{
+                fontFamily: "'Syne', sans-serif",
+                fontSize: 13, fontWeight: 600, color: "#E57367",
+              }}>Sair</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* TOP BAR */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 24,
+      }}>
+        <button
+          type="button"
+          aria-label="Abrir menu"
+          onClick={() => setMenuOpen(true)}
+          style={{
+            height: 38, width: 38,
+            borderRadius: 10,
+            border: "1.5px solid rgba(13,17,23,0.10)",
+            background: "#fff",
+            cursor: "pointer",
+            fontSize: 16,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 1px 3px rgba(13,17,23,0.06)",
+          }}
+        >☰</button>
+
+        {/* ── ALTERADO: título com fonte Syne ── */}
+        <div style={{
+          fontFamily: "'Syne', sans-serif",
+          fontWeight: 800,
+          fontSize: 20,
+          color: "#0D1117",
+          display: "flex", alignItems: "center", gap: 7,
+        }}>
+          <span style={{
+            width: 8, height: 8,
+            background: "#1A6B4A",
+            borderRadius: "50%",
+            display: "inline-block",
+          }} />
+          EscalaMed
+        </div>
+
+        <a
+          href="/admin"
+          aria-label="Novo cadastro"
+          style={{
+            height: 38, width: 38,
+            borderRadius: "50%",
+            border: "none",
+            background: "#1A6B4A",
+            color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 20,
+            textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(26,107,74,0.35)",
+          }}
+        >+</a>
+      </div>
+
+      {/* SUBTÍTULO */}
+      <p style={{
+        marginBottom: 20,
+        fontSize: 13,
+        color: "#8A9BB0",
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        Médicos disponíveis por região e período
+      </p>
+
+      {/* FILTROS */}
+      <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
+
+        {/* Linha 1: UF + Cidade */}
+        <div style={{
+          display: "grid",
+          gap: 12,
+          padding: 16,
+          border: "1px solid rgba(13,17,23,0.08)",
+          borderRadius: 16,
+          background: "#fff",
+          boxShadow: "0 1px 3px rgba(13,17,23,0.05)",
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <label style={filterLabelStyle}>
+              <span style={filterSpanStyle}>UF</span>
+              <select
+                value={uf}
+                onChange={(e) => onChangeUF(e.target.value as typeof UFS[number])}
+                style={selectStyle}
+              >
+                {UFS.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </label>
+
+            <label style={filterLabelStyle}>
+              <span style={filterSpanStyle}>Cidade</span>
+              <select
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                style={selectStyle}
+              >
+                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        {/* Linha 2: Dia + Período */}
+        <div style={{
+          display: "grid",
+          gap: 12,
+          padding: 16,
+          border: "1px solid rgba(13,17,23,0.08)",
+          borderRadius: 16,
+          background: "#fff",
+          boxShadow: "0 1px 3px rgba(13,17,23,0.05)",
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <label style={filterLabelStyle}>
+              <span style={filterSpanStyle}>Dia da semana</span>
+              <select
+                value={weekday}
+                onChange={(e) => setWeekday(e.target.value as Weekday)}
+                style={selectStyle}
+              >
+                {WEEKDAYS.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </label>
+
+            <label style={filterLabelStyle}>
+              <span style={filterSpanStyle}>Período</span>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as Period)}
+                style={selectStyle}
+              >
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* RESULTADO ATIVO */}
+      <div style={{
+        marginTop: 16,
+        border: "1px solid rgba(13,17,23,0.08)",
+        borderRadius: 10,
+        padding: "11px 16px",
+        background: "#fff",
+        fontSize: 13,
+        color: "#4A5568",
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        • {title}
+      </div>
+
+      {/* CARDS */}
+      <section style={{ marginTop: 12 }}>
+        {doctors.length === 0 ? (
+          <div style={{
+            padding: "14px 16px",
+            border: "1.5px solid rgba(212,130,10,0.25)",
+            background: "#FFF3DC",
+            borderRadius: 12,
+            fontSize: 13,
+            color: "#7A4A00",
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
             Nenhum médico encontrado para esse filtro.
           </div>
         ) : (
@@ -519,33 +584,49 @@ setLoading(false);
               <div
                 key={d.id}
                 style={{
-                  padding: 14,
-                  border: "1px solid #e6e6e6",
-                  borderRadius: 12,
+                  padding: 16,
+                  // ── ALTERADO: card com borda esquerda verde ──
+                  border: "1px solid rgba(13,17,23,0.08)",
+                  borderRadius: 14,
                   background: "#fff",
                   display: "flex",
                   justifyContent: "space-between",
                   gap: 12,
                   alignItems: "center",
+                  boxShadow: "0 1px 4px rgba(13,17,23,0.06)",
+                  borderLeft: "3px solid #1A6B4A",
                 }}
               >
-                <div style={{ display: "grid", gap: 6 }}>
-                  <strong style={{ fontSize: 16 }}>{d.name}</strong>
+                <div style={{ display: "grid", gap: 5 }}>
+                  {/* ── ALTERADO: nome com Syne ── */}
+                  <strong style={{
+                    fontSize: 13,
+                    fontFamily: "'Syne', sans-serif",
+                    fontWeight: 700,
+                    color: "#0D1117",
+                  }}>{d.name}</strong>
 
-                  <div style={{ fontSize: 12, color: "#666" }}>
+                  <div style={{ fontSize: 12, color: "#8A9BB0" }}>
                     {d.specialty} · {d.phone}
                   </div>
 
-                  <div style={{ fontSize: 12, color: "#666" }}>
+                  <div style={{ fontSize: 12, color: "#8A9BB0" }}>
                     {d.clinic} — {d.address}
                   </div>
 
-                  <div style={{ fontSize: 12, color: "#888" }}>
-                    {uf} · {city} · {weekday} · {period}
+                  <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                    {[uf, city, weekday, period].map((tag) => (
+                      <span key={tag} style={{
+                        fontSize: 10, fontWeight: 600,
+                        padding: "3px 8px", borderRadius: 100,
+                        background: "#F5F3EE", color: "#4A5568",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}>{tag}</span>
+                    ))}
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                   <button
                     onClick={() => router.push(`/admin?id=${d.id}`)}
                     style={btnStyle}
@@ -566,7 +647,7 @@ setLoading(false);
         )}
       </section>
 
-      <footer style={{ marginTop: 28, fontSize: 12, color: "#888" }}>
+      <footer style={{ marginTop: 28, fontSize: 11, color: "#8A9BB0" }}>
         *Dados vindos do Supabase.
       </footer>
     </main>
