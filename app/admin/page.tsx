@@ -57,7 +57,19 @@ function AdminContent() {
   const router = useRouter();
   
   console.log("ADMIN PAGE OK - ACCORDION TEST");
-  const inputStyle = {padding: 10,borderRadius: 8,border: "1px solid #ddd",fontSize: 14,};
+
+  // ── ÚNICO TRECHO ALTERADO: inputStyle ──
+  const inputStyle = {
+    padding: "11px 14px",
+    borderRadius: 10,
+    border: "1.5px solid rgba(13,17,23,0.10)",
+    fontSize: 13,
+    fontFamily: "'DM Sans', sans-serif",
+    background: "#FFFFFF",
+    color: "#0D1117",
+    outline: "none",
+  };
+
   const [name, setName] = useState("");
   const [crmUf, setCrmUf] = useState("DF");
   const [specialty, setSpecialty] = useState("");
@@ -83,7 +95,7 @@ function AdminContent() {
   const [weekday, setWeekday] = useState("");
   const [period, setPeriod] = useState("");
   function formatCRM(raw: string, ufValue: string) {
-  const digits = raw.replace(/\D/g, "").slice(0, 6); // até 6 dígitos
+  const digits = raw.replace(/\D/g, "").slice(0, 6);
   const padded = digits.padStart(6, "0");
   return `${padded}-${ufValue}`;
 }
@@ -99,7 +111,6 @@ async function loadMyDoctors() {
     return;
   }
 
-  // 1) busca os ids dos médicos linkados ao usuário
 const { data: links, error: linkErr } = await supabase
   .from("user_doctors")
   .select("doctor_id")
@@ -118,7 +129,6 @@ if (ids.length === 0) {
   return;
 }
 
-// 2) busca os médicos na tabela doctors
 const { data: docs, error: docsErr } = await supabase
   .from("doctors")
   .select("*")
@@ -133,7 +143,6 @@ if (docsErr) {
 setMyDoctors(docs ?? []);
 setLoadError(null);
 
-  // transforma para uma lista simples de doctors
   const list = (docs ?? [])
     .map((row: any) => row.doctors)
     .filter(Boolean);
@@ -206,7 +215,6 @@ useEffect(() => {
       setWeekday(data.weekday || "Segunda");
       setPeriod(data.period || "Manhã");
 
-      // carregar horários previamente selecionados
       const { data: avail, error: avErr } = await supabase
         .from("doctor_availability")
         .select("slot")
@@ -263,7 +271,6 @@ useEffect(() => {
   setMsgType(null);
 
   try {
-    // 1) Validar usuário
     const { data: authData, error: authErr } = await supabase.auth.getUser();
     const user = authData?.user;
 
@@ -273,7 +280,6 @@ useEffect(() => {
       return;
     }
 
-    // 2) Validações de campos
     if (slotsSelected.length === 0) {
       setMsg("Selecione pelo menos 1 slot.");
       setMsgType("warning");
@@ -299,12 +305,10 @@ useEffect(() => {
       return;
     }
 
-    // Normalizações (mantenha simples e consistente)
     const nameNorm = (name || "").trim().toUpperCase();
-    const phoneNorm = onlyDigits(phone); // seu input já guarda dígitos, mas garante
+    const phoneNorm = onlyDigits(phone);
     const ufNorm = uf;
 
-    // 3) Verificar se já existe (Nome + Telefone + UF) - ignore o próprio registro quando em edição
     let existingDoctorQuery = supabase
       .from("doctors")
       .select("id")
@@ -323,8 +327,6 @@ useEffect(() => {
       return;
     }
 
-    // 3A) Se já existe: só vincula ao usuário e salva horários
-    // se estamos editando, não queremos tratar o próprio registro como duplicato
     if (existingDoctor?.id && existingDoctor.id !== editId) {
       const { error: linkErr } = await supabase
         .from("user_doctors")
@@ -360,18 +362,16 @@ useEffect(() => {
       return;
     }
 
-    // 3B) Aviso: já existe em OUTRA UF (NUNCA avisar se for a mesma UF)
 const { data: dupOtherUF, error: dupOtherUFErr } = await supabase
   .from("doctors")
   .select("id, uf, state, crm_uf")
   .or(`phone.eq.${phoneNorm},name.eq.${nameNorm}`)
-  .neq("uf", ufNorm)          // se no seu banco o campo for "state", troque esta linha
+  .neq("uf", ufNorm)
   .limit(1)
   .maybeSingle();
 
 if (dupOtherUFErr) {
   console.error("Erro ao checar duplicidade (outra UF):", dupOtherUFErr);
-  // não trava o cadastro por causa do aviso
 } else if (dupOtherUF?.id) {
   const ufExistente = dupOtherUF.uf
   const ok = confirm(
@@ -384,7 +384,6 @@ if (dupOtherUFErr) {
   }
 }
 
-    // 4) Inserir novo médico
     const payload = {
       name: nameNorm,
       crm: crm || null,
@@ -392,7 +391,7 @@ if (dupOtherUFErr) {
       phone: phoneNorm,
       city: (city || "").toUpperCase(),
       uf: ufNorm,
-      state: ufNorm, // se você usa os dois no banco
+      state: ufNorm,
       specialty: (specialty || "").toUpperCase(),
       clinic: clinic ? clinic.toUpperCase() : null,
       address: (address || "").toUpperCase(),
@@ -403,7 +402,6 @@ if (dupOtherUFErr) {
       is_active: true,
     };
 
-    // ===== MODO EDIÇÃO =====
 if (editId) {
   const { tenant_id, is_active, ...updatePayload } = payload;
 
@@ -419,7 +417,6 @@ if (editId) {
     return;
   }
 
-  // se o usuário alterou os horários, podemos recadastrar a disponibilidade
   try {
     await supabase.from("doctor_availability").delete().eq("doctor_id", editId);
     if (slotsSelected.length > 0) {
@@ -443,7 +440,7 @@ if (editId) {
   setTimeout(() => {
     router.push("/home");
   }, 1500);
-  return; // IMPORTANTE: impede cair no INSERT
+  return;
 }
     const { data: newDoc, error: docErr } = await supabase
       .from("doctors")
@@ -458,7 +455,6 @@ if (editId) {
       return;
     }
 
-    // 5) Vincular ao usuário + salvar horários
     const { error: linkErr2 } = await supabase
       .from("user_doctors")
       .insert({ user_id: user.id, doctor_id: newDoc.id });
@@ -467,8 +463,6 @@ if (editId) {
       console.error("Erro ao vincular médico:", linkErr2);
       setMsg("Médico criado, mas falhou vincular ao seu perfil.");
       setMsgType("warning");
-      // continua mesmo assim para salvar horários? (opcional)
-      // return;
     }
 
     const availabilityRows = slotsSelected.map((s) => ({
@@ -487,7 +481,6 @@ if (editId) {
       return;
     }
 
-    // 6) Sucesso + limpeza
     setMsg("Cadastrado ✅");
     setMsgType("success");
 
@@ -520,357 +513,372 @@ if (editId) {
 }
 
   return (
+    // ── ALTERADO: background e fontFamily ──
     <main
       style={{
         minHeight: "100vh",
         padding: 24,
-        background:
-          "linear-gradient(0deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02))",
-      }} 
-      >
+        background: "#F5F3EE",
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      {/* ── ALTERADO: container visual ── */}
       <div
         style={{
           maxWidth: 720,
           margin: "0 auto",
-          background: "rgba(255,255,255,0.65)",
-          border: "1px solid rgba(0,0,0,0.06)",
-          borderRadius: 24,
+          background: "#FFFFFF",
+          border: "1px solid rgba(13,17,23,0.10)",
+          borderRadius: 16,
           padding: 20,
-          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-          backdropFilter: "blur(6px)",
+          boxShadow: "0 4px 16px rgba(13,17,23,0.10)",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-  <h2 style={{ margin: 0 }}>Cadastrar Médico</h2>
+          {/* ── ALTERADO: h2 ── */}
+          <h2 style={{
+            margin: 0,
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 22,
+            color: "#0D1117",
+          }}>Cadastrar Médico</h2>
 
-  <button
-    type="button"
-    onClick={() => router.push("/home")}
-    style={{
-      backgroundColor: "#111827",
-      color: "white",
-      padding: "8px 12px",
-      borderRadius: "8px",
-      border: "none",
-      cursor: "pointer",
-      fontSize: "14px",
-      fontWeight: "500",
-      transition: "all 0.3s ease",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.backgroundColor = "#0f172a";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.backgroundColor = "#111827";
-    }}
-  >
-    Voltar
-  </button>
-</div>
+          {/* ── ALTERADO: botão Voltar ── */}
+          <button
+            type="button"
+            onClick={() => router.push("/home")}
+            style={{
+              backgroundColor: "#1A6B4A",
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 12,
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#155c3e";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#1A6B4A";
+            }}
+          >
+            Voltar
+          </button>
+        </div>
 
         {/* Nome */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Nome</span>
-  <input
-    value={name}
-    onChange={(e) => setName(e.target.value.toUpperCase())}
-    placeholder="Digite o nome"
-    style={inputStyle}
-  />
-
-</label>
-<div style={{display: "grid",gridTemplateColumns:typeof window !== "undefined" && window.innerWidth >= 768 ? "1.4fr 120px 1.6fr": "1fr",gap: 12, }}
->
-
-{/* CRM */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>CRM</span>
-  <input
-    value={crm}
-   onChange={(e) => {
-  const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
-  setCrm(digits);}}
-    placeholder="000000"
-    style={inputStyle}
-  />
-
-</label>
-{/* UF CRM */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>UF</span>
-  <select value={crmUf} onChange={(e) => setCrmUf(e.target.value)} style={inputStyle}>
-    {UFS.map((u) => (
-      <option key={u} value={u}>{u}</option>
-    ))}
-  </select>
-</label>
-
-</div>
-
-{/* Telefone (por enquanto normal; máscara no passo 2) */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Telefone</span>
-  <input
-    value={formatPhoneBR(phone)}
-    onChange={(e) => setPhone(onlyDigits(e.target.value))}
-    placeholder="(62) 99999-9999"
-    style={inputStyle}
-  />
-</label>
-
-<div style={{ display: "grid", gridTemplateColumns: "2fr 120px", gap: 12, alignItems: "end" }}>
- <label style={{ display: "grid", gap: 6, position: "relative" }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Cidade</span>
-
-  <input
-    value={cityQuery}
-   onChange={(e) => {
-  const value = e.target.value.toUpperCase();
-  setCityQuery(value);
-  setCitySelected(false);
-  setCity("");
-  setCityOpen(value.length > 0);   
-}}
-
-    placeholder="Digite a cidade"
-    style={inputStyle}
-  />
-  
- </label>
-  {cityOpen && !citySelected && cityOptions.length > 0 && (
-  <div
-    style={{
-      position: "absolute",
-      top: 62,
-      left: 0,
-      right: 0,
-      background: "white",
-      border: "1px solid #ddd",
-      borderRadius: 8,
-      boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
-      maxHeight: 240,
-      overflowY: "auto",
-      zIndex: 20,
-    }}
-  >
-    {cityOptions.map((c) => (
-      <button
-        key={c}
-        type="button"
-        onClick={() => {
-  setCity(c);
-  setCityQuery(c);
-  setCitySelected(true);
-  setCityOpen(false); 
-}}
-        style={{
-          width: "100%",
-          textAlign: "left",
-          padding: "10px 12px",
-          border: "none",
-          background: "transparent",
-          cursor: "pointer",
-        }}
-      >
-        {c}
-      </button>
-    ))}
-    
-  </div>
-)}
-{/* UF (da cidade) */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>UF</span>
-  <select
-    value={uf}
-    onChange={(e) => setUf(e.target.value as (typeof UFS)[number])}
-    style={inputStyle}
-  >
-    {UFS.map((u) => (
-      <option key={u} value={u}>{u}</option>
-    ))}
-  </select>
-</label>
-
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: typeof window !== "undefined" && window.innerWidth >= 768 ? "1fr 1fr" : "1fr",
-    gap: 12,
-    width: "100%",
-  }}
->
-  {/* Especialidade */}
-  <label style={{ display: "grid", gap: 6, width: "100%", minWidth: 0 }}>
-    <span style={{ fontSize: 13, fontWeight: 700 }}>Especialidade</span>
-
-    <select
-      value={specialty}
-      onChange={(e) => setSpecialty(e.target.value)}
-      style={{ ...inputStyle, width: "100%", maxWidth: "none" }}
-    >
-      <option value="">Selecione</option>
-      {SPECIALTIES.map((s) => (
-        <option key={s} value={s}>
-          {s}
-        </option>
-      ))}
-    </select>
-  </label>
-
-  {/* Clínica */}
-  <label style={{ display: "grid", gap: 6, width: "100%", minWidth: 0 }}>
-    <span style={{ fontSize: 13, fontWeight: 700 }}>Clínica</span>
-    <input
-      value={clinic}
-      onChange={(e) => setClinic(e.target.value.toUpperCase())}
-      placeholder="Nome da clínica"
-      style={{ ...inputStyle, width: "100%", maxWidth: "none" }}
-    />
-  </label>
-</div>
-  
-
-</div>
-{/* Endereço */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Endereço</span>
-  <input
-    value={address}
-    onChange={(e) => setAddress(e.target.value.toUpperCase())}
-    placeholder="Rua, número, bairro"
-    style={inputStyle}
-  />
-</label>
-
-{/* Dias de Atendimento */}
-<div style={{ display: "grid", gap: 6, position: "relative" }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Dias de Atendimento</span>
-
-  <button
-  type="button"
-  onClick={() => setSlotsOpen((v) => !v)}
-  style={{ ...inputStyle, width: "100%", textAlign: "left", cursor: "pointer" }}
->
-  {slotsSelected.length ? slotsSelected.join(", ") : "SELECIONAR"}
-</button>
-
-{slotsOpen && (
-  <div
-    style={{
-      position: "absolute",
-      top: "100%",
-      left: 0,
-      right: 0,
-      marginTop: 6,
-      background: "white",
-      border: "1px solid #ddd",
-      borderRadius: 8,
-      boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
-      zIndex: 30,
-      padding: 8,
-      display: "grid",
-      gap: 6,
-    }}
-  >
-    {SLOTS.map((s) => {
-      const checked = slotsSelected.includes(s);
-      return (
-        <label key={s} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label style={{ display: "grid", gap: 6 }}>
+          {/* ── ALTERADO: span label ── */}
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Nome</span>
           <input
-            type="checkbox"
-            checked={checked}
-            onChange={() => {
-              setSlotsSelected((prev) =>
-                prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-              );
-            }}
+            value={name}
+            onChange={(e) => setName(e.target.value.toUpperCase())}
+            placeholder="Digite o nome"
+            style={inputStyle}
           />
-          <span>{s}</span>
         </label>
-      );
-    })}
 
-    <button
-      type="button"
-      onClick={() => setSlotsOpen(false)}
-      style={{ ...inputStyle, width: "100%", marginTop: 8 }}
-    >
-      OK
-    </button>
-  </div>
-)}
-</div>
+        <div style={{display: "grid",gridTemplateColumns:typeof window !== "undefined" && window.innerWidth >= 768 ? "1.4fr 120px 1.6fr": "1fr",gap: 12,}}>
 
-{/* Nome Secretária */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Nome Secretária</span>
-  <input
-    value={secretaryName}
-    onChange={(e) => setSecretaryName(e.target.value.toUpperCase())}
-    placeholder="Nome da secretária"
-    style={inputStyle}
-  />
-</label>
+          {/* CRM */}
+          <label style={{ display: "grid", gap: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>CRM</span>
+            <input
+              value={crm}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setCrm(digits);
+              }}
+              placeholder="000000"
+              style={inputStyle}
+            />
+          </label>
 
-{/* Telefone Secretária (máscara no passo 2 também) */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Telefone Secretária</span>
-  <input
-    value={formatPhoneBR(secretaryPhone)}
-    onChange={(e) => setSecretaryPhone(onlyDigits(e.target.value))}
-    placeholder="(00) 99999-1122"
-    style={inputStyle}
-  />
-</label>
-
-{/* Observações */}
-<label style={{ display: "grid", gap: 6 }}>
-  <span style={{ fontSize: 13, fontWeight: 700 }}>Observações</span>
-  <textarea
-    value={notes}
-    onChange={(e) => setNotes(e.target.value)}
-    placeholder="Observações (opcional)"
-    rows={3}
-    style={{ ...inputStyle, resize: "vertical" as const }}
-  />
-</label>
-
-{msg && (
-  <div
-    style={{
-      marginTop: 16,
-      padding: "10px 14px",
-      borderRadius: 6,
-      background: msgType === "success" ? "#d4edda" : "#f8d7da",
-      color: msgType === "success" ? "#155724" : "#721c24",
-      fontWeight: 600,
-    }}
-  >
-    {msg}
-  </div>
-)}
-
-<button
-  type="button"
-  onClick={onSave}
-  style={{
-    marginTop: 16,
-    padding: "10px 16px",
-    background: "#111",
-    color: "white",
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-  }}
->
-  Salvar Médico
-</button>
+          {/* UF CRM */}
+          <label style={{ display: "grid", gap: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>UF</span>
+            <select value={crmUf} onChange={(e) => setCrmUf(e.target.value)} style={inputStyle}>
+              {UFS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+          </label>
 
         </div>
-     </main>
+
+        {/* Telefone */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Telefone</span>
+          <input
+            value={formatPhoneBR(phone)}
+            onChange={(e) => setPhone(onlyDigits(e.target.value))}
+            placeholder="(62) 99999-9999"
+            style={inputStyle}
+          />
+        </label>
+
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 120px", gap: 12, alignItems: "end" }}>
+          <label style={{ display: "grid", gap: 6, position: "relative" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Cidade</span>
+            <input
+              value={cityQuery}
+              onChange={(e) => {
+                const value = e.target.value.toUpperCase();
+                setCityQuery(value);
+                setCitySelected(false);
+                setCity("");
+                setCityOpen(value.length > 0);
+              }}
+              placeholder="Digite a cidade"
+              style={inputStyle}
+            />
+          </label>
+
+          {cityOpen && !citySelected && cityOptions.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: 62,
+                left: 0,
+                right: 0,
+                background: "white",
+                border: "1.5px solid rgba(13,17,23,0.10)",
+                borderRadius: 10,
+                boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
+                maxHeight: 240,
+                overflowY: "auto",
+                zIndex: 20,
+              }}
+            >
+              {cityOptions.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    setCity(c);
+                    setCityQuery(c);
+                    setCitySelected(true);
+                    setCityOpen(false);
+                  }}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "10px 12px",
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* UF da cidade */}
+          <label style={{ display: "grid", gap: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>UF</span>
+            <select
+              value={uf}
+              onChange={(e) => setUf(e.target.value as (typeof UFS)[number])}
+              style={inputStyle}
+            >
+              {UFS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+          </label>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: typeof window !== "undefined" && window.innerWidth >= 768 ? "1fr 1fr" : "1fr",
+              gap: 12,
+              width: "100%",
+            }}
+          >
+            {/* Especialidade */}
+            <label style={{ display: "grid", gap: 6, width: "100%", minWidth: 0 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Especialidade</span>
+              <select
+                value={specialty}
+                onChange={(e) => setSpecialty(e.target.value)}
+                style={{ ...inputStyle, width: "100%", maxWidth: "none" }}
+              >
+                <option value="">Selecione</option>
+                {SPECIALTIES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+
+            {/* Clínica */}
+            <label style={{ display: "grid", gap: 6, width: "100%", minWidth: 0 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Clínica</span>
+              <input
+                value={clinic}
+                onChange={(e) => setClinic(e.target.value.toUpperCase())}
+                placeholder="Nome da clínica"
+                style={{ ...inputStyle, width: "100%", maxWidth: "none" }}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Endereço */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Endereço</span>
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value.toUpperCase())}
+            placeholder="Rua, número, bairro"
+            style={inputStyle}
+          />
+        </label>
+
+        {/* Dias de Atendimento */}
+        <div style={{ display: "grid", gap: 6, position: "relative" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Dias de Atendimento</span>
+          <button
+            type="button"
+            onClick={() => setSlotsOpen((v) => !v)}
+            style={{ ...inputStyle, width: "100%", textAlign: "left", cursor: "pointer" }}
+          >
+            {slotsSelected.length ? slotsSelected.join(", ") : "SELECIONAR"}
+          </button>
+
+          {slotsOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                marginTop: 6,
+                background: "white",
+                border: "1.5px solid rgba(13,17,23,0.10)",
+                borderRadius: 10,
+                boxShadow: "0 10px 20px rgba(0,0,0,0.08)",
+                zIndex: 30,
+                padding: 8,
+                display: "grid",
+                gap: 6,
+              }}
+            >
+              {SLOTS.map((s) => {
+                const checked = slotsSelected.includes(s);
+                return (
+                  <label key={s} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        setSlotsSelected((prev) =>
+                          prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+                        );
+                      }}
+                    />
+                    <span>{s}</span>
+                  </label>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setSlotsOpen(false)}
+                style={{ ...inputStyle, width: "100%", marginTop: 8 }}
+              >
+                OK
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Nome Secretária */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Nome Secretária</span>
+          <input
+            value={secretaryName}
+            onChange={(e) => setSecretaryName(e.target.value.toUpperCase())}
+            placeholder="Nome da secretária"
+            style={inputStyle}
+          />
+        </label>
+
+        {/* Telefone Secretária */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Telefone Secretária</span>
+          <input
+            value={formatPhoneBR(secretaryPhone)}
+            onChange={(e) => setSecretaryPhone(onlyDigits(e.target.value))}
+            placeholder="(00) 99999-1122"
+            style={inputStyle}
+          />
+        </label>
+
+        {/* Observações */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" }}>Observações</span>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Observações (opcional)"
+            rows={3}
+            style={{ ...inputStyle, resize: "vertical" as const }}
+          />
+        </label>
+
+        {/* ── ALTERADO: mensagem de feedback ── */}
+        {msg && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: "12px 16px",
+              borderRadius: 10,
+              background: msgType === "success" ? "rgba(26,107,74,0.10)" : msgType === "warning" ? "#FFF3DC" : "#FFF0EE",
+              color: msgType === "success" ? "#1A6B4A" : msgType === "warning" ? "#7A4A00" : "#C0392B",
+              fontWeight: 600,
+              fontSize: 13,
+              border: `1.5px solid ${msgType === "success" ? "rgba(26,107,74,0.20)" : msgType === "warning" ? "rgba(212,130,10,0.25)" : "rgba(192,57,43,0.20)"}`,
+            }}
+          >
+            {msg}
+          </div>
+        )}
+
+        {/* ── ALTERADO: botão Salvar ── */}
+        <button
+          type="button"
+          onClick={onSave}
+          style={{
+            marginTop: 16,
+            padding: "14px 16px",
+            background: "#1A6B4A",
+            color: "white",
+            borderRadius: 10,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase" as const,
+            width: "100%",
+            boxShadow: "0 4px 16px rgba(26,107,74,0.30)",
+          }}
+        >
+          Salvar Médico
+        </button>
+
+      </div>
+    </main>
   );
 }
+
 export default function AdminPage() {
   return (
     <Suspense fallback={null}>
