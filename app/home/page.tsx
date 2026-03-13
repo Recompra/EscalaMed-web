@@ -319,7 +319,7 @@ setLoading(false);
               { href: "/medicos", icon: "👥", label: "Médicos cadastrados", badge: String(doctors.length) },
               { href: "/import",  icon: "⬆️", label: "Importar escala (Excel)" },
               { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PAGO" },
-              { href: undefined,  icon: "📨", label: "Médico solicitou visita" },
+              { href: "/visit-request", icon: "📨", label: "Médico solicitou visita" },
               { href: undefined,  icon: "⭐", label: "Plano Premium" },
             ].map((item) => (
               <a
