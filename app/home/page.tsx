@@ -320,7 +320,7 @@ setLoading(false);
               { href: "/import",  icon: "⬆️", label: "Importar escala (Excel)" },
               { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PAGO" },
               { href: "/visit-request/requests", icon: "📨", label: "Médico solicitou visita" },
-              { href: undefined,  icon: "⭐", label: "Plano Premium" },
+              { href: "/premium", icon: "⭐", label: "Plano Premium" },
             ].map((item) => (
               <a
                 key={item.label}
