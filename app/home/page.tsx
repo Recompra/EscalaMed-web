@@ -362,9 +362,10 @@ setLoading(false);
             <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "8px 0" }} />
 
             {[
-              { href: "/account", icon: "⚙️", label: "Minha conta" },
-              { icon: "💬", label: "Suporte / Feedback" },
-            ].map((item) => (
+           { href: "/account", icon: "⚙️", label: "Minha conta" },
+           { href: "/suporte", icon: "💬", label: "Suporte / Feedback" },
+           ].map((item) => (
+            
               <a key={item.label} style={{
                 padding: "12px 12px", borderRadius: 10,
                 display: "flex", alignItems: "center", gap: 12,
