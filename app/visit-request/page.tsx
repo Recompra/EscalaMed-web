@@ -158,7 +158,7 @@ export default function VisitRequestPage() {
           }}>Solicitar Visita</h2>
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/login")}
             style={{
               backgroundColor: "#1A6B4A",
               color: "white",
