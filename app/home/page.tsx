@@ -383,7 +383,7 @@ setLoading(false);
 
             {[
            { href: "/account", icon: "⚙️", label: "Minha conta" },
-           { href: "/suporte", icon: "💬", label: "Suporte / Feedback" },
+           { href: "/support", icon: "💬", label: "Suporte / Feedback" },
            ].map((item) => (
             
               <a key={item.label} href={item.href} style={{
