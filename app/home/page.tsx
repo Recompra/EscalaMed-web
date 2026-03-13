@@ -40,13 +40,32 @@ export default function Page() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [uf, setUf] = useState<typeof UFS[number]>(UFS[0]);
-  const cities = useMemo(() => CITIES_BY_UF[uf as keyof typeof CITIES_BY_UF] ?? [],[uf]);
-  const [city, setCity] = useState(cities[0] ?? "");
-  const [weekday, setWeekday] = useState<Weekday>("Terça");
-  const [period, setPeriod] = useState<Period>("Manhã");
+  const [uf, setUf] = useState<typeof UFS[number]>(() => {
+  if (typeof window === "undefined") return UFS[0];
+  return (localStorage.getItem("filter_uf") as typeof UFS[number]) || UFS[0];
+});
+const cities = useMemo(() => CITIES_BY_UF[uf as keyof typeof CITIES_BY_UF] ?? [], [uf]);
+const [city, setCity] = useState(() => {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("filter_city") || "";
+});
+const [weekday, setWeekday] = useState<Weekday>(() => {
+  if (typeof window === "undefined") return "Terça";
+  return (localStorage.getItem("filter_weekday") as Weekday) || "Terça";
+});
+const [period, setPeriod] = useState<Period>(() => {
+  if (typeof window === "undefined") return "Manhã";
+  return (localStorage.getItem("filter_period") as Period) || "Manhã";
+});
   const [menuOpen, setMenuOpen] = useState(false);
   const [visitRequestsCount, setVisitRequestsCount] = useState(0);
+
+  useEffect(() => {
+  localStorage.setItem("filter_uf", uf);
+  localStorage.setItem("filter_city", city);
+  localStorage.setItem("filter_weekday", weekday);
+  localStorage.setItem("filter_period", period);
+}, [uf, city, weekday, period]);
 
   // ── ALTERADO: estilos visuais ──
   const btnStyle: React.CSSProperties = {
