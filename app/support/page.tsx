@@ -37,19 +37,15 @@ ${message}
       </div>
 
       <section className="card">
-        <div className="header-row">
-          <div>
-            <h1>Suporte / Feedback</h1>
-            <p>
-              Encontrou algo para melhorar? Escreva abaixo. Seu feedback ajuda a
-              deixar o EscalaMed mais simples e essencial.
-            </p>
-          </div>
+        <h1>Suporte / Feedback</h1>
+        <p>
+          Encontrou algo para melhorar? Escreva abaixo. Seu feedback ajuda a
+          deixar o EscalaMed mais simples e essencial.
+        </p>
 
-          <a href="/" className="back-btn">
-            Voltar
-          </a>
-        </div>
+        <a href="/" className="back-btn">
+          Voltar
+        </a>
 
         <div className="divider" />
 
@@ -111,11 +107,7 @@ ${message}
           </div>
         </div>
 
-        <button
-          className="send-btn"
-          onClick={handleSend}
-          disabled={!canSend}
-        >
+        <button className="send-btn" onClick={handleSend} disabled={!canSend}>
           Enviar feedback
         </button>
       </section>
@@ -151,16 +143,8 @@ ${message}
           border: 1px solid rgba(17, 24, 39, 0.06);
         }
 
-        .header-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 16px;
-          margin-bottom: 18px;
-        }
-
         h1 {
-          margin: 0;
+          margin: 0 0 14px;
           font-size: 42px;
           line-height: 1;
           letter-spacing: -0.04em;
@@ -169,33 +153,32 @@ ${message}
         }
 
         p {
-          margin: 14px 0 0;
-          max-width: 560px;
+          margin: 0 0 20px;
           font-size: 17px;
           line-height: 1.6;
           color: #7c8798;
         }
 
         .back-btn {
-          display: inline-flex;
+          display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 128px;
-          height: 68px;
-          padding: 0 22px;
-          border-radius: 18px;
+          width: 100%;
+          height: 58px;
+          border-radius: 16px;
           background: #1a6b4a;
           color: #fff;
           text-decoration: none;
-          font-weight: 800;
+          font-weight: 700;
           font-size: 18px;
           box-shadow: 0 8px 20px rgba(26, 107, 74, 0.18);
+          box-sizing: border-box;
         }
 
         .divider {
           height: 1px;
           background: #ececec;
-          margin: 18px 0 22px;
+          margin: 22px 0;
         }
 
         .info-box {
@@ -218,11 +201,12 @@ ${message}
           justify-content: center;
           background: #e7f0ea;
           font-size: 24px;
+          flex-shrink: 0;
         }
 
         .info-box strong {
           display: block;
-          font-size: 15px;
+          font-size: 13px;
           color: #5f6b7c;
           margin-bottom: 4px;
           text-transform: uppercase;
@@ -230,7 +214,7 @@ ${message}
         }
 
         .info-box span {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 700;
           color: #1a6b4a;
         }
@@ -252,7 +236,7 @@ ${message}
 
         label {
           margin-bottom: 10px;
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 800;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -266,8 +250,8 @@ ${message}
           border: 2px solid #e6e6e6;
           background: #fff;
           border-radius: 18px;
-          padding: 18px 20px;
-          font-size: 18px;
+          padding: 16px 18px;
+          font-size: 16px;
           color: #111827;
           outline: none;
           transition: 0.2s ease;
@@ -282,7 +266,7 @@ ${message}
         }
 
         textarea {
-          min-height: 220px;
+          min-height: 180px;
           resize: vertical;
           line-height: 1.6;
         }
@@ -299,12 +283,12 @@ ${message}
         .send-btn {
           margin-top: 26px;
           width: 100%;
-          height: 72px;
+          height: 64px;
           border: 0;
-          border-radius: 20px;
+          border-radius: 16px;
           background: #1a6b4a;
           color: #fff;
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 900;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -324,6 +308,16 @@ ${message}
           box-shadow: none;
         }
 
+        @media (min-width: 769px) {
+          .card {
+            padding: 32px;
+          }
+
+          h1 {
+            font-size: 42px;
+          }
+        }
+
         @media (max-width: 768px) {
           .support-page {
             padding: 18px 12px 32px;
@@ -334,10 +328,6 @@ ${message}
             border-radius: 24px;
           }
 
-          .header-row {
-            flex-direction: column;
-          }
-
           h1 {
             font-size: 30px;
           }
@@ -346,26 +336,8 @@ ${message}
             font-size: 15px;
           }
 
-          .back-btn {
-            width: 100%;
-            height: 58px;
-            border-radius: 16px;
-          }
-
           .form-grid {
             grid-template-columns: 1fr;
-          }
-
-          input,
-          select,
-          textarea {
-            font-size: 16px;
-            padding: 16px 16px;
-          }
-
-          .send-btn {
-            height: 64px;
-            font-size: 16px;
           }
         }
       `}</style>
