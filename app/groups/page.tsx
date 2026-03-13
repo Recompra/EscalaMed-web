@@ -197,7 +197,7 @@ export default function GroupsPage() {
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value.toUpperCase())}
-            placeholder="Nome do grupo (ex: EQUIPE BRASÍLIA)"
+            placeholder="Nome do grupo"
             style={inputStyle}
           />
 
