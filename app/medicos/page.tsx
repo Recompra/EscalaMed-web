@@ -23,31 +23,12 @@ type Doctor = {
 };
 
 const SPECIALTIES = [
-  "CLÍNICO GERAL",
-  "GINECOLOGISTA",
-  "PEDIATRA",
-  "CARDIOLOGISTA",
-  "DERMATOLOGISTA",
-  "ORTOPEDISTA",
-  "UROLOGISTA",
-  "ENDOCRINOLOGISTA",
-  "PSIQUIATRA",
-  "NEUROLOGISTA",
-  "OFTALMOLOGISTA",
-  "OTORRINOLARINGOLOGISTA",
-  "GASTROENTEROLOGISTA",
-  "MASTOLOGISTA",
-  "ONCOLOGISTA",
-  "CIRURGIÃO GERAL",
-  "ANESTESIOLOGISTA",
-  "OBSTETRA",
-  "NUTROLOGO",
-  "NEFROLOGISTA",
-  "PNEUMOLOGISTA",
-  "REUMATOLOGISTA",
-  "HEMATOLOGISTA",
-  "INFECTOLOGISTA",
-  "OUTRAS",
+  "CLÍNICO GERAL","GINECOLOGISTA","PEDIATRA","CARDIOLOGISTA",
+  "DERMATOLOGISTA","ORTOPEDISTA","UROLOGISTA","ENDOCRINOLOGISTA",
+  "PSIQUIATRA","NEUROLOGISTA","OFTALMOLOGISTA","OTORRINOLARINGOLOGISTA",
+  "GASTROENTEROLOGISTA","MASTOLOGISTA","ONCOLOGISTA","CIRURGIÃO GERAL",
+  "ANESTESIOLOGISTA","OBSTETRA","NUTROLOGO","NEFROLOGISTA",
+  "PNEUMOLOGISTA","REUMATOLOGISTA","HEMATOLOGISTA","INFECTOLOGISTA","OUTRAS",
 ] as const;
 
 export default function MedicosPage() {
@@ -75,144 +56,174 @@ export default function MedicosPage() {
 
   useEffect(() => {
     let result = doctors;
-
     if (nameFilter) {
-      result = result.filter((d) =>
-        d.name?.includes(nameFilter.toUpperCase())
-      );
+      result = result.filter((d) => d.name?.includes(nameFilter.toUpperCase()));
     }
-
     if (specialtyFilter) {
       result = result.filter((d) => d.specialty === specialtyFilter);
     }
-
     setFiltered(result);
   }, [nameFilter, specialtyFilter, doctors]);
 
   async function handleDelete(id: string) {
-  
-  if (!confirm("Deseja realmente excluir?")) return;
+    if (!confirm("Deseja realmente excluir?")) return;
 
-  const { error } = await supabase
-    .from("doctors")
-    .delete()
-    .eq("id", id);
+    const { error } = await supabase.from("doctors").delete().eq("id", id);
 
-  if (error) {
-    alert("Erro ao excluir (provável RLS). Veja o console.");
-    console.error(error);
-    return;
+    if (error) {
+      alert("Erro ao excluir (provável RLS). Veja o console.");
+      console.error(error);
+      return;
+    }
+
+    setDoctors((prev) => prev.filter((doc) => doc.id !== id));
+    setFiltered((prev) => prev.filter((doc) => doc.id !== id));
+    loadDoctors();
   }
 
-  // remove da tela na hora
-  setDoctors((prev) => prev.filter((doc) => doc.id !== id));
-  setFiltered((prev) => prev.filter((doc) => doc.id !== id));
-
-  // backup pra garantir
-  loadDoctors();
-}
   return (
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800 }}>
-     Médicos cadastrados ({doctors.length})
-    </h1>
+    <main style={{
+      minHeight: "100vh",
+      background: "#F5F3EE",
+      fontFamily: "'DM Sans', sans-serif",
+      maxWidth: 900,
+      margin: "0 auto",
+      padding: 20,
+    }}>
 
-      {/* FILTROS */}
-      <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+      {/* Título */}
+      <h1 style={{
+        fontFamily: "'Syne', sans-serif",
+        fontWeight: 800,
+        fontSize: 22,
+        color: "#0D1117",
+        marginBottom: 16,
+      }}>
+        Médicos cadastrados ({doctors.length})
+      </h1>
+
+      {/* Filtros */}
+      <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
         <input
           placeholder="Nome"
           value={nameFilter}
-          onChange={(e) =>
-            setNameFilter(e.target.value.toUpperCase())
-          }
+          onChange={(e) => setNameFilter(e.target.value.toUpperCase())}
           style={{
-            padding: 8,
-            borderRadius: 8,
-            border: "1px solid #ddd",
+            padding: "11px 14px",
+            borderRadius: 10,
+            border: "1.5px solid rgba(13,17,23,0.10)",
+            fontSize: 13,
+            fontFamily: "'DM Sans', sans-serif",
+            background: "#fff",
+            color: "#0D1117",
+            outline: "none",
             width: "100%",
           }}
         />
-
         <select
           value={specialtyFilter}
           onChange={(e) => setSpecialtyFilter(e.target.value)}
           style={{
-            padding: 8,
-            borderRadius: 8,
-            border: "1px solid #ddd",
+            padding: "11px 14px",
+            borderRadius: 10,
+            border: "1.5px solid rgba(13,17,23,0.10)",
+            fontSize: 13,
+            fontFamily: "'DM Sans', sans-serif",
+            background: "#fff",
+            color: specialtyFilter ? "#0D1117" : "#8A9BB0",
+            outline: "none",
             width: "100%",
           }}
         >
           <option value="">Especialidade</option>
           {SPECIALTIES.map((s: string) => (
-         <option key={s} value={s}>
-          {s}
-        </option>
-         ))}
+            <option key={s} value={s}>{s}</option>
+          ))}
         </select>
       </div>
 
-      {/* LISTA */}
-      <div style={{ marginTop: 20, display: "grid", gap: 14 }}>
+      {/* Lista */}
+      <div style={{ display: "grid", gap: 10 }}>
         {filtered.map((doc) => (
           <div
-                key={doc.id}
+            key={doc.id}
+            style={{
+              padding: 16,
+              border: "1px solid rgba(13,17,23,0.08)",
+              borderLeft: "3px solid #1A6B4A",
+              borderRadius: 14,
+              background: "#fff",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              alignItems: "center",
+              boxShadow: "0 1px 4px rgba(13,17,23,0.06)",
+            }}
+          >
+            <div style={{ display: "grid", gap: 5 }}>
+              <strong style={{
+                fontSize: 13,
+                fontFamily: "'Syne', sans-serif",
+                fontWeight: 700,
+                color: "#0D1117",
+              }}>{doc.name}</strong>
+
+              <div style={{ fontSize: 12, color: "#8A9BB0" }}>
+                {doc.specialty} · {doc.phone}
+              </div>
+
+              <div style={{ fontSize: 12, color: "#8A9BB0" }}>
+                {doc.clinic ?? "—"} — {doc.address ?? "—"}
+              </div>
+
+              <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                {[doc.uf, doc.city, doc.weekday, doc.period].filter(Boolean).map((tag) => (
+                  <span key={tag} style={{
+                    fontSize: 10, fontWeight: 600,
+                    padding: "3px 8px", borderRadius: 100,
+                    background: "#F5F3EE", color: "#4A5568",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>{tag}</span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+              <button
+                onClick={() => router.push(`/admin?id=${doc.id}`)}
                 style={{
-                  padding: 14,
-                  border: "1px solid #e6e6e6",
-                  borderRadius: 12,
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  border: "1.5px solid rgba(13,17,23,0.12)",
                   background: "#fff",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "center",
+                  cursor: "pointer",
+                  fontFamily: "'Syne', sans-serif",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#0D1117",
                 }}
               >
-                <div style={{ display: "grid", gap: 6 }}>
-                  <strong style={{ fontSize: 16 }}>{doc.name}</strong>
-
-                  <div style={{ fontSize: 12, color: "#666" }}>
-                    {doc.specialty} · {doc.phone}
-                  </div>
-
-                <div style={{ fontSize: 12, color: "#666" }}>
-                  {doc.clinic ?? "—"} — {doc.address ?? "—"}
-              </div>
-
-            <div style={{ fontSize: 12, color: "#888" }}>
-                {doc.uf} · {doc.city} · {doc.weekday} · {doc.period}
-              </div>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                 <button
-               onClick={() => router.push(`/admin?id=${doc.id}`)}
-               style={{
-               padding: "8px 12px",
-               borderRadius: 10,
-               border: "1px solid #ddd",
-              background: "#fff",
-              cursor: "pointer",
-             }}
-             >
-              Editar
+                Editar
               </button>
-                  <button
-                       type="button"
-                      onClick={() => handleDelete(doc.id)}
-                     style={{
-                     padding: "8px 12px",
-                       borderRadius: 10,
-                      border: "none",
-                      background: "#dc2626",
-                       color: "#fff",
-                    cursor: "pointer",
-                         }}
-                            >
-                    Excluir
-                  </button>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => handleDelete(doc.id)}
+                style={{
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  border: "1.5px solid rgba(192,57,43,0.20)",
+                  background: "#FFF0EE",
+                  color: "#C0392B",
+                  cursor: "pointer",
+                  fontFamily: "'Syne', sans-serif",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </main>
