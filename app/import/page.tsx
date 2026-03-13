@@ -149,11 +149,17 @@ export default function ImportPage() {
 
       const normalized = limited.map((row) => {
         const out: Row = { ...row };
-        if (nameKey) out["Nome"] = String(row[nameKey] ?? "").trim().toUpperCase();
+        if (nameKey) {
+  const rawName = String(row[nameKey] ?? "").trim();
+  const match = rawName.match(/HYPERLINK\s*\([^,]+,\s*"([^"]+)"\s*\)/i);
+  out["Nome"] = match ? match[1].trim().toUpperCase() : rawName.toUpperCase();
+}
         if (specialtyKey) out["Especialidade"] = normalizeSpecialty(row[specialtyKey]).toUpperCase();
         if (cityUfKey) out["UF Cidade"] = String(row[cityUfKey] ?? "").trim().toUpperCase();
         if (crmKey) {
-          const parsedCrm = parseCrm(row[crmKey], cityUfKey ? String(row[cityUfKey] ?? "").trim().toUpperCase() : "");
+          const rawCrm = String(row[crmKey] ?? "").trim();
+const firstCrm = rawCrm.split(",")[0].trim();
+const parsedCrm = parseCrm(firstCrm, cityUfKey ? String(row[cityUfKey] ?? "").trim().toUpperCase() : "");
           out["CRM"] = parsedCrm.crm;
           out["CRM_UF"] = parsedCrm.crm_uf;
         }
