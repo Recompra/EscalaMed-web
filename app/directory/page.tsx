@@ -65,24 +65,64 @@ export default function PremiumPage() {
     setRows((data as Row[]) ?? []);
   }
 
-  async function addToMyList(doctorId: string) {
-    setMsg("");
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth?.user;
-    if (!user) { setMsg("Usuário não autenticado."); return; }
+  async function addToMyList(r: Row) {
+  setMsg("");
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  if (!user) { setMsg("Usuário não autenticado."); return; }
 
-    const { error } = await supabase
-      .from("user_doctors")
-      .upsert([{ user_id: user.id, doctor_id: doctorId }], { onConflict: "user_id,doctor_id" });
+  // 1. Verifica se já existe na tabela doctors pelo doctor_key
+  let { data: existing } = await supabase
+    .from("doctors")
+    .select("id")
+    .eq("doctor_key", r.doctor_key)
+    .maybeSingle();
 
-    if (error) {
-      if ((error as any).code === "23505") { setMsg("Médico já está na sua lista."); return; }
-      console.log("ERRO AO INSERIR:", error);
-      setMsg((error as any).message ?? "Erro ao adicionar.");
+  let doctorUuid = existing?.id;
+
+  // 2. Se não existe, cria o registro em doctors
+  if (!doctorUuid) {
+    const { data: inserted, error: insertErr } = await supabase
+      .from("doctors")
+      .insert({
+        doctor_key: r.doctor_key,
+        name: r.name,
+        specialty: r.specialty ?? "",
+        phone: r.phone ?? "",
+        clinic: r.clinic ?? "",
+        address: r.address ?? "",
+        city: r.city ?? "",
+        uf: r.uf ?? "",
+        state: r.uf ?? "",
+        tenant_id: user.id,
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (insertErr || !inserted) {
+      setMsg("Erro ao copiar médico para sua lista.");
+      console.error(insertErr);
       return;
     }
-    setMsg("Adicionado à sua escala ✅");
+
+    doctorUuid = inserted.id;
   }
+
+  // 3. Vincula ao propagandista em user_doctors
+  const { error } = await supabase
+    .from("user_doctors")
+    .upsert([{ user_id: user.id, doctor_id: doctorUuid }], {
+      onConflict: "user_id,doctor_id",
+    });
+
+  if (error) {
+    setMsg("Médico já está na sua lista.");
+    return;
+  }
+
+  setMsg("Adicionado à sua escala ✅");
+}
 
   useEffect(() => {
     const t = setTimeout(() => runSearch(), 350);
@@ -288,7 +328,7 @@ export default function PremiumPage() {
                   e.stopPropagation();
                   const ok = window.confirm("Deseja adicionar este médico à sua escala?");
                   if (!ok) return;
-                  addToMyList(r.doctor_key);
+                  addToMyList(r);
                 }}
                 style={{
                   height: 36,
