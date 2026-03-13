@@ -386,7 +386,7 @@ setLoading(false);
            { href: "/suporte", icon: "💬", label: "Suporte / Feedback" },
            ].map((item) => (
             
-              <a key={item.label} style={{
+              <a key={item.label} href={item.href} style={{
                 padding: "12px 12px", borderRadius: 10,
                 display: "flex", alignItems: "center", gap: 12,
                 textDecoration: "none", cursor: "pointer",
