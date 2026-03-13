@@ -338,8 +338,8 @@ setLoading(false);
               { href: "/medicos", icon: "👥", label: "Médicos cadastrados", badge: String(doctors.length) },
               { href: "/import",  icon: "⬆️", label: "Importar escala (Excel)" },
               { href: "/groups", icon: "👥", label: "Grupos", badge: "PREMIUM" },
-              { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PAGO" },
-              { href: "/visit-request/requests", icon: "📨", label: "Médico solicitou visita" },
+              { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PREMIUM" },
+              { href: "/visit-request/requests", icon: "✉️", label: "Médico solicitou visita", badge: "PREMIUM" },
               { href: "/premium", icon: "⭐", label: "Plano Premium" },
             ].map((item) => (
               <a
