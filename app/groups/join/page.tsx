@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function JoinGroupPage() {
+function JoinGroupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
@@ -46,25 +46,35 @@ export default function JoinGroupPage() {
   }, [code]);
 
   return (
+    <div style={{
+      background: "#fff", borderRadius: 16, padding: 32,
+      maxWidth: 400, width: "100%", textAlign: "center",
+      boxShadow: "0 4px 16px rgba(13,17,23,0.10)",
+    }}>
+      <div style={{
+        fontFamily: "'Syne', sans-serif",
+        fontWeight: 800, fontSize: 20, color: "#0D1117", marginBottom: 16,
+      }}>EscalaMed</div>
+      <div style={{
+        fontSize: 14, color: done ? "#1A6B4A" : "#8A9BB0", fontWeight: 600,
+      }}>{msg}</div>
+    </div>
+  );
+}
+
+export default function JoinGroupPage() {
+  return (
     <main style={{
       minHeight: "100vh", background: "#F5F3EE",
       fontFamily: "'DM Sans', sans-serif",
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: 24,
     }}>
-      <div style={{
-        background: "#fff", borderRadius: 16, padding: 32,
-        maxWidth: 400, width: "100%", textAlign: "center",
-        boxShadow: "0 4px 16px rgba(13,17,23,0.10)",
-      }}>
-        <div style={{
-          fontFamily: "'Syne', sans-serif",
-          fontWeight: 800, fontSize: 20, color: "#0D1117", marginBottom: 16,
-        }}>EscalaMed</div>
-        <div style={{
-          fontSize: 14, color: done ? "#1A6B4A" : "#8A9BB0", fontWeight: 600,
-        }}>{msg}</div>
-      </div>
+      <Suspense fallback={
+        <div style={{ fontSize: 13, color: "#8A9BB0" }}>Carregando...</div>
+      }>
+        <JoinGroupContent />
+      </Suspense>
     </main>
   );
 }
