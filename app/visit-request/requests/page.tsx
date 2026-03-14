@@ -24,6 +24,10 @@ export default function VisitRequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Filtros
+  const [filterUF, setFilterUF] = useState("");
+  const [filterCity, setFilterCity] = useState("");
+
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
@@ -47,6 +51,33 @@ export default function VisitRequestsPage() {
       prev.map((r) => r.id === id ? { ...r, status: "contacted" } : r)
     );
   }
+
+  // ✅ Excluir solicitação
+  async function deleteRequest(id: string) {
+    const ok = confirm("Deseja excluir esta solicitação?");
+    if (!ok) return;
+
+    await supabase.from("visit_requests").delete().eq("id", id);
+    setRequests((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  // ✅ Listas únicas para os selects
+  const ufs = Array.from(new Set(requests.map((r) => r.uf).filter(Boolean))).sort();
+  const cities = Array.from(
+    new Set(
+      requests
+        .filter((r) => !filterUF || r.uf === filterUF)
+        .map((r) => r.city)
+        .filter(Boolean)
+    )
+  ).sort();
+
+  // ✅ Aplicar filtros
+  const filtered = requests.filter((r) => {
+    if (filterUF && r.uf !== filterUF) return false;
+    if (filterCity && r.city !== filterCity) return false;
+    return true;
+  });
 
   return (
     <main style={{
@@ -83,11 +114,75 @@ export default function VisitRequestsPage() {
         >Voltar</button>
       </div>
 
+      {/* ✅ Filtros UF e Cidade */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <select
+          value={filterUF}
+          onChange={(e) => { setFilterUF(e.target.value); setFilterCity(""); }}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "1px solid rgba(13,17,23,0.12)",
+            background: "#fff",
+            fontSize: 12,
+            fontFamily: "'DM Sans', sans-serif",
+            color: filterUF ? "#0D1117" : "#8A9BB0",
+            cursor: "pointer",
+            minWidth: 100,
+          }}
+        >
+          <option value="">Todas as UFs</option>
+          {ufs.map((uf) => (
+            <option key={uf} value={uf}>{uf}</option>
+          ))}
+        </select>
+
+        <select
+          value={filterCity}
+          onChange={(e) => setFilterCity(e.target.value)}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "1px solid rgba(13,17,23,0.12)",
+            background: "#fff",
+            fontSize: 12,
+            fontFamily: "'DM Sans', sans-serif",
+            color: filterCity ? "#0D1117" : "#8A9BB0",
+            cursor: "pointer",
+            minWidth: 140,
+          }}
+        >
+          <option value="">Todas as cidades</option>
+          {cities.map((city) => (
+            <option key={city} value={city}>{city}</option>
+          ))}
+        </select>
+
+        {(filterUF || filterCity) && (
+          <button
+            type="button"
+            onClick={() => { setFilterUF(""); setFilterCity(""); }}
+            style={{
+              padding: "8px 12px",
+              borderRadius: 8,
+              border: "1px solid rgba(192,57,43,0.20)",
+              background: "#FFF0EE",
+              color: "#C0392B",
+              fontSize: 11,
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 700,
+              cursor: "pointer",
+              letterSpacing: "0.06em",
+            }}
+          >LIMPAR</button>
+        )}
+      </div>
+
       {loading && (
         <div style={{ fontSize: 13, color: "#8A9BB0" }}>Carregando...</div>
       )}
 
-      {!loading && requests.length === 0 && (
+      {!loading && filtered.length === 0 && (
         <div style={{
           padding: "12px 16px",
           borderRadius: 10,
@@ -95,11 +190,11 @@ export default function VisitRequestsPage() {
           border: "1.5px solid rgba(212,130,10,0.25)",
           fontSize: 13,
           color: "#7A4A00",
-        }}>Nenhuma solicitação recebida ainda.</div>
+        }}>Nenhuma solicitação encontrada.</div>
       )}
 
       <div style={{ display: "grid", gap: 12 }}>
-        {requests.map((r) => (
+        {filtered.map((r) => (
           <div key={r.id} style={{
             padding: 16,
             background: "#fff",
@@ -158,27 +253,49 @@ export default function VisitRequestsPage() {
               })}
             </div>
 
-            {r.status !== "contacted" && (
+            {/* ✅ Botões de ação */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {r.status !== "contacted" && (
+                <button
+                  type="button"
+                  onClick={() => markContacted(r.id)}
+                  style={{
+                    padding: "9px 14px",
+                    borderRadius: 8,
+                    border: "1.5px solid rgba(26,107,74,0.25)",
+                    background: "rgba(26,107,74,0.08)",
+                    color: "#1A6B4A",
+                    fontFamily: "'Syne', sans-serif",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  Marcar como contatado
+                </button>
+              )}
+
+              {/* ✅ Botão excluir */}
               <button
                 type="button"
-                onClick={() => markContacted(r.id)}
+                onClick={() => deleteRequest(r.id)}
                 style={{
                   padding: "9px 14px",
                   borderRadius: 8,
-                  border: "1.5px solid rgba(26,107,74,0.25)",
-                  background: "rgba(26,107,74,0.08)",
-                  color: "#1A6B4A",
+                  border: "1.5px solid rgba(192,57,43,0.20)",
+                  background: "#FFF0EE",
+                  color: "#C0392B",
                   fontFamily: "'Syne', sans-serif",
                   fontSize: 11,
                   fontWeight: 700,
                   cursor: "pointer",
                   letterSpacing: "0.06em",
-                  width: "fit-content",
                 }}
               >
-                Marcar como contatado
+                Excluir
               </button>
-            )}
+            </div>
           </div>
         ))}
       </div>
