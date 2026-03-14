@@ -188,6 +188,7 @@ export default function ImportPage() {
             crm_uf: String(r["CRM_UF"] ?? "").trim().toUpperCase(),
             tenant_id: user.id,
             is_active: true,
+            share_enabled: true, // ✅ linha nova
           }))
         )
         .select("id");
