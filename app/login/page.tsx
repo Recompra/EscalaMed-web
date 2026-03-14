@@ -171,7 +171,15 @@ export default function LoginPage() {
         {/* Botão médico */}
         <button
           type="button"
-          onClick={() => router.push("/visit-request")}
+          onClick={() => {
+          const url = "https://escalamed.app.br/visit-request";
+         if (navigator.share) {
+         navigator.share({ title: "Solicitar visita", url });
+         } else {
+         navigator.clipboard.writeText(url);
+         alert("Link copiado!");
+          }
+        }}
           style={{
             padding: "13px 16px",
             borderRadius: 10,
@@ -188,7 +196,7 @@ export default function LoginPage() {
           onMouseEnter={(e) => { e.currentTarget.style.background = "#1C2333"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "#0D1117"; }}
         >
-          É médico? Solicitar visita do representante
+          É médico? Solicitar visita do representante  ↗
         </button>
 
       </div>
