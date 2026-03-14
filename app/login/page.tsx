@@ -1,307 +1,197 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
-export default function LandingPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const [scrolled, setScrolled] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  async function onLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    setLoading(true);
 
-  const features = [
-    {
-      icon: "📋",
-      tag: null,
-      title: "Rotina de visitação organizada",
-      desc: "Cadastre médicos por cidade, UF, dia e período. Filtros disponíveis com 1 toque. Ideal para quem atende varias regiões e cidades",
-    },
-    {
-      icon: "📥",
-      tag: null,
-      title: "Importação via Excel",
-      desc: "Já tem uma base de médicos? Importe tudo de uma vez pelo Excel. Zero retrabalho, zero digitação manual.",
-    },
-    {
-      icon: "🔍",
-      tag: "PREMIUM",
-      title: "Diretório unificado de médicos",
-      desc: "Acesse todos os médicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique — sem digitar nada. Ideal para encontar aquele médico auditado que não está cadastrado",
-    },
-    {
-      icon: "🔔",
-      tag: "PREMIUM",
-      title: "Aviso de duplicidade de cadastro",
-      desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora. Mantenha esses campos atualizados e tenha mais segurança na sua escala.",
-    },
-    {
-      icon: "👥",
-      tag: "PREMIUM",
-      title: "Grupos colaborativos",
-      desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os médicos da base dos outros — sem precisar perguntar, sem perder tempo.",
-    },
-    {
-      icon: "✉️",
-      tag: "PREMIUM",
-      title: "Médico solicita visita",
-      desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, teledone, cidade e os melhores dias para ir.",
-    },
-  ];
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
 
-  const stats = [
-    { value: "4000+", label: "Médicos no diretório" },
-    { value: "27", label: "Estados cobertos" },
-    { value: "100%", label: "Web + Mobile" },
-  ];
+    if (error) { setMsg(error.message); return; }
+    router.push("/home");
+  }
+
+  const inputStyle = {
+    padding: "11px 14px",
+    borderRadius: 10,
+    border: "1.5px solid rgba(13,17,23,0.10)",
+    fontSize: 13,
+    fontFamily: "'DM Sans', sans-serif",
+    background: "#FFFFFF",
+    color: "#0D1117",
+    outline: "none",
+    width: "100%",
+  };
+
+  const labelStyle = {
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: "0.06em",
+    color: "#4A5568",
+    textTransform: "uppercase" as const,
+  };
 
   return (
     <main style={{
-      fontFamily: "'DM Sans', sans-serif",
+      minHeight: "100vh",
       background: "#F5F3EE",
-      color: "#0D1117",
-      overflowX: "hidden",
+      fontFamily: "'DM Sans', sans-serif",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
     }}>
-
-      {/* NAV */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        padding: "0 24px", height: 60,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: scrolled ? "rgba(245,243,238,0.95)" : "transparent",
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(26,107,74,0.12)" : "none",
-        transition: "all 0.3s",
+      <div style={{
+        width: "100%",
+        maxWidth: 420,
+        background: "#FFFFFF",
+        border: "1px solid rgba(13,17,23,0.10)",
+        borderRadius: 16,
+        padding: 28,
+        boxShadow: "0 4px 16px rgba(13,17,23,0.10)",
+        display: "grid",
+        gap: 14,
       }}>
+
+        {/* Logo */}
         <div style={{
           fontFamily: "'Syne', sans-serif",
-          fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em",
-        }}>
-          <span style={{ color: "#0D1117" }}>Escala</span>
-          <span style={{ color: "#1A6B4A" }}>Med</span>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <a href="/login" style={{
-          padding: "8px 18px", borderRadius: 8,
-          border: "1.5px solid rgba(13,17,23,0.15)",
-          background: "transparent", color: "#0D1117",
-          fontFamily: "'Syne', sans-serif", fontSize: 12,
-          fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em",
-          textDecoration: "none", display: "inline-block",
-          }}>Entrar</a>
-      
-          <button type="button" onClick={() => router.push("/signup")} style={{
-            padding: "8px 18px", borderRadius: 8, border: "none",
-            background: "#1A6B4A", color: "white",
-            fontFamily: "'Syne', sans-serif", fontSize: 12,
-            fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em",
-            boxShadow: "0 4px 16px rgba(26,107,74,0.30)",
-          }}>Criar conta</button>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section style={{
-        minHeight: "92vh",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        padding: "100px 24px 60px", textAlign: "center",
-        position: "relative", overflow: "hidden",
-        background: "#0D1117",
-      }}>
-        <div style={{
-          position: "absolute", top: "30%", left: "50%",
-          transform: "translateX(-50%)",
-          width: 600, height: 500,
-          background: "radial-gradient(circle, rgba(26,107,74,0.18) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          background: "rgba(26,107,74,0.15)",
-          border: "1px solid rgba(26,107,74,0.35)",
-          borderRadius: 100, padding: "6px 16px",
-          fontSize: 11, fontWeight: 700, color: "#4ADE80",
-          letterSpacing: "0.12em", marginBottom: 28,
-          textTransform: "uppercase" as const,
+          fontWeight: 800,
+          fontSize: 20,
+          color: "#0D1117",
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          marginBottom: 4,
         }}>
           <span style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: "#4ADE80", boxShadow: "0 0 8px #4ADE80",
+            width: 8, height: 8,
+            background: "#1A6B4A",
+            borderRadius: "50%",
             display: "inline-block",
-          }} />
-          Para propagandistas médicos
+          }}/>
+          EscalaMed
         </div>
 
-        <h1 style={{
-          fontFamily: "'Syne', sans-serif", fontWeight: 800,
-          fontSize: "clamp(36px, 8vw, 72px)",
-          lineHeight: 1.05, letterSpacing: "-0.03em",
-          margin: "0 0 24px", maxWidth: 800, color: "#F0EDE6",
-        }}>
-          Sua escala{" "}
-          <span style={{ color: "#1A6B4A", textShadow: "0 0 40px rgba(26,107,74,0.5)" }}>
-            mais inteligente
-          </span>
-          {" "}e segura
-        </h1>
-
-        <p style={{
-          fontSize: "clamp(15px, 2.5vw, 18px)",
-          color: "rgba(240,237,230,0.60)", maxWidth: 520,
-          lineHeight: 1.7, margin: 0,
-        }}>
-          Tudo que um propagandista precisa para não perder visita,
-          não repetir médico e fechar mais resultados.
-        </p>
-
-        {/* Stats */}
-        <div style={{
-          display: "flex", gap: 48, marginTop: 64,
-          flexWrap: "wrap" as const, justifyContent: "center",
-        }}>
-          {stats.map((s) => (
-            <div key={s.label} style={{ textAlign: "center" as const }}>
-              <div style={{
-                fontFamily: "'Syne', sans-serif", fontWeight: 800,
-                fontSize: 32, color: "#4ADE80", letterSpacing: "-0.02em",
-              }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: "rgba(240,237,230,0.50)", marginTop: 4 }}>
-                {s.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FUNCIONALIDADES */}
-      <section style={{ padding: "80px 24px", maxWidth: 800, margin: "0 auto" }}>
-        <div style={{ textAlign: "center" as const, marginBottom: 48 }}>
-          <div style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.16em",
-            color: "#1A6B4A", textTransform: "uppercase" as const, marginBottom: 12,
-          }}>Funcionalidades</div>
-          <h2 style={{
-            fontFamily: "'Syne', sans-serif", fontWeight: 800,
-            fontSize: "clamp(26px, 5vw, 40px)",
-            letterSpacing: "-0.02em", margin: 0, color: "#0D1117",
-          }}>Tudo no mesmo lugar</h2>
-        </div>
-
-        <div style={{ display: "grid", gap: 12 }}>
-          {features.map((f) => (
-            <div key={f.title} style={{
-              background: "#FFFFFF",
-              border: "1px solid rgba(13,17,23,0.07)",
-              borderLeft: "3px solid #1A6B4A",
-              borderRadius: 16, padding: "20px 22px",
-              display: "flex", gap: 18, alignItems: "flex-start",
-              boxShadow: "0 1px 4px rgba(13,17,23,0.06)",
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                background: "rgba(26,107,74,0.10)",
-                border: "1px solid rgba(26,107,74,0.15)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 20,
-              }}>{f.icon}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  marginBottom: 6, flexWrap: "wrap" as const,
-                }}>
-                  <span style={{
-                    fontFamily: "'Syne', sans-serif",
-                    fontWeight: 700, fontSize: 15, color: "#0D1117",
-                  }}>{f.title}</span>
-                  {f.tag && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 800, letterSpacing: "0.12em",
-                      padding: "3px 8px", borderRadius: 100,
-                      background: f.tag === "PREMIUM"
-                        ? "rgba(212,130,10,0.12)" : "rgba(26,107,74,0.12)",
-                      color: f.tag === "PREMIUM" ? "#D4820A" : "#1A6B4A",
-                      border: f.tag === "PREMIUM"
-                        ? "1px solid rgba(212,130,10,0.25)"
-                        : "1px solid rgba(26,107,74,0.25)",
-                    }}>{f.tag}</span>
-                  )}
-                </div>
-                <p style={{
-                  fontSize: 13, color: "#8A9BB0",
-                  lineHeight: 1.65, margin: 0,
-                }}>{f.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section style={{ padding: "20px 24px 60px", maxWidth: 600, margin: "0 auto" }}>
-
-        {/* Texto simples */}
-        <div style={{
-          background: "#fff",
-          border: "1px solid rgba(13,17,23,0.07)",
-          borderRadius: 20, padding: "36px 28px",
-          textAlign: "center" as const,
-          boxShadow: "0 1px 4px rgba(13,17,23,0.06)",
-          marginBottom: 16,
-        }}>
-          <h2 style={{
-            fontFamily: "'Syne', sans-serif", fontWeight: 800,
-            fontSize: "clamp(22px, 4vw, 32px)",
-            letterSpacing: "-0.02em", margin: "0 0 12px", color: "#0D1117",
-          }}>
-            Comece agora,{" "}
-            <span style={{ color: "#1A6B4A" }}>gratuitamente</span>
-          </h2>
-          <p style={{
-            fontSize: 14, color: "#8A9BB0",
-            lineHeight: 1.65, margin: 0,
-          }}>
-            Crie sua conta e organize sua escala hoje mesmo.<br />
-            Plano Premium disponível por apenas{" "}
-            <strong style={{ color: "#0D1117" }}>R$29/mês</strong>.
-            Cancele quando quiser.
+        <div>
+          <h1 style={{
+            margin: 0,
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 22,
+            color: "#0D1117",
+          }}>Entrar</h1>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8A9BB0" }}>
+            Acesse sua conta EscalaMed
           </p>
         </div>
 
-        {/* É médico — destaque separado */}
-        <div
+        <form onSubmit={onLogin} style={{ display: "grid", gap: 12 }}>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span style={labelStyle}>E-mail</span>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              placeholder="seu@email.com"
+              required
+              style={inputStyle}
+            />
+          </label>
+
+          <label style={{ display: "grid", gap: 6 }}>
+            <span style={labelStyle}>Senha</span>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              placeholder="••••••••"
+              required
+              style={inputStyle}
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "13px 16px",
+              borderRadius: 10,
+              border: "none",
+              background: loading ? "#8A9BB0" : "#1A6B4A",
+              color: "white",
+              fontFamily: "'Syne', sans-serif",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase" as const,
+              cursor: loading ? "not-allowed" : "pointer",
+              boxShadow: loading ? "none" : "0 4px 16px rgba(26,107,74,0.30)",
+            }}
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+
+          {msg && (
+            <div style={{
+              padding: "10px 14px",
+              borderRadius: 10,
+              background: "#FFF0EE",
+              border: "1.5px solid rgba(192,57,43,0.20)",
+              color: "#C0392B",
+              fontSize: 13,
+              fontWeight: 600,
+            }}>{msg}</div>
+          )}
+        </form>
+
+        <p style={{ textAlign: "center", fontSize: 13, color: "#8A9BB0", margin: 0 }}>
+          Ainda não tem conta?{" "}
+          <span
+            style={{ color: "#1A6B4A", cursor: "pointer", fontWeight: 700 }}
+            onClick={() => router.push("/signup")}
+          >Criar conta</span>
+        </p>
+
+        {/* Divisor */}
+        <div style={{ height: 1, background: "rgba(13,17,23,0.07)" }} />
+
+        {/* Botão médico */}
+        <button
+          type="button"
           onClick={() => router.push("/visit-request")}
           style={{
+            padding: "13px 16px",
+            borderRadius: 10,
+            border: "1.5px solid rgba(13,17,23,0.12)",
             background: "#0D1117",
-            borderRadius: 16, padding: "22px 28px",
-            textAlign: "center" as const, cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(13,17,23,0.15)",
-          }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
-            color: "#4ADE80", textTransform: "uppercase" as const, marginBottom: 8,
-          }}>Para médicos</div>
-          <div style={{
-            fontFamily: "'Syne', sans-serif", fontWeight: 700,
-            fontSize: 16, color: "#F0EDE6",
-          }}>
-            É médico? Solicite a visita do representante →
-          </div>
-        </div>
-      </section>
+            color: "white",
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: "0.04em",
+            cursor: "pointer",
+            width: "100%",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#1C2333"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#0D1117"; }}
+        >
+          É médico? Solicitar visita do representante
+        </button>
 
-      {/* FOOTER */}
-      <footer style={{
-        borderTop: "1px solid rgba(13,17,23,0.08)",
-        padding: "24px", textAlign: "center" as const,
-        fontSize: 12, color: "rgba(13,17,23,0.35)",
-      }}>
-        © {new Date().getFullYear()} EscalaMed · contato@escalamed.app.br
-      </footer>
+      </div>
     </main>
   );
 }
