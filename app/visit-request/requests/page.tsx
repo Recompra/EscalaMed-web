@@ -23,19 +23,36 @@ export default function VisitRequestsPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // ✅ Filtros
+  const [userId, setUserId] = useState<string | null>(null);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [filterUF, setFilterUF] = useState("");
   const [filterCity, setFilterCity] = useState("");
 
   useEffect(() => {
     async function load() {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) return;
+      setUserId(user.id);
+
+      // Busca solicitações
       const { data, error } = await supabase
         .from("visit_requests")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (!error && data) setRequests(data);
+
+      // ✅ Busca IDs já ocultos por este usuário
+      const { data: hidden } = await supabase
+        .from("visit_request_hidden")
+        .select("request_id")
+        .eq("user_id", user.id);
+
+      if (hidden) {
+        setHiddenIds(new Set(hidden.map((h) => h.request_id)));
+      }
+
       setLoading(false);
     }
     load();
@@ -52,16 +69,19 @@ export default function VisitRequestsPage() {
     );
   }
 
-  // ✅ Excluir solicitação
-  async function deleteRequest(id: string) {
-    const ok = confirm("Deseja excluir esta solicitação?");
-    if (!ok) return;
+  // ✅ Oculta só para o usuário atual
+  async function hideRequest(id: string) {
+    const ok = confirm("Deseja ocultar esta solicitação para você?");
+    if (!ok || !userId) return;
 
-    await supabase.from("visit_requests").delete().eq("id", id);
-    setRequests((prev) => prev.filter((r) => r.id !== id));
+    await supabase.from("visit_request_hidden").insert({
+      user_id: userId,
+      request_id: id,
+    });
+
+    setHiddenIds((prev) => new Set([...prev, id]));
   }
 
-  // ✅ Listas únicas para os selects
   const ufs = Array.from(new Set(requests.map((r) => r.uf).filter(Boolean))).sort();
   const cities = Array.from(
     new Set(
@@ -72,8 +92,9 @@ export default function VisitRequestsPage() {
     )
   ).sort();
 
-  // ✅ Aplicar filtros
+  // ✅ Aplica filtros e remove ocultos
   const filtered = requests.filter((r) => {
+    if (hiddenIds.has(r.id)) return false;
     if (filterUF && r.uf !== filterUF) return false;
     if (filterCity && r.city !== filterCity) return false;
     return true;
@@ -114,7 +135,6 @@ export default function VisitRequestsPage() {
         >Voltar</button>
       </div>
 
-      {/* ✅ Filtros UF e Cidade */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <select
           value={filterUF}
@@ -253,7 +273,6 @@ export default function VisitRequestsPage() {
               })}
             </div>
 
-            {/* ✅ Botões de ação */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {r.status !== "contacted" && (
                 <button
@@ -276,10 +295,10 @@ export default function VisitRequestsPage() {
                 </button>
               )}
 
-              {/* ✅ Botão excluir */}
+              {/* ✅ Ocultar só para este usuário */}
               <button
                 type="button"
-                onClick={() => deleteRequest(r.id)}
+                onClick={() => hideRequest(r.id)}
                 style={{
                   padding: "9px 14px",
                   borderRadius: 8,
