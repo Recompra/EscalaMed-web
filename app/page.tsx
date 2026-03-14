@@ -272,26 +272,6 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* É médico — destaque separado */}
-        <div
-          onClick={() => router.push("/visit-request")}
-          style={{
-            background: "#0D1117",
-            borderRadius: 16, padding: "22px 28px",
-            textAlign: "center" as const, cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(13,17,23,0.15)",
-          }}>
-          <div style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: "0.12em",
-            color: "#4ADE80", textTransform: "uppercase" as const, marginBottom: 8,
-          }}>Para médicos</div>
-          <div style={{
-            fontFamily: "'Syne', sans-serif", fontWeight: 700,
-            fontSize: 16, color: "#F0EDE6",
-          }}>
-            É médico? Solicite a visita do representante →
-          </div>
-        </div>
       </section>
 
       {/* FOOTER */}
