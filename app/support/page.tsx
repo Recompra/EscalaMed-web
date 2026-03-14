@@ -1,346 +1,229 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
-export default function SupportPage() {
-  const [category, setCategory] = useState("Sugestão");
-  const [message, setMessage] = useState("");
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+const TIPOS = [
+  { icon: "🐛", label: "Reportar bug" },
+  { icon: "💡", label: "Sugestão" },
+  { icon: "❓", label: "Dúvida" },
+  { icon: "💬", label: "Outro" },
+];
 
-  const canSend = useMemo(() => {
-    return message.trim().length >= 10;
-  }, [message]);
+export default function SuportePage() {
+  const router = useRouter();
+  const [tipo, setTipo] = useState("");
+  const [msg, setMsg] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSend() {
-    if (!canSend) return;
+  async function handleSend() {
+    if (!tipo) { setError("Selecione o tipo de mensagem."); return; }
+    if (msg.trim().length < 10) { setError("Escreva pelo menos 10 caracteres."); return; }
 
-    const to = "contato@escalamed.app.br";
-    const subject = `EscalaMed - ${category}`;
-    const body = `
-Nome: ${name || "Não informado"}
-E-mail para retorno: ${email || "Não informado"}
+    setSending(true);
+    setError("");
 
-Categoria: ${category}
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    const email = user?.email ?? "anônimo";
+    const name = user?.user_metadata?.name ?? "";
 
-Mensagem:
-${message}
-    `.trim();
+    // Salva no Supabase
+    await supabase.from("feedback").insert({
+      user_id: user?.id ?? null,
+      user_email: email,
+      user_name: name,
+      tipo,
+      mensagem: msg.trim(),
+    });
 
-    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Abre email como fallback
+    const subject = encodeURIComponent(`[EscalaMed] ${tipo} - ${email}`);
+    const body = encodeURIComponent(`De: ${name} (${email})\nTipo: ${tipo}\n\n${msg.trim()}`);
+    window.open(`mailto:contato@escalamed.app.br?subject=${subject}&body=${body}`);
+
+    setSent(true);
+    setSending(false);
+  }
+
+  if (sent) {
+    return (
+      <main style={{
+        minHeight: "100vh", background: "#F5F3EE",
+        fontFamily: "'DM Sans', sans-serif",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+      }}>
+        <div style={{
+          background: "#fff", borderRadius: 20, padding: 40,
+          maxWidth: 420, width: "100%", textAlign: "center",
+          boxShadow: "0 4px 24px rgba(13,17,23,0.10)",
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+          <div style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800, fontSize: 22, color: "#0D1117", marginBottom: 8,
+          }}>Mensagem enviada!</div>
+          <div style={{ fontSize: 14, color: "#8A9BB0", marginBottom: 28 }}>
+            Obrigado pelo seu feedback.<br/>
+            Respondemos em até 24h no seu e-mail.
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/home")}
+            style={{
+              background: "#1A6B4A", color: "white",
+              padding: "12px 28px", borderRadius: 10, border: "none",
+              cursor: "pointer", fontFamily: "'Syne', sans-serif",
+              fontSize: 13, fontWeight: 700,
+              boxShadow: "0 4px 16px rgba(26,107,74,0.30)",
+            }}
+          >Voltar ao início</button>
+        </div>
+      </main>
+    );
   }
 
   return (
-    <main className="support-page">
-      <div className="topbar">
-        <div className="brand">escalamed.app.br</div>
+    <main style={{
+      minHeight: "100vh", background: "#F5F3EE",
+      fontFamily: "'DM Sans', sans-serif",
+      maxWidth: 600, margin: "0 auto", padding: 24,
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+        <div>
+          <h1 style={{
+            margin: 0, fontFamily: "'Syne', sans-serif",
+            fontWeight: 800, fontSize: 22, color: "#0D1117",
+          }}>Suporte & Feedback</h1>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8A9BB0" }}>
+            Fale com a equipe EscalaMed
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/home")}
+          style={{
+            background: "rgba(13,17,23,0.06)", color: "#0D1117",
+            padding: "8px 14px", borderRadius: 8, border: "none",
+            cursor: "pointer", fontSize: 12,
+            fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          }}
+        >Voltar</button>
       </div>
 
-      <section className="card">
-        <h1>Suporte / Feedback</h1>
-        <p>
-          Encontrou algo para melhorar? Escreva abaixo. Seu feedback ajuda a
-          deixar o EscalaMed mais simples e essencial.
-        </p>
+      {/* Card principal */}
+      <div style={{
+        background: "#fff", borderRadius: 20, padding: 24,
+        boxShadow: "0 4px 24px rgba(13,17,23,0.08)",
+        border: "1px solid rgba(13,17,23,0.06)",
+        display: "grid", gap: 20,
+      }}>
 
-        <a href="/" className="back-btn">
-          Voltar
-        </a>
-
-        <div className="divider" />
-
-        <div className="info-box">
-          <div className="info-icon">✉️</div>
-          <div>
-            <strong>Contato direto</strong>
-            <span>contato@escalamed.app.br</span>
+        {/* Tipo */}
+        <div>
+          <div style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase" as const, color: "#8A9BB0", marginBottom: 10,
+          }}>Tipo de mensagem</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {TIPOS.map((t) => (
+              <button
+                key={t.label}
+                type="button"
+                onClick={() => setTipo(t.label)}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: tipo === t.label
+                    ? "2px solid #1A6B4A"
+                    : "1.5px solid rgba(13,17,23,0.10)",
+                  background: tipo === t.label
+                    ? "rgba(26,107,74,0.08)"
+                    : "#F5F3EE",
+                  cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 8,
+                  fontFamily: "'Syne', sans-serif",
+                  fontSize: 12, fontWeight: 700,
+                  color: tipo === t.label ? "#1A6B4A" : "#4A5568",
+                  transition: "all 0.15s",
+                }}
+              >
+                <span style={{ fontSize: 18 }}>{t.icon}</span>
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="form-grid">
-          <div className="field">
-            <label>Nome</label>
-            <input
-              type="text"
-              placeholder="Seu nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label>E-mail para retorno</label>
-            <input
-              type="email"
-              placeholder="seuemail@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label>Categoria</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option>Sugestão</option>
-              <option>Erro no sistema</option>
-              <option>Dúvida</option>
-              <option>Solicitação de melhoria</option>
-              <option>Outro</option>
-            </select>
-          </div>
-
-          <div className="field field-full">
-            <label>Mensagem</label>
-            <textarea
-              placeholder="Escreva aqui seu feedback, sugestão ou problema encontrado..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              maxLength={1500}
-            />
-            <div className="helper-row">
-              <span>Quanto mais detalhe, melhor.</span>
-              <span>{message.length}/1500</span>
-            </div>
-          </div>
+        {/* Mensagem */}
+        <div>
+          <div style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase" as const, color: "#8A9BB0", marginBottom: 10,
+          }}>Sua mensagem</div>
+          <textarea
+            value={msg}
+            onChange={(e) => setMsg(e.target.value)}
+            placeholder="Descreva sua dúvida, sugestão ou problema com o máximo de detalhes possível..."
+            rows={7}
+            style={{
+              width: "100%", padding: "14px",
+              borderRadius: 12,
+              border: "1.5px solid rgba(13,17,23,0.10)",
+              fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+              background: "#F5F3EE", color: "#0D1117",
+              outline: "none", resize: "vertical" as const,
+              lineHeight: 1.6, boxSizing: "border-box" as const,
+            }}
+          />
+          <div style={{
+            textAlign: "right" as const, fontSize: 11,
+            color: msg.length > 10 ? "#1A6B4A" : "#8A9BB0",
+            marginTop: 4,
+          }}>{msg.length} caracteres</div>
         </div>
 
-        <button className="send-btn" onClick={handleSend} disabled={!canSend}>
-          Enviar feedback
-        </button>
-      </section>
+        {/* Erro */}
+        {error && (
+          <div style={{
+            padding: "12px 16px", borderRadius: 10,
+            background: "#FFF0EE", border: "1.5px solid rgba(192,57,43,0.20)",
+            color: "#C0392B", fontWeight: 600, fontSize: 13,
+          }}>{error}</div>
+        )}
 
-      <style jsx>{`
-        .support-page {
-          min-height: 100vh;
-          background: #f5f3ee;
-          padding: 24px 16px 40px;
-          color: #111827;
-        }
+        {/* Botão */}
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={sending}
+          style={{
+            padding: "14px",
+            background: sending ? "#8A9BB0" : "#1A6B4A",
+            color: "white", borderRadius: 12, border: "none",
+            cursor: sending ? "not-allowed" : "pointer",
+            fontFamily: "'Syne', sans-serif", fontSize: 14,
+            fontWeight: 700, letterSpacing: "0.06em",
+            boxShadow: sending ? "none" : "0 4px 16px rgba(26,107,74,0.30)",
+          }}
+        >{sending ? "Enviando..." : "Enviar mensagem →"}</button>
 
-        .topbar {
-          display: flex;
-          justify-content: center;
-          margin-bottom: 20px;
-        }
-
-        .brand {
-          font-size: 18px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          color: #0b1020;
-        }
-
-        .card {
-          max-width: 820px;
-          margin: 0 auto;
-          background: #ffffff;
-          border-radius: 28px;
-          padding: 24px;
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-          border: 1px solid rgba(17, 24, 39, 0.06);
-        }
-
-        h1 {
-          margin: 0 0 14px;
-          font-size: 42px;
-          line-height: 1;
-          letter-spacing: -0.04em;
-          font-weight: 900;
-          color: #0b1020;
-        }
-
-        p {
-          margin: 0 0 20px;
-          font-size: 17px;
-          line-height: 1.6;
-          color: #7c8798;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 58px;
-          border-radius: 16px;
-          background: #1a6b4a;
-          color: #fff;
-          text-decoration: none;
-          font-weight: 700;
-          font-size: 18px;
-          box-shadow: 0 8px 20px rgba(26, 107, 74, 0.18);
-          box-sizing: border-box;
-        }
-
-        .divider {
-          height: 1px;
-          background: #ececec;
-          margin: 22px 0;
-        }
-
-        .info-box {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 16px 18px;
-          border-radius: 20px;
-          background: #f7f8f6;
-          border: 1px solid #ebeeeb;
-          margin-bottom: 22px;
-        }
-
-        .info-icon {
-          width: 52px;
-          height: 52px;
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #e7f0ea;
-          font-size: 24px;
-          flex-shrink: 0;
-        }
-
-        .info-box strong {
-          display: block;
-          font-size: 13px;
-          color: #5f6b7c;
-          margin-bottom: 4px;
-          text-transform: uppercase;
-          letter-spacing: 0.12em;
-        }
-
-        .info-box span {
-          font-size: 16px;
-          font-weight: 700;
-          color: #1a6b4a;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 18px;
-        }
-
-        .field {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .field-full {
-          grid-column: 1 / -1;
-        }
-
-        label {
-          margin-bottom: 10px;
-          font-size: 13px;
-          font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #6f7b8f;
-        }
-
-        input,
-        select,
-        textarea {
-          width: 100%;
-          border: 2px solid #e6e6e6;
-          background: #fff;
-          border-radius: 18px;
-          padding: 16px 18px;
-          font-size: 16px;
-          color: #111827;
-          outline: none;
-          transition: 0.2s ease;
-          box-sizing: border-box;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-          border-color: #1a6b4a;
-          box-shadow: 0 0 0 4px rgba(26, 107, 74, 0.08);
-        }
-
-        textarea {
-          min-height: 180px;
-          resize: vertical;
-          line-height: 1.6;
-        }
-
-        .helper-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 8px;
-          font-size: 13px;
-          color: #8a93a3;
-        }
-
-        .send-btn {
-          margin-top: 26px;
-          width: 100%;
-          height: 64px;
-          border: 0;
-          border-radius: 16px;
-          background: #1a6b4a;
-          color: #fff;
-          font-size: 16px;
-          font-weight: 900;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          cursor: pointer;
-          box-shadow: 0 10px 24px rgba(26, 107, 74, 0.2);
-          transition: 0.2s ease;
-        }
-
-        .send-btn:hover {
-          transform: translateY(-1px);
-        }
-
-        .send-btn:disabled {
-          opacity: 0.45;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        @media (min-width: 769px) {
-          .card {
-            padding: 32px;
-          }
-
-          h1 {
-            font-size: 42px;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .support-page {
-            padding: 18px 12px 32px;
-          }
-
-          .card {
-            padding: 18px;
-            border-radius: 24px;
-          }
-
-          h1 {
-            font-size: 30px;
-          }
-
-          p {
-            font-size: 15px;
-          }
-
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
+        {/* Rodapé */}
+        <div style={{
+          textAlign: "center" as const, fontSize: 12, color: "#8A9BB0",
+          borderTop: "1px solid rgba(13,17,23,0.06)", paddingTop: 16,
+        }}>
+          Ou envie direto para{" "}
+          <a href="mailto:contato@escalamed.app.br" style={{ color: "#1A6B4A", fontWeight: 700 }}>
+            contato@escalamed.app.br
+          </a>
+        </div>
+      </div>
     </main>
   );
 }
