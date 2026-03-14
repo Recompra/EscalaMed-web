@@ -335,7 +335,7 @@ setLoading(false);
 
             {/* Itens do menu */}
             {[
-              { href: "/medicos", icon: "👥", label: "Médicos cadastrados", badge: String(doctors.length) },
+              { href: "/medicos", icon: "👥", label: "Médicos cadastrados" },
               { href: "/import",  icon: "⬆️", label: "Importar escala (Excel)" },
               { href: "/groups", icon: "👥", label: "Grupos", badge: "PREMIUM" },
               { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PREMIUM" },
