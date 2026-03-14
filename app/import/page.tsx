@@ -150,16 +150,16 @@ export default function ImportPage() {
       const normalized = limited.map((row) => {
         const out: Row = { ...row };
         if (nameKey) {
-  const rawName = String(row[nameKey] ?? "").trim();
-  const match = rawName.match(/HYPERLINK\s*\([^,]+,\s*"([^"]+)"\s*\)/i);
-  out["Nome"] = match ? match[1].trim().toUpperCase() : rawName.toUpperCase();
-}
+          const rawName = String(row[nameKey] ?? "").trim();
+          const match = rawName.match(/HYPERLINK\s*\([^,]+,\s*"([^"]+)"\s*\)/i);
+          out["Nome"] = match ? match[1].trim().toUpperCase() : rawName.toUpperCase();
+        }
         if (specialtyKey) out["Especialidade"] = normalizeSpecialty(row[specialtyKey]).toUpperCase();
         if (cityUfKey) out["UF Cidade"] = String(row[cityUfKey] ?? "").trim().toUpperCase();
         if (crmKey) {
           const rawCrm = String(row[crmKey] ?? "").trim();
-const firstCrm = rawCrm.split(",")[0].trim();
-const parsedCrm = parseCrm(firstCrm, cityUfKey ? String(row[cityUfKey] ?? "").trim().toUpperCase() : "");
+          const firstCrm = rawCrm.split(",")[0].trim();
+          const parsedCrm = parseCrm(firstCrm, cityUfKey ? String(row[cityUfKey] ?? "").trim().toUpperCase() : "");
           out["CRM"] = parsedCrm.crm;
           out["CRM_UF"] = parsedCrm.crm_uf;
         }
@@ -172,25 +172,44 @@ const parsedCrm = parseCrm(firstCrm, cityUfKey ? String(row[cityUfKey] ?? "").tr
       const user = authData?.user;
       if (!user) throw new Error("Usuário não autenticado.");
 
-      const { error } = await supabase.from("doctors").insert(
-        normalized.map((r) => ({
-          name: String(r["Nome"] ?? "").trim().toUpperCase(),
-          specialty: String(r["Especialidade"] ?? "").trim().toUpperCase(),
-          phone: "", clinic: "", address: "",
-          city: String(r["Cidade"] ?? "").trim().toUpperCase(),
-          uf: String(r["UF"] ?? "").trim().toUpperCase(),
-          state: String(r["UF"] ?? "").trim().toUpperCase(),
-          secretary_name: "", secretary_phone: "", notes: "",
-          crm: String(r["CRM"] ?? "").trim(),
-          crm_uf: String(r["CRM_UF"] ?? "").trim().toUpperCase(),
-          tenant_id: user.id,
-          is_active: true,
-        }))
-      );
+      // ✅ CORREÇÃO 1: city e uf agora usam as chaves detectadas corretamente
+      const { data: inserted, error } = await supabase
+        .from("doctors")
+        .insert(
+          normalized.map((r) => ({
+            name: String(r["Nome"] ?? "").trim().toUpperCase(),
+            specialty: String(r["Especialidade"] ?? "").trim().toUpperCase(),
+            phone: "", clinic: "", address: "",
+            city: cityKey ? String(r[cityKey] ?? "").trim().toUpperCase() : "",
+            uf: cityUfKey ? String(r[cityUfKey] ?? "").trim().toUpperCase() : "",
+            state: cityUfKey ? String(r[cityUfKey] ?? "").trim().toUpperCase() : "",
+            secretary_name: "", secretary_phone: "", notes: "",
+            crm: String(r["CRM"] ?? "").trim(),
+            crm_uf: String(r["CRM_UF"] ?? "").trim().toUpperCase(),
+            tenant_id: user.id,
+            is_active: true,
+          }))
+        )
+        .select("id");
 
       if (error) throw error;
+
+      // ✅ CORREÇÃO 2: inserir registro em doctor_availability para cada médico importado
+      if (inserted && inserted.length > 0) {
+        const { error: availError } = await supabase
+          .from("doctor_availability")
+          .insert(
+            inserted.map((doc) => ({
+              doctor_id: doc.id,
+              slot: null,
+              tenant_id: user.id,
+            }))
+          );
+        if (availError) throw availError;
+      }
+
       setErrorMsg("");
-      setSuccessMsg("Planilha importada com sucesso.");
+      setSuccessMsg(`${inserted?.length ?? 0} médicos importados com sucesso.`);
 
     } catch (err: any) {
       setErrorMsg(err?.message || "Erro ao ler a planilha.");
@@ -208,7 +227,6 @@ const parsedCrm = parseCrm(firstCrm, cityUfKey ? String(row[cityUfKey] ?? "").tr
       margin: "0 auto",
       padding: 24,
     }}>
-      {/* Título */}
       <h1 style={{
         fontFamily: "'Syne', sans-serif",
         fontWeight: 800,
@@ -222,7 +240,6 @@ const parsedCrm = parseCrm(firstCrm, cityUfKey ? String(row[cityUfKey] ?? "").tr
         Selecione um arquivo
       </p>
 
-      {/* Card upload */}
       <section style={{
         border: "1px solid rgba(13,17,23,0.08)",
         borderRadius: 14,
