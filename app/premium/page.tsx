@@ -47,7 +47,6 @@ export default function PremiumPage() {
           }}
         >← Voltar</button>
 
-        {/* Badge */}
         <div style={{
           display: "inline-flex",
           alignItems: "center",
@@ -68,7 +67,7 @@ export default function PremiumPage() {
             boxShadow: "0 0 8px #4ADE80",
             display: "inline-block",
           }}/>
-          PLANO PREMIUM
+          PARA PROPAGANDISTAS MÉDICOS
         </div>
 
         <h1 style={{
@@ -134,26 +133,37 @@ export default function PremiumPage() {
         {[
           {
             icon: "📋",
-            title: "Escala organizada",
-            desc: "Cadastre médicos por cidade, UF, dia e período. Filtre disponíveis com 1 toque e nunca mais perca uma visita por falta de organização.",
+            title: "Rotina de visitação organizada",
+            desc: "Cadastre médicos por cidade, UF, dia e período. Filtros disponíveis com 1 toque. Ideal para quem atende varias regiões e cidades.",
+          },
+          {
+            icon: "📥",
+            title: "Importação via Excel",
+            desc: "Já tem uma base de médicos? Importe tudo de uma vez pelo Excel. Zero retrabalho, zero digitação manual.",
           },
           {
             icon: "🔍",
-            title: "Busca no diretório completo",
-            desc: "Acesse todos os médicos cadastrados na base EscalaMed. Importe para sua escala com 1 clique — sem digitar nada.",
-            badge: "EXCLUSIVO",
+            title: "Diretório unificado de médicos",
+            desc: "Acesse todos os médicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique — sem digitar nada. Ideal para encontrar aquele médico auditado que não está cadastrado.",
+            badge: "PREMIUM",
           },
           {
             icon: "🔔",
             title: "Aviso de duplicidade de cadastro",
-            desc: "Se um médico do seu painel for cadastrado em outra UF por outro propagandista, você recebe um alerta imediato. Nada passa batido.",
-            badge: "NOVO",
+            desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora. Mantenha esses campos atualizados e tenha mais segurança na sua escala.",
+            badge: "PREMIUM",
+          },
+          {
+            icon: "👥",
+            title: "Grupos colaborativos",
+            desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os médicos da base dos outros — sem precisar perguntar, sem perder tempo.",
+            badge: "PREMIUM",
           },
           {
             icon: "📨",
-            title: "Solicitações de visita do médico",
-            desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, cidade e os melhores dias para ir.",
-            badge: "EXCLUSIVO",
+            title: "Médico solicita visita",
+            desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, telefone, cidade e os melhores dias para ir.",
+            badge: "PREMIUM",
           },
         ].map((b, i) => (
           <div
@@ -180,7 +190,7 @@ export default function PremiumPage() {
             }}>{b.icon}</div>
 
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                 <span style={{
                   fontFamily: "'Syne', sans-serif",
                   fontWeight: 700, fontSize: 14,
@@ -205,7 +215,7 @@ export default function PremiumPage() {
         ))}
       </section>
 
-      {/* Social proof */}
+      {/* Social proof — ✅ atualizado para 4000+ */}
       <section style={{
         maxWidth: 720, margin: "0 auto", padding: "0 24px 48px",
         opacity: visible ? 1 : 0, transition: "all 0.7s ease 0.5s",
@@ -221,7 +231,7 @@ export default function PremiumPage() {
           textAlign: "center",
         }}>
           {[
-            { n: "240+", label: "Médicos no diretório" },
+            { n: "4000+", label: "Médicos no diretório" },
             { n: "27", label: "Estados cobertos" },
             { n: "100%", label: "Web + Mobile" },
           ].map((s) => (
