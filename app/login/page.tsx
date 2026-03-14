@@ -34,7 +34,7 @@ export default function LandingPage() {
     },
     {
       icon: "🔔",
-      tag: "NOVO",
+      tag: "PREMIUM",
       title: "Aviso de duplicidade de cadastro",
       desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora. Mantenha esses campos atualizados e tenha mais segurança na sua escala.",
     },
@@ -53,7 +53,7 @@ export default function LandingPage() {
   ];
 
   const stats = [
-    { value: "240+", label: "Médicos no diretório" },
+    { value: "4000+", label: "Médicos no diretório" },
     { value: "27", label: "Estados cobertos" },
     { value: "100%", label: "Web + Mobile" },
   ];
@@ -84,13 +84,15 @@ export default function LandingPage() {
           <span style={{ color: "#1A6B4A" }}>Med</span>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button type="button" onClick={() => router.push("/login")} style={{
-            padding: "8px 18px", borderRadius: 8,
-            border: "1.5px solid rgba(13,17,23,0.15)",
-            background: "transparent", color: "#0D1117",
-            fontFamily: "'Syne', sans-serif", fontSize: 12,
-            fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em",
-          }}>Entrar</button>
+          <a href="/login" style={{
+          padding: "8px 18px", borderRadius: 8,
+          border: "1.5px solid rgba(13,17,23,0.15)",
+          background: "transparent", color: "#0D1117",
+          fontFamily: "'Syne', sans-serif", fontSize: 12,
+          fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em",
+          textDecoration: "none", display: "inline-block",
+          }}>Entrar</a>
+      
           <button type="button" onClick={() => router.push("/signup")} style={{
             padding: "8px 18px", borderRadius: 8, border: "none",
             background: "#1A6B4A", color: "white",
