@@ -168,36 +168,56 @@ export default function LoginPage() {
         {/* Divisor */}
         <div style={{ height: 1, background: "rgba(13,17,23,0.07)" }} />
 
-        {/* Botão médico */}
-        <button
-          type="button"
-          onClick={() => {
-          const url = "https://escalamed.app.br/visit-request";
-         if (navigator.share) {
-         navigator.share({ title: "Solicitar visita", url });
-         } else {
-         navigator.clipboard.writeText(url);
-         alert("Link copiado!");
-          }
-        }}
-          style={{
-            padding: "13px 16px",
-            borderRadius: 10,
-            border: "1.5px solid rgba(13,17,23,0.12)",
-            background: "#0D1117",
-            color: "white",
-            fontFamily: "'Syne', sans-serif",
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: "0.04em",
-            cursor: "pointer",
-            width: "100%",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#1C2333"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "#0D1117"; }}
-        >
-          É médico? Solicitar visita do representante  ↗
-        </button>
+       {/* Botão médico */}
+<div style={{ display: "flex", gap: 8, width: "100%" }}>
+  <button
+    type="button"
+    onClick={() => router.push("/visit-request")}
+    style={{
+      flex: 1,
+      padding: "13px 16px",
+      borderRadius: 10,
+      border: "1.5px solid rgba(13,17,23,0.12)",
+      background: "#0D1117",
+      color: "white",
+      fontFamily: "'Syne', sans-serif",
+      fontSize: 13,
+      fontWeight: 700,
+      letterSpacing: "0.04em",
+      cursor: "pointer",
+    }}
+  >
+    É médico? Solicitar visita
+  </button>
+
+  <button
+    type="button"
+    onClick={() => {
+      const url = "https://escalamed.app.br/visit-request";
+      if (navigator.share) {
+        navigator.share({ title: "Solicitar visita", url });
+      } else {
+        navigator.clipboard.writeText(url);
+        alert("Link copiado!");
+      }
+    }}
+    style={{
+      padding: "13px 16px",
+      borderRadius: 10,
+      border: "1.5px solid rgba(13,17,23,0.12)",
+      background: "#0D1117",
+      color: "white",
+      cursor: "pointer",
+      fontSize: 18,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+    title="Compartilhar link"
+  >
+    🔗
+  </button>
+</div>
 
       </div>
     </main>
