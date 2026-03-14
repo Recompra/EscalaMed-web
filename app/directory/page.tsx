@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation"
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 type Row = {
@@ -21,7 +21,9 @@ const UF_LIST = [
   "SP","SE","TO",
 ];
 
-export default function PremiumPage() {
+const PAGE_SIZE = 50;
+
+export default function DirectoryPage() {
   const [qName, setQName] = useState("");
   const [qSpec, setQSpec] = useState("");
   const [qCrm, setQCrm] = useState("");
@@ -29,7 +31,12 @@ export default function PremiumPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState<number | null>(null);
   const router = useRouter();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filtersOk = (
     qName.trim().length >= 2 ||
@@ -38,96 +45,109 @@ export default function PremiumPage() {
     qUf.trim().length >= 2
   );
 
-  async function runSearch() {
-    setMsg("");
-    if (!filtersOk) { setRows([]); return; }
-    setLoading(true);
-
+  function buildQuery(from: number) {
     let query = supabase
       .from("doctors_directory")
-      .select("doctor_key,name,specialty,phone,clinic,address,city,uf");
+      .select("doctor_key,name,specialty,phone,clinic,address,city,uf", { count: "exact" })
+      .range(from, from + PAGE_SIZE - 1);
 
     if (qName.trim().length >= 2) query = query.ilike("name", `%${qName.trim()}%`);
     if (qSpec.trim().length >= 2) query = query.ilike("specialty", `%${qSpec.trim()}%`);
     if (qCrm.trim().length >= 1) query = query.eq("crm", qCrm.trim());
     if (qUf.trim().length >= 2) query = query.eq("uf", qUf.trim().toUpperCase());
 
-    const { data, error } = await query.limit(50);
+    return query;
+  }
+
+  async function runSearch() {
+    setMsg("");
+    if (!filtersOk) { setRows([]); setTotal(null); setHasMore(false); return; }
+    setLoading(true);
+    setPage(0);
+
+    const { data, error, count } = await buildQuery(0);
     setLoading(false);
 
     if (error) {
-      console.log(error);
-      setMsg((error as any)?.message ?? "Erro ao buscar no diretório.");
+      setMsg(error?.message ?? "Erro ao buscar no diretório.");
       setRows([]);
       return;
     }
-    console.log("primeiro item:", data?.[0]);
+
     setRows((data as Row[]) ?? []);
+    setTotal(count ?? null);
+    setHasMore((data?.length ?? 0) === PAGE_SIZE && (count ?? 0) > PAGE_SIZE);
   }
 
-  async function addToMyList(r: Row) {
-  setMsg("");
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth?.user;
-  if (!user) { setMsg("Usuário não autenticado."); return; }
+  async function loadMore() {
+    const nextPage = page + 1;
+    setLoadingMore(true);
 
-  // 1. Verifica se já existe na tabela doctors pelo doctor_key
-  let { data: existing } = await supabase
-    .from("doctors")
-    .select("id")
-    .eq("doctor_key", r.doctor_key)
-    .maybeSingle();
+    const { data, error } = await buildQuery(nextPage * PAGE_SIZE);
+    setLoadingMore(false);
 
-  let doctorUuid = existing?.id;
+    if (error || !data) return;
 
-  // 2. Se não existe, cria o registro em doctors
-  if (!doctorUuid) {
-    const { data: inserted, error: insertErr } = await supabase
-      .from("doctors")
-      .insert({
-        doctor_key: r.doctor_key,
-        name: r.name,
-        specialty: r.specialty ?? "",
-        phone: r.phone ?? "",
-        clinic: r.clinic ?? "",
-        address: r.address ?? "",
-        city: r.city ?? "",
-        uf: r.uf ?? "",
-        state: r.uf ?? "",
-        tenant_id: user.id,
-        is_active: true,
-      })
-      .select("id")
-      .single();
-
-    if (insertErr || !inserted) {
-      setMsg("Erro ao copiar médico para sua lista.");
-      console.error(insertErr);
-      return;
-    }
-
-    doctorUuid = inserted.id;
+    setRows((prev) => [...prev, ...(data as Row[])]);
+    setPage(nextPage);
+    setHasMore(data.length === PAGE_SIZE);
   }
-
-  // 3. Vincula ao propagandista em user_doctors
-  const { error } = await supabase
-    .from("user_doctors")
-    .upsert([{ user_id: user.id, doctor_id: doctorUuid }], {
-      onConflict: "user_id,doctor_id",
-    });
-
-  if (error) {
-    setMsg("Médico já está na sua lista.");
-    return;
-  }
-
-  setMsg("Adicionado à sua escala ✅");
-}
 
   useEffect(() => {
-    const t = setTimeout(() => runSearch(), 350);
-    return () => clearTimeout(t);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => runSearch(), 350);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [qName, qSpec, qCrm, qUf]);
+
+  async function addToMyList(r: Row) {
+    setMsg("");
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user) { setMsg("Usuário não autenticado."); return; }
+
+    let { data: existing } = await supabase
+      .from("doctors")
+      .select("id")
+      .eq("doctor_key", r.doctor_key)
+      .maybeSingle();
+
+    let doctorUuid = existing?.id;
+
+    if (!doctorUuid) {
+      const { data: inserted, error: insertErr } = await supabase
+        .from("doctors")
+        .insert({
+          doctor_key: r.doctor_key,
+          name: r.name,
+          specialty: r.specialty ?? "",
+          phone: r.phone ?? "",
+          clinic: r.clinic ?? "",
+          address: r.address ?? "",
+          city: r.city ?? "",
+          uf: r.uf ?? "",
+          state: r.uf ?? "",
+          tenant_id: user.id,
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (insertErr || !inserted) {
+        setMsg("Erro ao copiar médico para sua lista.");
+        return;
+      }
+      doctorUuid = inserted.id;
+    }
+
+    const { error } = await supabase
+      .from("user_doctors")
+      .upsert([{ user_id: user.id, doctor_id: doctorUuid }], {
+        onConflict: "user_id,doctor_id",
+      });
+
+    if (error) { setMsg("Médico já está na sua lista."); return; }
+    setMsg("Adicionado à sua escala ✅");
+  }
 
   const inputStyle = {
     padding: "11px 14px",
@@ -150,8 +170,6 @@ export default function PremiumPage() {
       margin: "0 auto",
       padding: 24,
     }}>
-
-      {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <h2 style={{
           fontFamily: "'Syne', sans-serif",
@@ -225,7 +243,7 @@ export default function PremiumPage() {
       </div>
 
       {/* Botão + Mensagem */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
         <button
           type="button"
           onClick={runSearch}
@@ -246,6 +264,14 @@ export default function PremiumPage() {
         >
           {loading ? "Buscando..." : "Pesquisar"}
         </button>
+
+        {/* ✅ Contador de resultados */}
+        {total !== null && filtersOk && (
+          <span style={{ fontSize: 12, color: "#8A9BB0" }}>
+            {total} médico{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}
+            {rows.length < total ? ` · exibindo ${rows.length}` : ""}
+          </span>
+        )}
 
         {msg && (
           <div style={{
@@ -291,17 +317,12 @@ export default function PremiumPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
               <div style={{ display: "grid", gap: 4 }}>
-                <div
-                  onClick={(e) => { e.stopPropagation(); window.location.href = `/doctor/${r.doctor_key}`; }}
-                  style={{
-                    fontFamily: "'Syne', sans-serif",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    color: "#0D1117",
-                    cursor: "pointer",
-                    textDecoration: "underline",
-                  }}
-                >{r.name}</div>
+                <div style={{
+                  fontFamily: "'Syne', sans-serif",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  color: "#0D1117",
+                }}>{r.name}</div>
 
                 <div style={{ fontSize: 12, color: "#8A9BB0" }}>
                   {r.specialty} · {r.phone}
@@ -361,6 +382,31 @@ export default function PremiumPage() {
             fontSize: 13,
             color: "#7A4A00",
           }}>Nenhum médico encontrado.</div>
+        )}
+
+        {/* ✅ Botão carregar mais */}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              padding: "12px 24px",
+              borderRadius: 10,
+              border: "1.5px solid rgba(26,107,74,0.25)",
+              background: "rgba(26,107,74,0.06)",
+              color: "#1A6B4A",
+              fontFamily: "'Syne', sans-serif",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              letterSpacing: "0.06em",
+              width: "100%",
+              marginTop: 4,
+            }}
+          >
+            {loadingMore ? "Carregando..." : `Carregar mais · ${total! - rows.length} restantes`}
+          </button>
         )}
       </div>
     </main>
