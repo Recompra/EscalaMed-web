@@ -8,6 +8,8 @@ type Message = {
   content: string;
 };
 
+type Mode = "normal" | "interview_gd";
+
 export default function AIAssistantPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -15,12 +17,27 @@ export default function AIAssistantPage() {
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [imageMediaType, setImageMediaType] = useState<string>("image/jpeg");
+  const [mode, setMode] = useState<Mode>("normal");
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
+  // Scroll suave apenas na área de mensagens, não na tela toda
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
   }, [messages, loading]);
+
+  // Auto-resize do textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const maxHeight = 120;
+    textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
+  }, [input]);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -32,6 +49,14 @@ export default function AIAssistantPage() {
       setImage(base64);
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleModeToggle() {
+    const newMode = mode === "normal" ? "interview_gd" : "normal";
+    setMode(newMode);
+    setMessages([]);
+    setInput("");
+    setImage(null);
   }
 
   async function sendMessage() {
@@ -63,7 +88,11 @@ export default function AIAssistantPage() {
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          mode,
+          simulationRole: "GR",
+        }),
       });
 
       const data = await response.json();
@@ -78,9 +107,11 @@ export default function AIAssistantPage() {
     }
   }
 
+  const isInterviewMode = mode === "interview_gd";
+
   return (
     <main style={{
-      minHeight: "100vh",
+      height: "100dvh",           // tela fixa — não mexe com teclado
       background: "#0A0F0D",
       fontFamily: "'DM Sans', sans-serif",
       color: "#F5F3EE",
@@ -88,19 +119,18 @@ export default function AIAssistantPage() {
       flexDirection: "column",
       maxWidth: 720,
       margin: "0 auto",
+      overflow: "hidden",         // sem scroll na tela toda
     }}>
 
-      {/* Header */}
+      {/* Header fixo */}
       <div style={{
-        padding: "20px 24px 16px",
+        padding: "14px 20px 12px",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
         display: "flex",
         alignItems: "center",
-        gap: 12,
-        position: "sticky",
-        top: 0,
+        gap: 10,
         background: "#0A0F0D",
-        zIndex: 10,
+        flexShrink: 0,
       }}>
         <button type="button" onClick={() => router.push("/home")} style={{
           background: "rgba(255,255,255,0.07)",
@@ -111,51 +141,90 @@ export default function AIAssistantPage() {
           fontSize: 12,
           cursor: "pointer",
           fontFamily: "'DM Sans', sans-serif",
+          flexShrink: 0,
         }}>← Voltar</button>
 
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
               width: 8, height: 8, borderRadius: "50%",
               background: "#4ADE80", boxShadow: "0 0 8px #4ADE80",
+              flexShrink: 0,
             }}/>
             <span style={{
               fontFamily: "'Syne', sans-serif",
               fontWeight: 800, fontSize: 16, color: "#F5F3EE",
             }}>EscalaIA</span>
+            {isInterviewMode && (
+              <span style={{
+                fontSize: 10, fontWeight: 700,
+                background: "rgba(251,191,36,0.15)",
+                border: "1px solid rgba(251,191,36,0.35)",
+                color: "#FBBF24",
+                padding: "2px 8px", borderRadius: 20,
+              }}>ENTREVISTA GD</span>
+            )}
           </div>
           <p style={{ margin: 0, fontSize: 11, color: "#8A9BB0" }}>
-            Assistente do propagandista médico
+            {isInterviewMode ? "Simulando entrevista com GR" : "Assistente do propagandista médico"}
           </p>
         </div>
+
+        {/* Botão modo entrevista */}
+        <button type="button" onClick={handleModeToggle} style={{
+          background: isInterviewMode
+            ? "rgba(251,191,36,0.15)"
+            : "rgba(255,255,255,0.07)",
+          border: isInterviewMode
+            ? "1px solid rgba(251,191,36,0.35)"
+            : "1px solid rgba(255,255,255,0.10)",
+          color: isInterviewMode ? "#FBBF24" : "#8A9BB0",
+          padding: "6px 10px",
+          borderRadius: 8,
+          fontSize: 11,
+          fontWeight: 600,
+          cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif",
+          flexShrink: 0,
+          whiteSpace: "nowrap",
+        }}>
+          {isInterviewMode ? "✕ Sair" : "🎯 Entrevista GD"}
+        </button>
       </div>
 
-      {/* Mensagens */}
-      <div style={{
-        flex: 1, overflowY: "auto",
-        padding: "20px 24px",
-        display: "flex", flexDirection: "column", gap: 16,
-      }}>
-
-        {messages.length === 0 && (
+      {/* Área de mensagens — scroll apenas aqui */}
+      <div
+        ref={messagesRef}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "16px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+          WebkitOverflowScrolling: "touch", // scroll suave iOS
+        }}
+      >
+        {messages.length === 0 && !isInterviewMode && (
           <div style={{
             background: "rgba(26,107,74,0.10)",
             border: "1px solid rgba(26,107,74,0.25)",
-            borderRadius: 14, padding: "20px 22px",
+            borderRadius: 14, padding: "18px 20px",
           }}>
-            <p style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 600, color: "#4ADE80" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600, color: "#4ADE80" }}>
               👋 Fala rep! Sou a EscalaIA.
             </p>
             <p style={{ margin: "0 0 12px", fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>
               Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento com o GD, de abordagem em drogaria a como não entrar em pânico antes de um acompanhamento com o GR. 😄
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {[
                 "📊 Analisar seu Power BI e preparar argumentos para reunião",
                 "💊 Dicas de abordagem com médicos e drogarias",
                 "🎯 Como se posicionar em acompanhamentos com GD/GR/GN",
                 "🗣️ Quebra gelo e relacionamento com gestores",
                 "📸 Manda o print do Sistema, Power BI ou MDTR que eu analiso",
+                "🏆 Toque em 'Entrevista GD' para simular o processo seletivo",
               ].map((tip) => (
                 <div key={tip} style={{
                   fontSize: 12, color: "#8A9BB0",
@@ -169,6 +238,24 @@ export default function AIAssistantPage() {
           </div>
         )}
 
+        {messages.length === 0 && isInterviewMode && (
+          <div style={{
+            background: "rgba(251,191,36,0.07)",
+            border: "1px solid rgba(251,191,36,0.25)",
+            borderRadius: 14, padding: "18px 20px",
+          }}>
+            <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600, color: "#FBBF24" }}>
+              🎯 Modo Entrevista GD ativado
+            </p>
+            <p style={{ margin: "0 0 8px", fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>
+              Vou simular uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. Uma pergunta por vez, com feedback após cada resposta.
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: "#8A9BB0", lineHeight: 1.65 }}>
+              Digite <strong style={{ color: "#FBBF24" }}>"começar"</strong> para iniciar a simulação ou me diga em qual bloco quer treinar.
+            </p>
+          </div>
+        )}
+
         {messages.map((m, i) => (
           <div key={i} style={{
             display: "flex",
@@ -176,10 +263,12 @@ export default function AIAssistantPage() {
           }}>
             <div style={{
               maxWidth: "85%",
-              padding: "12px 16px",
+              padding: "11px 15px",
               borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
               background: m.role === "user"
-                ? "linear-gradient(135deg, #1A6B4A, #145c3e)"
+                ? isInterviewMode
+                  ? "linear-gradient(135deg, #92400e, #78350f)"
+                  : "linear-gradient(135deg, #1A6B4A, #145c3e)"
                 : "rgba(255,255,255,0.05)",
               border: m.role === "user" ? "none" : "1px solid rgba(255,255,255,0.08)",
               fontSize: 13, lineHeight: 1.65,
@@ -194,27 +283,30 @@ export default function AIAssistantPage() {
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div style={{
-              padding: "12px 16px",
+              padding: "11px 15px",
               borderRadius: "14px 14px 14px 4px",
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.08)",
               fontSize: 13, color: "#8A9BB0",
-            }}>Analisando... ⏳</div>
+            }}>
+              {isInterviewMode ? "GR pensando... 🤔" : "Analisando... ⏳"}
+            </div>
           </div>
         )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
+      {/* Input fixo no fundo — não sobe com teclado */}
       <div style={{
-        padding: "16px 24px 32px",
+        padding: "12px 16px 16px",
         borderTop: "1px solid rgba(255,255,255,0.07)",
         background: "#0A0F0D",
+        flexShrink: 0,
       }}>
         {image && (
           <div style={{
-            marginBottom: 10, padding: "8px 12px",
+            marginBottom: 8, padding: "7px 12px",
             background: "rgba(26,107,74,0.10)",
             border: "1px solid rgba(26,107,74,0.25)",
             borderRadius: 8, fontSize: 12, color: "#4ADE80",
@@ -227,31 +319,45 @@ export default function AIAssistantPage() {
         )}
 
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <input ref={fileRef} type="file" accept="image/*"
-            onChange={handleImageUpload} style={{ display: "none" }} id="imageUpload" />
-          <label htmlFor="imageUpload" style={{
-            width: 40, height: 40, borderRadius: 10,
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.10)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", flexShrink: 0, fontSize: 18,
-          }}>📸</label>
+          {!isInterviewMode && (
+            <>
+              <input ref={fileRef} type="file" accept="image/*"
+                onChange={handleImageUpload} style={{ display: "none" }} id="imageUpload" />
+              <label htmlFor="imageUpload" style={{
+                width: 40, height: 40, borderRadius: 10,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0, fontSize: 18,
+              }}>📸</label>
+            </>
+          )}
 
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
             }}
-            placeholder="Pergunta, desabafo ou Power BI — pode mandar..."
+            placeholder={isInterviewMode
+              ? "Sua resposta para o GR..."
+              : "Pergunta, desabafo ou Power BI — pode mandar..."}
             rows={1}
             style={{
-              flex: 1, padding: "10px 14px", borderRadius: 10,
+              flex: 1,
+              padding: "10px 14px",
+              borderRadius: 10,
               border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(255,255,255,0.05)",
-              color: "#F5F3EE", fontSize: 13,
+              color: "#F5F3EE",
+              fontSize: 14,           // 14px evita zoom automático no iOS
               fontFamily: "'DM Sans', sans-serif",
-              outline: "none", resize: "none", lineHeight: 1.5,
+              outline: "none",
+              resize: "none",
+              lineHeight: 1.5,
+              maxHeight: 120,
+              overflowY: "auto",
             }}
           />
 
@@ -261,12 +367,16 @@ export default function AIAssistantPage() {
               width: 40, height: 40, borderRadius: 10, border: "none",
               background: loading || (!input.trim() && !image)
                 ? "rgba(255,255,255,0.07)"
-                : "linear-gradient(135deg, #1A6B4A, #145c3e)",
+                : isInterviewMode
+                  ? "linear-gradient(135deg, #92400e, #78350f)"
+                  : "linear-gradient(135deg, #1A6B4A, #145c3e)",
               color: "#fff", fontSize: 16,
               cursor: loading || (!input.trim() && !image) ? "not-allowed" : "pointer",
               flexShrink: 0,
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: loading ? "none" : "0 4px 16px rgba(26,107,74,0.40)",
+              boxShadow: loading ? "none" : isInterviewMode
+                ? "0 4px 16px rgba(146,64,14,0.40)"
+                : "0 4px 16px rgba(26,107,74,0.40)",
             }}>➤</button>
         </div>
       </div>
