@@ -86,7 +86,7 @@ export default function PremiumPage() {
             <span style={{
               fontFamily: "'Syne', sans-serif", fontSize: 42,
               fontWeight: 800, color: "#F5F3EE", lineHeight: 1,
-            }}>R$&nbsp;29</span>
+            }}>R$&nbsp;59,90</span>
             <span style={{ fontSize: 14, color: "#8A9BB0", paddingBottom: 6 }}>/mês</span>
           </div>
           <div style={{ fontSize: 12, color: "#8A9BB0" }}>Cancele quando quiser. Sem fidelidade.</div>
@@ -156,7 +156,7 @@ export default function PremiumPage() {
                 title: "Simulador de Entrevista para GD",
                 desc: "Simule uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. 8 blocos completos — apresentação, liderança, conflitos, verba, mudança de cidade e mais. Feedback após cada resposta.",
                 highlight: true,
-                badge: "CARRO-CHEFE",
+                badge: "Avance na carreira",
               },
               {
                 icon: "📊",
@@ -374,7 +374,7 @@ export default function PremiumPage() {
             e.currentTarget.style.transform = "translateY(0)";
             e.currentTarget.style.boxShadow = "0 8px 32px rgba(26,107,74,0.45)";
           }}
-        >ASSINAR AGORA — R$ 29/mês</button>
+        >ASSINAR AGORA — R$ 59,90/mês</button>
 
         <button type="button"
           onClick={() => alert("Em breve: trial gratuito.")}
