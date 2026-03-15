@@ -147,7 +147,7 @@ export default function AIAssistantPage() {
               👋 Fala rep! Sou a EscalaIA.
             </p>
             <p style={{ margin: "0 0 12px", fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>
-              Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento com o GD, de abordagem em drogaria a como não entrar em pânico antes de uma reunião com o GR. 😄
+              Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento com o GD, de abordagem em drogaria a como não entrar em pânico antes de um acompanhamento com o GR. 😄
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
@@ -155,7 +155,7 @@ export default function AIAssistantPage() {
                 "💊 Dicas de abordagem com médicos e drogarias",
                 "🎯 Como se posicionar em acompanhamentos com GD/GR/GN",
                 "🗣️ Quebra gelo e relacionamento com gestores",
-                "📸 Manda o print do Veeva ou Power BI que eu analiso",
+                "📸 Manda o print do Sistema, Power BI ou MDTR que eu analiso",
               ].map((tip) => (
                 <div key={tip} style={{
                   fontSize: 12, color: "#8A9BB0",
