@@ -10,6 +10,15 @@ type Message = {
 
 type Mode = "normal" | "interview_gd";
 
+const SUGGESTIONS = [
+  { icon: "📊", text: "Analisar seu Power BI e preparar argumentos para reunião", message: "Quero analisar meu Power BI. Vou te mandar o print agora." },
+  { icon: "💊", text: "Dicas de abordagem com médicos e drogarias", message: "Me dá dicas de abordagem com médicos difíceis e estratégias para drogaria." },
+  { icon: "🎯", text: "Como se posicionar em acompanhamentos com GD/GR/GN", message: "Tenho acompanhamento chegando. Como devo me preparar e me posicionar?" },
+  { icon: "🗣️", text: "Quebra gelo e relacionamento com gestores", message: "Como melhorar meu relacionamento com o GD e criar um bom clima nos acompanhamentos?" },
+  { icon: "📸", text: "Manda o print do Sistema, Power BI ou MDTR que eu analiso", message: "Vou mandar um print do meu painel para você analisar." },
+  { icon: "🏆", text: "Toque em 'Entrevista GD' para simular o processo seletivo", message: "" },
+];
+
 export default function AIAssistantPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -18,25 +27,21 @@ export default function AIAssistantPage() {
   const [image, setImage] = useState<string | null>(null);
   const [imageMediaType, setImageMediaType] = useState<string>("image/jpeg");
   const [mode, setMode] = useState<Mode>("normal");
-  const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
 
-  // Scroll suave apenas na área de mensagens, não na tela toda
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
-  // Auto-resize do textarea
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";
-    const maxHeight = 120;
-    textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + "px";
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
   }, [input]);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -52,11 +57,28 @@ export default function AIAssistantPage() {
   }
 
   function handleModeToggle() {
-    const newMode = mode === "normal" ? "interview_gd" : "normal";
-    setMode(newMode);
+    setMode((prev) => prev === "normal" ? "interview_gd" : "normal");
     setMessages([]);
     setInput("");
     setImage(null);
+  }
+
+  function handleSuggestionClick(suggestion: typeof SUGGESTIONS[0]) {
+    // Última sugestão é o botão de entrevista — ignora clique aqui
+    if (!suggestion.message) return;
+    sendMessageText(suggestion.message);
+  }
+
+  async function sendMessageText(text: string) {
+    if (!text.trim()) return;
+    setLoading(true);
+
+    const userMessage: Message = { role: "user", content: text };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput("");
+
+    await streamResponse(newMessages);
   }
 
   async function sendMessage() {
@@ -68,16 +90,17 @@ export default function AIAssistantPage() {
     setMessages(newMessages);
     setInput("");
 
+    await streamResponse(newMessages, image || undefined);
+  }
+
+  async function streamResponse(newMessages: Message[], imageData?: string) {
     try {
       const apiMessages = newMessages.map((m, idx) => {
-        if (idx === newMessages.length - 1 && image) {
+        if (idx === newMessages.length - 1 && imageData) {
           return {
             role: m.role,
             content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: imageMediaType, data: image },
-              },
+              { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageData } },
               { type: "text", text: m.content || "Analise essa imagem e me dê insights para minha reunião." },
             ],
           };
@@ -88,16 +111,50 @@ export default function AIAssistantPage() {
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: apiMessages,
-          mode,
-          simulationRole: "GR",
-        }),
+        body: JSON.stringify({ messages: apiMessages, mode, simulationRole: "GR" }),
       });
 
-      const data = await response.json();
-      const reply = data.content?.[0]?.text ?? "Erro ao obter resposta.";
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      if (!response.body) throw new Error("Sem resposta");
+
+      // Adiciona mensagem vazia do assistente para ir preenchendo
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed?.delta?.text || parsed?.delta?.value || "";
+            if (delta) {
+              setMessages((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                  ...updated[updated.length - 1],
+                  content: updated[updated.length - 1].content + delta,
+                };
+                return updated;
+              });
+            }
+          } catch {
+            // linha incompleta — ignora
+          }
+        }
+      }
+
       setImage(null);
       if (fileRef.current) fileRef.current.value = "";
     } catch {
@@ -111,7 +168,7 @@ export default function AIAssistantPage() {
 
   return (
     <main style={{
-      height: "100dvh",           // tela fixa — não mexe com teclado
+      height: "100dvh",
       background: "#0A0F0D",
       fontFamily: "'DM Sans', sans-serif",
       color: "#F5F3EE",
@@ -119,37 +176,29 @@ export default function AIAssistantPage() {
       flexDirection: "column",
       maxWidth: 720,
       margin: "0 auto",
-      overflow: "hidden",         // sem scroll na tela toda
+      overflow: "hidden",
     }}>
 
-      {/* Header fixo */}
+      {/* Header */}
       <div style={{
         padding: "14px 20px 12px",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        background: "#0A0F0D",
-        flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 10,
+        background: "#0A0F0D", flexShrink: 0,
       }}>
         <button type="button" onClick={() => router.push("/home")} style={{
           background: "rgba(255,255,255,0.07)",
           border: "1px solid rgba(255,255,255,0.10)",
-          color: "#8A9BB0",
-          padding: "6px 12px",
-          borderRadius: 8,
-          fontSize: 12,
-          cursor: "pointer",
-          fontFamily: "'DM Sans', sans-serif",
-          flexShrink: 0,
+          color: "#8A9BB0", padding: "6px 12px", borderRadius: 8,
+          fontSize: 12, cursor: "pointer",
+          fontFamily: "'DM Sans', sans-serif", flexShrink: 0,
         }}>← Voltar</button>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
               width: 8, height: 8, borderRadius: "50%",
-              background: "#4ADE80", boxShadow: "0 0 8px #4ADE80",
-              flexShrink: 0,
+              background: "#4ADE80", boxShadow: "0 0 8px #4ADE80", flexShrink: 0,
             }}/>
             <span style={{
               fontFamily: "'Syne', sans-serif",
@@ -160,8 +209,7 @@ export default function AIAssistantPage() {
                 fontSize: 10, fontWeight: 700,
                 background: "rgba(251,191,36,0.15)",
                 border: "1px solid rgba(251,191,36,0.35)",
-                color: "#FBBF24",
-                padding: "2px 8px", borderRadius: 20,
+                color: "#FBBF24", padding: "2px 8px", borderRadius: 20,
               }}>ENTREVISTA GD</span>
             )}
           </div>
@@ -170,41 +218,26 @@ export default function AIAssistantPage() {
           </p>
         </div>
 
-        {/* Botão modo entrevista */}
         <button type="button" onClick={handleModeToggle} style={{
-          background: isInterviewMode
-            ? "rgba(251,191,36,0.15)"
-            : "rgba(255,255,255,0.07)",
-          border: isInterviewMode
-            ? "1px solid rgba(251,191,36,0.35)"
-            : "1px solid rgba(255,255,255,0.10)",
+          background: isInterviewMode ? "rgba(251,191,36,0.15)" : "rgba(255,255,255,0.07)",
+          border: isInterviewMode ? "1px solid rgba(251,191,36,0.35)" : "1px solid rgba(255,255,255,0.10)",
           color: isInterviewMode ? "#FBBF24" : "#8A9BB0",
-          padding: "6px 10px",
-          borderRadius: 8,
-          fontSize: 11,
-          fontWeight: 600,
-          cursor: "pointer",
-          fontFamily: "'DM Sans', sans-serif",
-          flexShrink: 0,
-          whiteSpace: "nowrap",
+          padding: "6px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          flexShrink: 0, whiteSpace: "nowrap",
         }}>
           {isInterviewMode ? "✕ Sair" : "🎯 Entrevista GD"}
         </button>
       </div>
 
-      {/* Área de mensagens — scroll apenas aqui */}
-      <div
-        ref={messagesRef}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "16px 20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-          WebkitOverflowScrolling: "touch", // scroll suave iOS
-        }}
-      >
+      {/* Mensagens */}
+      <div ref={messagesRef} style={{
+        flex: 1, overflowY: "auto", padding: "16px 20px",
+        display: "flex", flexDirection: "column", gap: 14,
+        WebkitOverflowScrolling: "touch",
+      }}>
+
+        {/* Tela inicial normal — sugestões clicáveis */}
         {messages.length === 0 && !isInterviewMode && (
           <div style={{
             background: "rgba(26,107,74,0.10)",
@@ -218,26 +251,47 @@ export default function AIAssistantPage() {
               Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento com o GD, de abordagem em drogaria a como não entrar em pânico antes de um acompanhamento com o GR. 😄
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {[
-                "📊 Analisar seu Power BI e preparar argumentos para reunião",
-                "💊 Dicas de abordagem com médicos e drogarias",
-                "🎯 Como se posicionar em acompanhamentos com GD/GR/GN",
-                "🗣️ Quebra gelo e relacionamento com gestores",
-                "📸 Manda o print do Sistema, Power BI ou MDTR que eu analiso",
-                "🏆 Toque em 'Entrevista GD' para simular o processo seletivo",
-              ].map((tip) => (
-                <div key={tip} style={{
-                  fontSize: 12, color: "#8A9BB0",
-                  padding: "8px 12px",
-                  background: "rgba(255,255,255,0.03)",
-                  borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}>{tip}</div>
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s.text}
+                  type="button"
+                  onClick={() => {
+                    if (!s.message) {
+                      handleModeToggle();
+                    } else {
+                      handleSuggestionClick(s);
+                    }
+                  }}
+                  style={{
+                    fontSize: 12, color: "#8A9BB0",
+                    padding: "10px 12px",
+                    background: "rgba(255,255,255,0.03)",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    transition: "background 0.15s, border-color 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(74,222,128,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(74,222,128,0.20)";
+                    e.currentTarget.style.color = "#C8D8C0";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.color = "#8A9BB0";
+                  }}
+                >
+                  {s.icon} {s.text}
+                </button>
               ))}
             </div>
           </div>
         )}
 
+        {/* Tela inicial entrevista */}
         {messages.length === 0 && isInterviewMode && (
           <div style={{
             background: "rgba(251,191,36,0.07)",
@@ -250,20 +304,55 @@ export default function AIAssistantPage() {
             <p style={{ margin: "0 0 8px", fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>
               Vou simular uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. Uma pergunta por vez, com feedback após cada resposta.
             </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#8A9BB0", lineHeight: 1.65 }}>
-              Digite <strong style={{ color: "#FBBF24" }}>"começar"</strong> para iniciar a simulação ou me diga em qual bloco quer treinar.
-            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {[
+                { label: "▶️ Começar do início", msg: "começar" },
+                { label: "🧑‍💼 Treinar apresentação pessoal", msg: "Quero treinar o bloco de apresentação pessoal" },
+                { label: "📈 Treinar trajetória e resultados", msg: "Quero treinar o bloco de trajetória e resultados" },
+                { label: "👥 Treinar liderança e gestão", msg: "Quero treinar o bloco de liderança e gestão" },
+                { label: "🔥 Treinar situações difíceis", msg: "Quero treinar o bloco de conflitos e situações difíceis" },
+                { label: "🏠 Treinar mudança de cidade", msg: "Quero treinar o bloco de mudança de cidade e disponibilidade" },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => sendMessageText(item.msg)}
+                  style={{
+                    fontSize: 12, color: "#8A9BB0",
+                    padding: "10px 12px",
+                    background: "rgba(255,255,255,0.03)",
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(251,191,36,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(251,191,36,0.20)";
+                    e.currentTarget.style.color = "#FBBF24";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.color = "#8A9BB0";
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
+        {/* Mensagens */}
         {messages.map((m, i) => (
           <div key={i} style={{
             display: "flex",
             justifyContent: m.role === "user" ? "flex-end" : "flex-start",
           }}>
             <div style={{
-              maxWidth: "85%",
-              padding: "11px 15px",
+              maxWidth: "85%", padding: "11px 15px",
               borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
               background: m.role === "user"
                 ? isInterviewMode
@@ -276,15 +365,23 @@ export default function AIAssistantPage() {
               whiteSpace: "pre-wrap",
             }}>
               {m.content}
+              {/* Cursor piscando enquanto escreve */}
+              {m.role === "assistant" && loading && i === messages.length - 1 && (
+                <span style={{
+                  display: "inline-block", width: 2, height: 14,
+                  background: "#4ADE80", marginLeft: 2,
+                  animation: "blink 1s step-end infinite",
+                }}/>
+              )}
             </div>
           </div>
         ))}
 
-        {loading && (
+        {/* Loading inicial antes de começar a escrever */}
+        {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div style={{
-              padding: "11px 15px",
-              borderRadius: "14px 14px 14px 4px",
+              padding: "11px 15px", borderRadius: "14px 14px 14px 4px",
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.08)",
               fontSize: 13, color: "#8A9BB0",
@@ -293,16 +390,13 @@ export default function AIAssistantPage() {
             </div>
           </div>
         )}
-
-        <div ref={bottomRef} />
       </div>
 
-      {/* Input fixo no fundo — não sobe com teclado */}
+      {/* Input */}
       <div style={{
         padding: "12px 16px 16px",
         borderTop: "1px solid rgba(255,255,255,0.07)",
-        background: "#0A0F0D",
-        flexShrink: 0,
+        background: "#0A0F0D", flexShrink: 0,
       }}>
         {image && (
           <div style={{
@@ -313,7 +407,8 @@ export default function AIAssistantPage() {
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <span>📸 Imagem anexada — pronta para análise</span>
-            <button type="button" onClick={() => { setImage(null); if (fileRef.current) fileRef.current.value = ""; }}
+            <button type="button"
+              onClick={() => { setImage(null); if (fileRef.current) fileRef.current.value = ""; }}
               style={{ background: "none", border: "none", color: "#C0392B", cursor: "pointer", fontSize: 14 }}>✕</button>
           </div>
         )}
@@ -340,24 +435,16 @@ export default function AIAssistantPage() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
             }}
-            placeholder={isInterviewMode
-              ? "Sua resposta para o GR..."
-              : "Pergunta, desabafo ou Power BI — pode mandar..."}
+            placeholder={isInterviewMode ? "Sua resposta para o GR..." : "Pergunta, desabafo ou Power BI — pode mandar..."}
             rows={1}
             style={{
-              flex: 1,
-              padding: "10px 14px",
-              borderRadius: 10,
+              flex: 1, padding: "10px 14px", borderRadius: 10,
               border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(255,255,255,0.05)",
-              color: "#F5F3EE",
-              fontSize: 14,           // 14px evita zoom automático no iOS
+              color: "#F5F3EE", fontSize: 14,
               fontFamily: "'DM Sans', sans-serif",
-              outline: "none",
-              resize: "none",
-              lineHeight: 1.5,
-              maxHeight: 120,
-              overflowY: "auto",
+              outline: "none", resize: "none", lineHeight: 1.5,
+              maxHeight: 120, overflowY: "auto",
             }}
           />
 
@@ -372,14 +459,21 @@ export default function AIAssistantPage() {
                   : "linear-gradient(135deg, #1A6B4A, #145c3e)",
               color: "#fff", fontSize: 16,
               cursor: loading || (!input.trim() && !image) ? "not-allowed" : "pointer",
-              flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow: loading ? "none" : isInterviewMode
                 ? "0 4px 16px rgba(146,64,14,0.40)"
                 : "0 4px 16px rgba(26,107,74,0.40)",
             }}>➤</button>
         </div>
       </div>
+
+      {/* CSS para cursor piscando */}
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+      `}</style>
     </main>
   );
 }
