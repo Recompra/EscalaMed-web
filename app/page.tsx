@@ -58,7 +58,7 @@ export default function LandingPage() {
       title: "Simulador de Entrevista para GD",
       desc: "Simule uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. 8 blocos completos — apresentação, liderança, conflitos, verba, mudança de cidade e mais. Feedback após cada resposta.",
       highlight: true,
-      badge: "CARRO-CHEFE",
+      badge: "Avance na carreira",
     },
     {
       icon: "📊",
