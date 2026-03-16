@@ -1,59 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_ROUTES = [
-  "/",
-  "/login",
-  "/signup",
-  "/visit-request",
-  "/premium",
+const PROTECTED_ROUTES = [
+  "/home",
+  "/ai",
+  "/admin",
+  "/medicos",
+  "/directory",
+  "/groups",
+  "/import",
+  "/account",
+  "/support",
+  "/visit-request/requests",
 ];
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
   const { pathname } = req.nextUrl;
 
-  // Rotas públicas — passa direto sem verificar sessão
-  const isPublic = PUBLIC_ROUTES.some((route) =>
+  // Só bloqueia rotas explicitamente protegidas
+  const isProtected = PROTECTED_ROUTES.some((route) =>
     pathname === route || pathname.startsWith(route + "/")
   );
 
-  if (isPublic) return res;
+  if (!isProtected) return NextResponse.next();
 
-  // Verifica sessão apenas para rotas protegidas
-  try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return req.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              res.cookies.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
+  // Verifica cookie de sessão do Supabase
+  const allCookies = req.cookies.getAll();
+  const hasSession = allCookies.some((c) => c.name.includes("auth-token"));
 
-    const { data: { session } } = await supabase.auth.getSession();
-
-    // Sem sessão em rota protegida → vai para landing
-    if (!session) {
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = "/";
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    return res;
-
-  } catch {
-    // Se der qualquer erro na verificação, deixa passar
-    return res;
+  if (!hasSession) {
+    const redirectUrl = req.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    return NextResponse.redirect(redirectUrl);
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
