@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
 const PROTECTED_ROUTES = [
@@ -9,33 +10,79 @@ const PROTECTED_ROUTES = [
   "/groups",
   "/import",
   "/account",
-  "/support",
   "/visit-request/requests",
 ];
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/signup",
+  "/register",
+  "/support",
+  "/visit-request",
+];
 
-  const isProtected = PROTECTED_ROUTES.some((route) =>
-    pathname === route || pathname.startsWith(route + "/")
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  const isPublic = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  if (!isProtected) return NextResponse.next();
-
-  const allCookies = req.cookies.getAll();
-  const hasSession = allCookies.some((c) => c.name.startsWith("sb_"));
-
-  if (!hasSession) {
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = "/";
-    return NextResponse.redirect(redirectUrl);
+  if (isPublic) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  const isProtected = PROTECTED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  if (!isProtected) {
+    return NextResponse.next();
+  }
+
+  let response = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+
+          response = NextResponse.next({
+            request,
+          });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|opengraph-image.png|.*\\.svg|.*\\.png).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
