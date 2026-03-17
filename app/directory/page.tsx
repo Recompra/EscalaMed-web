@@ -45,6 +45,7 @@ export default function DirectoryPage() {
     qUf.trim().length >= 2
   );
 
+ 
   function buildQuery(from: number) {
     let query = supabase
       .from("doctors_directory")
@@ -58,6 +59,7 @@ export default function DirectoryPage() {
 
     return query;
   }
+  
 
   async function runSearch() {
     setMsg("");
@@ -106,10 +108,11 @@ export default function DirectoryPage() {
     if (!user) { setMsg("Usuário não autenticado."); return; }
 
     let { data: existing } = await supabase
-      .from("doctors")
-      .select("id")
-      .eq("doctor_key", r.doctor_key)
-      .maybeSingle();
+  .from("doctors")
+  .select("id")
+  .eq("doctor_key", r.doctor_key)
+  .limit(1)
+  .maybeSingle();
 
     let doctorUuid = existing?.id;
 
