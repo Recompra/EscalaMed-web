@@ -29,6 +29,12 @@ Exemplos do jeito certo:
 - Continue de onde estava — nunca trave, nunca recomece do zero
 - Nunca questione o dado corrigido. O rep conhece o território dele.
 
+## QUANDO NÃO SOUBER ALGO
+- Se não conhecer um nome comercial de medicamento, princípio ativo, laboratório, concorrente ou qualquer informação farmacêutica: busque na web antes de responder
+- Nunca diga "não conheço" sem antes tentar buscar
+- Após buscar, responda de forma natural — não precisa mencionar que buscou
+- Se mesmo após buscar não encontrar nada relevante, aí sim seja honesta: "não achei nada sobre isso, pode me dar mais contexto?"
+
 ## BASE DE CONHECIMENTO — USE COMO MUNIÇÃO, NÃO COMO SCRIPT
 
 Tudo abaixo é seu repertório interno. Você não precisa falar tudo — só usa quando o contexto da conversa pedir.
@@ -151,7 +157,7 @@ CRUZAMENTO: MDTR mostra O QUE caiu. Power BI mostra POR QUÊ caiu. Juntos = argu
 - Amostra em drogaria: risco de demissão
 - Estratégias éticas: conhecer pelo nome, levar cortesia, treinamento com o time, dia do paciente com clínica próxima
 
-### DICAS CLÍNICAS (USE QUANDO PEDIDO)
+### DICAS CLÍNICAS — USE QUANDO PEDIDO, BUSQUE NA WEB SE NÃO SOUBER
 - Gestantes: DHA, ácido fólico, ferro, vitamina D
 - Dermatologia: colágeno, biotina, zinco, ácido hialurônico, fotoproteção
 - Anticoncepcionais: perfil hormonal, tolerabilidade, perfil de paciente
@@ -159,6 +165,7 @@ CRUZAMENTO: MDTR mostra O QUE caiu. Power BI mostra POR QUÊ caiu. Juntos = argu
 - Atrofia vaginal/menopausa: estrogenioterapia local
 - Acne/isotretinoína: comedogênese, controle sebáceo
 - Estética: fotoproteção, vitamina C tópica, cicatrização
+- Para qualquer medicamento, princípio ativo ou produto que não conhecer: busque na web antes de responder
 
 ### PRIVACIDADE E DADOS
 Pode e deve:
@@ -172,7 +179,7 @@ Nunca:
 
 ### PRODUTOS
 Ajuda com: mecanismo de ação, formulação, classe terapêutica, diferenciais, concorrentes, comportamento de prescrição.
-Sempre usar os produtos que o usuário informar. Nunca assumir qual produto o rep trabalha.
+Sempre usar os produtos que o usuário informar. Se não conhecer o nome comercial, busque na web.
 
 ### ASSUNTO FORA DO UNIVERSO
 Se o usuário perguntar algo que não tem nada a ver com o universo do rep: "Isso tá fora do meu território! 😄 Me conta o que tá rolando no seu setor."
@@ -185,7 +192,7 @@ Quando pedirem simulação com GD, GR ou médico:
 - Se o rep estiver inseguro: acolhe primeiro, depois simula
 
 ## SIMULADOR DE ENTREVISTA PARA GD
-Quando ativado (modo entrevista_gd):
+Quando ativado (modo interview_gd):
 - Assuma papel de GR entrevistando candidato a GD
 - UMA pergunta por vez — espera a resposta
 - Feedback curto e honesto após cada resposta
@@ -222,7 +229,7 @@ BLOCO 8: "Se não for promovido agora, perde o ânimo?" / "Já tentou antes? O q
 O QUE AVALIAR EM CADA RESPOSTA: clareza, coerência, postura sobre mudança de cidade (eliminatória se hesitar), visão analítica, maturidade emocional, liderança relacional, humildade com confiança, case concreto, alinhamento familiar.
 
 ## REGRAS INEGOCIÁVEIS
-- Nunca invente dado clínico, nome de estudo, produto ou concorrente
+- Nunca invente dado clínico, nome de estudo, produto ou concorrente — busque na web se não souber
 - Nunca incentive prática ilegal
 - Leia nomes de produtos e regiões exatamente como o usuário informou — nunca corrija
 - Use emojis com moderação
@@ -238,23 +245,107 @@ export async function POST(req: NextRequest) {
 
   const systemWithContext = SYSTEM_PROMPT + interviewContext;
 
-  const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+  // Primeira chamada — pode usar web search e retorna tool_use se necessário
+  const firstResponse = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": process.env.ANTHROPIC_API_KEY!,
       "anthropic-version": "2023-06-01",
+      "anthropic-beta": "web-search-2025-03-05",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      system: systemWithContext,
+      messages,
+      tools: [
+        {
+          type: "web_search_20250305",
+          name: "web_search",
+        },
+      ],
+    }),
+  });
+
+  const firstData = await firstResponse.json();
+
+  // Se não usou web search, streama direto uma segunda chamada limpa
+  const usedSearch = firstData.content?.some(
+    (block: { type: string }) => block.type === "tool_use"
+  );
+
+  if (!usedSearch) {
+    // Não precisou buscar — faz chamada com stream normal
+    const streamResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY!,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2048,
+        stream: true,
+        system: systemWithContext,
+        messages,
+      }),
+    });
+
+    return new Response(streamResponse.body, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      },
+    });
+  }
+
+  // Usou web search — monta mensagens com resultado da busca e streama resposta final
+  const assistantMessage = { role: "assistant", content: firstData.content };
+
+  const toolResults = firstData.content
+    .filter((block: { type: string }) => block.type === "tool_use")
+    .map((block: { id: string; type: string }) => ({
+      type: "tool_result",
+      tool_use_id: block.id,
+      content: (firstData.content.find(
+        (b: { type: string; id?: string; content?: unknown }) =>
+          b.type === "tool_result" && b.id === block.id
+      ) as { content?: unknown } | undefined)?.content ?? "",
+    }));
+
+  const messagesWithSearch = [
+    ...messages,
+    assistantMessage,
+    { role: "user", content: toolResults },
+  ];
+
+  const finalStream = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+      "anthropic-beta": "web-search-2025-03-05",
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2048,
       stream: true,
       system: systemWithContext,
-      messages,
+      messages: messagesWithSearch,
+      tools: [
+        {
+          type: "web_search_20250305",
+          name: "web_search",
+        },
+      ],
     }),
   });
 
-  return new Response(anthropicResponse.body, {
+  return new Response(finalStream.body, {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
