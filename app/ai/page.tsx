@@ -11,48 +11,22 @@ type Message = {
 type Mode = "normal" | "interview_gd";
 
 const SUGGESTIONS = [
-  {
-    icon: "📊",
-    text: "Analisar seu Power BI e preparar argumentos para reunião",
-    message: "Quero analisar meu Power BI. Vou te mandar o print agora.",
-  },
-  {
-    icon: "💊",
-    text: "Dicas de abordagem com médicos e drogarias",
-    message: "Me dá dicas de abordagem com médicos difíceis e estratégias para drogaria.",
-  },
-  {
-    icon: "🎯",
-    text: "Como se posicionar em acompanhamentos com GD/GR/GN",
-    message: "Tenho acompanhamento chegando. Como devo me preparar e me posicionar?",
-  },
-  {
-    icon: "🗣️",
-    text: "Quebra gelo e relacionamento com gestores",
-    message: "Como melhorar meu relacionamento com o GD e criar um bom clima nos acompanhamentos?",
-  },
-  {
-    icon: "📸",
-    text: "Manda o print do Sistema, Power BI ou MDTR que eu analiso",
-    message: "Vou mandar um print do meu painel para você analisar.",
-  },
-  {
-    icon: "🏆",
-    text: "Toque em 'Entrevista GD' para simular o processo seletivo",
-    message: "",
-  },
+  { icon: "📊", text: "Analisar seu Power BI e preparar argumentos para reunião", message: "Quero analisar meu Power BI. Vou te mandar o print agora." },
+  { icon: "💊", text: "Dicas de abordagem com médicos e drogarias", message: "Me dá dicas de abordagem com médicos difíceis e estratégias para drogaria." },
+  { icon: "🎯", text: "Como se posicionar em acompanhamentos com GD/GR/GN", message: "Tenho acompanhamento chegando. Como devo me preparar e me posicionar?" },
+  { icon: "🗣️", text: "Quebra gelo e relacionamento com gestores", message: "Como melhorar meu relacionamento com o GD e criar um bom clima nos acompanhamentos?" },
+  { icon: "📸", text: "Manda o print do Sistema, Power BI ou MDTR que eu analiso", message: "Vou mandar um print do meu painel para você analisar." },
+  { icon: "🏆", text: "Toque em 'Entrevista GD' para simular o processo seletivo", message: "" },
 ];
 
 export default function AIAssistantPage() {
   const router = useRouter();
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [imageMediaType, setImageMediaType] = useState<string>("image/jpeg");
   const [mode, setMode] = useState<Mode>("normal");
-
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -73,13 +47,10 @@ export default function AIAssistantPage() {
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setImageMediaType(file.type || "image/jpeg");
-
     const reader = new FileReader();
     reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(",")[1];
+      const base64 = (reader.result as string).split(",")[1];
       setImage(base64);
     };
     reader.readAsDataURL(file);
@@ -90,25 +61,18 @@ export default function AIAssistantPage() {
     setMessages([]);
     setInput("");
     setImage(null);
-
-    if (fileRef.current) fileRef.current.value = "";
   }
 
   function handleSuggestionClick(suggestion: (typeof SUGGESTIONS)[0]) {
     if (!suggestion.message) return;
-    void sendMessageText(suggestion.message);
+    sendMessageText(suggestion.message);
   }
 
   async function sendMessageText(text: string) {
-    if (!text.trim() || loading) return;
-
+    if (!text.trim()) return;
     setLoading(true);
 
-    const userMessage: Message = {
-      role: "user",
-      content: text.trim(),
-    };
-
+    const userMessage: Message = { role: "user", content: text };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
@@ -117,16 +81,10 @@ export default function AIAssistantPage() {
   }
 
   async function sendMessage() {
-    if (loading) return;
     if (!input.trim() && !image) return;
-
     setLoading(true);
 
-    const userMessage: Message = {
-      role: "user",
-      content: input.trim(),
-    };
-
+    const userMessage: Message = { role: "user", content: input.trim() };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
@@ -137,9 +95,7 @@ export default function AIAssistantPage() {
   async function streamResponse(newMessages: Message[], imageData?: string) {
     try {
       const apiMessages = newMessages.map((m, idx) => {
-        const isLastMessage = idx === newMessages.length - 1;
-
-        if (isLastMessage && imageData) {
+        if (idx === newMessages.length - 1 && imageData) {
           return {
             role: m.role,
             content: [
@@ -153,145 +109,75 @@ export default function AIAssistantPage() {
               },
               {
                 type: "text",
-                text:
-                  m.content || "Analise essa imagem e me dê insights para minha reunião.",
+                text: m.content || "Analise essa imagem e me dê insights para minha reunião.",
               },
             ],
           };
         }
-
-        return {
-          role: m.role,
-          content: m.content,
-        };
+        return { role: m.role, content: m.content };
       });
 
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: apiMessages,
-          mode,
-          simulationRole: "GR",
-        }),
+        body: JSON.stringify({ messages: apiMessages, mode, simulationRole: "GR" }),
       });
 
-      if (!response.ok) {
-        let errorMessage = "Erro ao conectar com a IA. Tente novamente.";
+      if (!response.body) throw new Error("Sem resposta");
 
-        try {
-          const contentType = response.headers.get("content-type") || "";
-
-          if (contentType.includes("application/json")) {
-            const errorData = await response.json();
-            errorMessage = errorData?.details || errorData?.error || errorMessage;
-          } else {
-            const errorText = await response.text();
-            if (errorText) errorMessage = errorText;
-          }
-        } catch {
-          // mantém a mensagem padrão
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      if (!response.body) {
-        throw new Error("Sem resposta da IA.");
-      }
-
+      // Adiciona mensagem vazia do assistente para ir preenchendo via stream
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let assistantText = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
-
           const data = line.slice(6).trim();
-
           if (!data || data === "[DONE]") continue;
 
           try {
             const parsed = JSON.parse(data);
 
-            const delta =
-              parsed?.delta?.text ||
-              parsed?.delta?.value ||
-              parsed?.content_block?.text ||
-              "";
-
-            if (delta) {
-              assistantText += delta;
-
-              setMessages((prev) => {
-                const updated = [...prev];
-                const lastIndex = updated.length - 1;
-
-                if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-                  updated[lastIndex] = {
-                    ...updated[lastIndex],
-                    content: assistantText,
+            // ✅ CORREÇÃO PRINCIPAL: filtra apenas eventos de delta de texto da Anthropic
+            if (
+              parsed?.type === "content_block_delta" &&
+              parsed?.delta?.type === "text_delta"
+            ) {
+              const delta: string = parsed.delta.text ?? "";
+              if (delta) {
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = {
+                    ...updated[updated.length - 1],
+                    content: updated[updated.length - 1].content + delta,
                   };
-                }
-
-                return updated;
-              });
+                  return updated;
+                });
+              }
             }
           } catch {
-            // ignora linha parcial ou formato intermediário do stream
+            // linha de stream incompleta — ignora silenciosamente
           }
         }
-      }
-
-      if (!assistantText.trim()) {
-        setMessages((prev) => {
-          const updated = [...prev];
-          const lastIndex = updated.length - 1;
-
-          if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: "Não consegui gerar resposta agora. Tente novamente.",
-            };
-          }
-
-          return updated;
-        });
       }
 
       setImage(null);
       if (fileRef.current) fileRef.current.value = "";
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Erro ao conectar com a IA. Tente novamente.";
-
-      setMessages((prev) => {
-        const updated = [...prev];
-
-        if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
-          updated[updated.length - 1] = {
-            ...updated[updated.length - 1],
-            content: message,
-          };
-          return updated;
-        }
-
-        return [...updated, { role: "assistant", content: message }];
-      });
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Erro ao conectar com a IA. Tente novamente." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -313,6 +199,7 @@ export default function AIAssistantPage() {
         overflow: "hidden",
       }}
     >
+      {/* Header */}
       <div
         style={{
           padding: "14px 20px 12px",
@@ -364,7 +251,6 @@ export default function AIAssistantPage() {
             >
               EscalaIA
             </span>
-
             {isInterviewMode && (
               <span
                 style={{
@@ -381,7 +267,6 @@ export default function AIAssistantPage() {
               </span>
             )}
           </div>
-
           <p style={{ margin: 0, fontSize: 11, color: "#8A9BB0" }}>
             {isInterviewMode
               ? "Simulando entrevista com GR"
@@ -414,6 +299,7 @@ export default function AIAssistantPage() {
         </button>
       </div>
 
+      {/* Mensagens */}
       <div
         ref={messagesRef}
         style={{
@@ -426,6 +312,7 @@ export default function AIAssistantPage() {
           WebkitOverflowScrolling: "touch",
         }}
       >
+        {/* Tela inicial normal */}
         {messages.length === 0 && !isInterviewMode && (
           <div
             style={{
@@ -445,7 +332,6 @@ export default function AIAssistantPage() {
             >
               👋 Fala rep! Sou a EscalaIA.
             </p>
-
             <p
               style={{
                 margin: "0 0 12px",
@@ -454,9 +340,10 @@ export default function AIAssistantPage() {
                 lineHeight: 1.65,
               }}
             >
-              Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento com o GD, de abordagem em drogaria a como não entrar em pânico antes de um acompanhamento com o GR. 😄
+              Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento
+              com o GD, de abordagem em drogaria a como não entrar em pânico
+              antes de um acompanhamento com o GR. 😄
             </p>
-
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {SUGGESTIONS.map((s) => (
                 <button
@@ -499,6 +386,7 @@ export default function AIAssistantPage() {
           </div>
         )}
 
+        {/* Tela inicial entrevista */}
         {messages.length === 0 && isInterviewMode && (
           <div
             style={{
@@ -518,7 +406,6 @@ export default function AIAssistantPage() {
             >
               🎯 Modo Entrevista GD ativado
             </p>
-
             <p
               style={{
                 margin: "0 0 8px",
@@ -527,37 +414,23 @@ export default function AIAssistantPage() {
                 lineHeight: 1.65,
               }}
             >
-              Vou simular uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. Uma pergunta por vez, com feedback após cada resposta.
+              Vou simular uma entrevista real conduzida por um GR para a vaga de
+              Gerente Distrital. Uma pergunta por vez, com feedback após cada
+              resposta.
             </p>
-
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {[
                 { label: "▶️ Começar do início", msg: "começar" },
-                {
-                  label: "🧑‍💼 Treinar apresentação pessoal",
-                  msg: "Quero treinar o bloco de apresentação pessoal",
-                },
-                {
-                  label: "📈 Treinar trajetória e resultados",
-                  msg: "Quero treinar o bloco de trajetória e resultados",
-                },
-                {
-                  label: "👥 Treinar liderança e gestão",
-                  msg: "Quero treinar o bloco de liderança e gestão",
-                },
-                {
-                  label: "🔥 Treinar situações difíceis",
-                  msg: "Quero treinar o bloco de conflitos e situações difíceis",
-                },
-                {
-                  label: "🏠 Treinar mudança de cidade",
-                  msg: "Quero treinar o bloco de mudança de cidade e disponibilidade",
-                },
+                { label: "🧑‍💼 Treinar apresentação pessoal", msg: "Quero treinar o bloco de apresentação pessoal" },
+                { label: "📈 Treinar trajetória e resultados", msg: "Quero treinar o bloco de trajetória e resultados" },
+                { label: "👥 Treinar liderança e gestão", msg: "Quero treinar o bloco de liderança e gestão" },
+                { label: "🔥 Treinar situações difíceis", msg: "Quero treinar o bloco de conflitos e situações difíceis" },
+                { label: "🏠 Treinar mudança de cidade", msg: "Quero treinar o bloco de mudança de cidade e disponibilidade" },
               ].map((item) => (
                 <button
                   key={item.label}
                   type="button"
-                  onClick={() => void sendMessageText(item.msg)}
+                  onClick={() => sendMessageText(item.msg)}
                   style={{
                     fontSize: 12,
                     color: "#8A9BB0",
@@ -587,6 +460,7 @@ export default function AIAssistantPage() {
           </div>
         )}
 
+        {/* Mensagens */}
         {messages.map((m, i) => (
           <div
             key={i}
@@ -620,6 +494,7 @@ export default function AIAssistantPage() {
               }}
             >
               {m.content}
+              {/* Cursor piscando enquanto escreve */}
               {m.role === "assistant" &&
                 loading &&
                 i === messages.length - 1 && (
@@ -638,6 +513,7 @@ export default function AIAssistantPage() {
           </div>
         ))}
 
+        {/* Loading inicial antes de começar a escrever */}
         {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div
@@ -656,6 +532,7 @@ export default function AIAssistantPage() {
         )}
       </div>
 
+      {/* Input */}
       <div
         style={{
           padding: "12px 16px 16px",
@@ -738,7 +615,7 @@ export default function AIAssistantPage() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                void sendMessage();
+                sendMessage();
               }
             }}
             placeholder={
@@ -766,7 +643,7 @@ export default function AIAssistantPage() {
 
           <button
             type="button"
-            onClick={() => void sendMessage()}
+            onClick={sendMessage}
             disabled={loading || (!input.trim() && !image)}
             style={{
               width: 40,
@@ -789,11 +666,12 @@ export default function AIAssistantPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: loading
-                ? "none"
-                : isInterviewMode
-                ? "0 4px 16px rgba(146,64,14,0.40)"
-                : "0 4px 16px rgba(26,107,74,0.40)",
+              boxShadow:
+                loading
+                  ? "none"
+                  : isInterviewMode
+                  ? "0 4px 16px rgba(146,64,14,0.40)"
+                  : "0 4px 16px rgba(26,107,74,0.40)",
             }}
           >
             ➤
@@ -801,6 +679,7 @@ export default function AIAssistantPage() {
         </div>
       </div>
 
+      {/* CSS cursor piscando */}
       <style>{`
         @keyframes blink {
           0%, 100% { opacity: 1; }
