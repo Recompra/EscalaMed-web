@@ -116,19 +116,14 @@ export default function Page() {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       const user = authData?.user;
       if (authError || !user) { setDoctors([]); setLoading(false); setErrorMsg("Usuário não autenticado"); return; }
-      const { data: myLinks, error: myError } = await supabase
-        .from("user_doctors").select("doctor_id").eq("user_id", user.id).limit(2000);
-      if (myError) { console.log("MY LIST ERROR:", myError); setDoctors([]); setLoading(false); return; }
-      const myDoctorIds = (myLinks ?? []).map((x: any) => x.doctor_id);
+      
       const { data: availability, error: availError } = await supabase
         .from("doctor_availability").select("doctor_id")
         .ilike("slot", `%${weekdayLabel} ${period}%`).limit(50);
       if (availError) { console.log("AVAIL ERROR:", availError); setDoctors([]); setLoading(false); return; }
       const availabilityIds = availability?.map((a) => a.doctor_id) ?? [];
 
-      const doctorIds = myDoctorIds.filter((id: string) =>
-     availabilityIds.includes(id)
-      );
+     const doctorIds = availabilityIds;
       if (doctorIds.length === 0) { setDoctors([]); setLoading(false); return; }
       const { data, error } = await supabase
         .from("doctors").select("*")
