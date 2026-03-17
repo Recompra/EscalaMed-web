@@ -143,11 +143,6 @@ if (docsErr) {
 setMyDoctors(docs ?? []);
 setLoadError(null);
 
-  const list = (docs ?? [])
-    .map((row: any) => row.doctors)
-    .filter(Boolean);
-
-  setMyDoctors(list);
 }
 
 useEffect(() => {
@@ -184,11 +179,15 @@ useEffect(() => {
   if (!editId) return;
 
   async function loadDoctorForEdit() {
-    const { data, error } = await supabase
-      .from("doctors")
-      .select("*")
-      .eq("id", editId)
-      .single();
+    const { data: auth } = await supabase.auth.getUser();
+const user = auth?.user;
+
+const { data, error } = await supabase
+  .from("doctors")
+  .select("*")
+  .eq("id", editId)
+  .eq("created_by", user?.id)
+  .single();
 
     if (error) {
       console.log(error);

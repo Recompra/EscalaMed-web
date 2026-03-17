@@ -42,17 +42,36 @@ export default function MedicosPage() {
     loadDoctors();
   }, []);
 
-  async function loadDoctors() {
-    const { data } = await supabase
-      .from("doctors")
-      .select("*")
-      .order("name");
+ async function loadDoctors() {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
 
-    if (data) {
-      setDoctors(data);
-      setFiltered(data);
-    }
+  if (!user) return;
+
+  const { data: links } = await supabase
+    .from("user_doctors")
+    .select("doctor_id")
+    .eq("user_id", user.id);
+
+  const ids = (links ?? []).map((x: any) => x.doctor_id);
+
+  if (ids.length === 0) {
+    setDoctors([]);
+    setFiltered([]);
+    return;
   }
+
+  const { data } = await supabase
+    .from("doctors")
+    .select("*")
+    .in("id", ids)
+    .order("name");
+
+  if (data) {
+    setDoctors(data);
+    setFiltered(data);
+  }
+}
 
   useEffect(() => {
     let result = doctors;

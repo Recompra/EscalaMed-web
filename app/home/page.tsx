@@ -125,7 +125,10 @@ export default function Page() {
         .ilike("slot", `%${weekdayLabel} ${period}%`).limit(50);
       if (availError) { console.log("AVAIL ERROR:", availError); setDoctors([]); setLoading(false); return; }
       const availabilityIds = availability?.map((a) => a.doctor_id) ?? [];
-      const doctorIds = availabilityIds;
+
+      const doctorIds = myDoctorIds.filter((id: string) =>
+     availabilityIds.includes(id)
+      );
       if (doctorIds.length === 0) { setDoctors([]); setLoading(false); return; }
       const { data, error } = await supabase
         .from("doctors").select("*")
