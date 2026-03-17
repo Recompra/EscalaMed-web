@@ -125,7 +125,6 @@ export default function AIAssistantPage() {
 
       if (!response.body) throw new Error("Sem resposta");
 
-      // Adiciona mensagem vazia do assistente para ir preenchendo via stream
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       const reader = response.body.getReader();
@@ -148,7 +147,7 @@ export default function AIAssistantPage() {
           try {
             const parsed = JSON.parse(data);
 
-            // ✅ CORREÇÃO PRINCIPAL: filtra apenas eventos de delta de texto da Anthropic
+            // Filtra apenas eventos de delta de texto da Anthropic
             if (
               parsed?.type === "content_block_delta" &&
               parsed?.delta?.type === "text_delta"
@@ -166,7 +165,7 @@ export default function AIAssistantPage() {
               }
             }
           } catch {
-            // linha de stream incompleta — ignora silenciosamente
+            // linha incompleta — ignora
           }
         }
       }
@@ -494,7 +493,6 @@ export default function AIAssistantPage() {
               }}
             >
               {m.content}
-              {/* Cursor piscando enquanto escreve */}
               {m.role === "assistant" &&
                 loading &&
                 i === messages.length - 1 && (
@@ -513,7 +511,7 @@ export default function AIAssistantPage() {
           </div>
         ))}
 
-        {/* Loading inicial antes de começar a escrever */}
+        {/* Loading inicial */}
         {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div
@@ -659,9 +657,7 @@ export default function AIAssistantPage() {
               color: "#fff",
               fontSize: 16,
               cursor:
-                loading || (!input.trim() && !image)
-                  ? "not-allowed"
-                  : "pointer",
+                loading || (!input.trim() && !image) ? "not-allowed" : "pointer",
               flexShrink: 0,
               display: "flex",
               alignItems: "center",
@@ -679,7 +675,6 @@ export default function AIAssistantPage() {
         </div>
       </div>
 
-      {/* CSS cursor piscando */}
       <style>{`
         @keyframes blink {
           0%, 100% { opacity: 1; }
