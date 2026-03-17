@@ -136,9 +136,10 @@ export default function DirectoryPage() {
         .single();
 
       if (insertErr || !inserted) {
-        setMsg("Erro ao copiar médico para sua lista.");
-        return;
-      }
+     console.error("DIRECTORY INSERT ERROR:", insertErr);
+     setMsg(insertErr?.message ?? "Erro ao copiar médico para sua lista.");
+     return;
+     }
       doctorUuid = inserted.id;
     }
 
