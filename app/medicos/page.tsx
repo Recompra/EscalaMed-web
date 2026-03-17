@@ -43,28 +43,9 @@ export default function MedicosPage() {
   }, []);
 
  async function loadDoctors() {
-  const { data: auth } = await supabase.auth.getUser();
-  const user = auth?.user;
-
-  if (!user) return;
-
-  const { data: links } = await supabase
-    .from("user_doctors")
-    .select("doctor_id")
-    .eq("user_id", user.id);
-
-  const ids = (links ?? []).map((x: any) => x.doctor_id);
-
-  if (ids.length === 0) {
-    setDoctors([]);
-    setFiltered([]);
-    return;
-  }
-
   const { data } = await supabase
     .from("doctors")
     .select("*")
-    .in("id", ids)
     .order("name");
 
   if (data) {
@@ -72,6 +53,7 @@ export default function MedicosPage() {
     setFiltered(data);
   }
 }
+
 
   useEffect(() => {
     let result = doctors;
