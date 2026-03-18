@@ -113,10 +113,10 @@ export default function OwnerDashboardPage() {
         .eq("user_id", user.id)
         .single();
 
-      if (profileError) {
-        setErrorMsg("Erro ao validar acesso.");
-        setLoading(false);
-        return;
+      if (profile?.role !== "owner") {
+      setErrorMsg(`Acesso negado. role atual: ${profile?.role ?? "null"}`);
+      setLoading(false);
+      return;
       }
 
       if (profile?.role !== "owner") {
