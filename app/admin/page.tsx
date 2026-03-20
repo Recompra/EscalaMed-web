@@ -240,6 +240,7 @@ useEffect(() => {
     } else if (avail) {
       setSlotsSelected(avail.map((row: any) => row.slot));
     }
+    
   }
 
   loadDoctorForEdit();
@@ -433,10 +434,10 @@ if (editId) {
   }
 
   try {
-    await supabase.from("doctor_availability").delete().eq("doctor_id", editId);
+    await supabase.from("doctor_availability").delete().eq("doctor_id", editId as string)
     if (slotsSelected.length > 0) {
       const availabilityRows = slotsSelected.map((s) => ({
-        doctor_id: editId,
+        doctor_id: editId as string,
         slot: s,
       }));
       const { error: avErr } = await supabase
