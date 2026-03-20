@@ -43,9 +43,9 @@ export async function POST(req: Request) {
           },
         ],
         back_urls: {
-  success: "https://escalamed.app.br/premium?status=success",
-  failure: "https://escalamed.app.br/premium?status=failure",
-  pending: "https://escalamed.app.br/premium?status=pending",
+  success: "https://escalamed.app.br/home?status=success",
+  failure: "https://escalamed.app.br/home?status=failure",
+  pending: "https://escalamed.app.br/home?status=pending",
 },
 auto_return: "approved",
       }),
