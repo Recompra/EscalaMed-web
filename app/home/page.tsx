@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { UFS, CITIES_BY_UF } from "@/data/cities";
@@ -24,6 +24,8 @@ type Doctor = {
 };
 
 export default function Page() {
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status");
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
@@ -147,6 +149,24 @@ export default function Page() {
   const title = useMemo(() => `${uf} · ${city} · ${weekday} · ${period}`, [uf, city, weekday, period]);
 
   return (
+  <>
+    {status === "success" && (
+  <div style={{ background: "#16a34a", color: "white", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+    ✅ Pagamento aprovado
+  </div>
+)}
+
+{status === "pending" && (
+  <div style={{ background: "#f59e0b", color: "white", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+    ⏳ Pagamento pendente
+  </div>
+)}
+
+{status === "failure" && (
+  <div style={{ background: "#dc2626", color: "white", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+    ❌ Pagamento recusado
+  </div>
+)}
     <main style={{
       minHeight: "100vh", background: "#F5F3EE",
       fontFamily: "'DM Sans', sans-serif",
@@ -486,5 +506,6 @@ export default function Page() {
         *Dados vindos do Supabase.
       </footer>
     </main>
+</>
   );
 }
