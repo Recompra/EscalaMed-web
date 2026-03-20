@@ -409,27 +409,7 @@ export default function PremiumPage() {
         display: "grid", gap: 12,
         opacity: visible ? 1 : 0, transition: "all 0.7s ease 0.6s",
       }}>
-        <button type="button"
-          onClick={() => alert("Em breve: integração com pagamento.")}
-          style={{
-            padding: "16px 24px",
-            background: "linear-gradient(135deg, #1A6B4A, #145c3e)",
-            color: "white", border: "none", borderRadius: 12,
-            fontFamily: "'Syne', sans-serif", fontWeight: 800,
-            fontSize: 14, letterSpacing: "0.08em", cursor: "pointer",
-            boxShadow: "0 8px 32px rgba(26,107,74,0.45)", width: "100%",
-            transition: "transform 0.15s ease, box-shadow 0.15s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = "0 12px 40px rgba(26,107,74,0.55)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 8px 32px rgba(26,107,74,0.45)";
-          }}
-        >ESCOLHER PLANO</button>
-
+        
   {/* MENSAL */}
   <button
     onClick={async () => {
@@ -442,7 +422,14 @@ export default function PremiumPage() {
       });
 
       const data = await res.json();
-      window.location.href = data.init_point;
+
+if (!res.ok || !data?.init_point) {
+  console.log("Erro checkout:", data);
+  alert("Erro ao criar checkout");
+  return;
+}
+
+window.location.href = data.init_point;
     }}
     style={{
       padding: "16px 24px",

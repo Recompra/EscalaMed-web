@@ -9,15 +9,15 @@ export async function POST(req: Request) {
     const plans = {
       mensal: {
         title: "EscalaMed Premium - Mensal",
-        price: 59.90,
+        price: 59.9,
       },
       semestral: {
         title: "EscalaMed Premium - Semestral",
-        price: 299.90,
+        price: 299.9,
       },
       anual: {
         title: "EscalaMed Premium - Anual",
-        price: 479.90,
+        price: 479.9,
       },
     };
 
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
             title: selected.title,
             quantity: 1,
             unit_price: selected.price,
+            currency_id: "BRL",
           },
         ],
       }),
@@ -46,7 +47,14 @@ export async function POST(req: Request) {
 
     const data = await response.json();
 
-    return NextResponse.json({ url: data.init_point });
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Erro Mercado Pago", details: data },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ init_point: data.init_point });
   } catch (error) {
     return NextResponse.json({ error: "Erro ao criar pagamento" }, { status: 500 });
   }
