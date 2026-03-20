@@ -46,6 +46,7 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
+    console.log("MP RESPONSE:", data);
 
     if (!response.ok) {
       return NextResponse.json(
