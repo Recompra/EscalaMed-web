@@ -180,49 +180,65 @@ useEffect(() => {
 
   async function loadDoctorForEdit() {
     const { data: auth } = await supabase.auth.getUser();
-const user = auth?.user;
+    const user = auth?.user;
+    if (!user) return;
 
-const { data, error } = await supabase
-  .from("doctors")
-  .select("*")
-  .eq("id", editId)
-  .eq("created_by", user?.id)
-  .single();
+    // Busca o perfil para saber se é owner
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
 
-    if (error) {
-      console.log(error);
+    const isOwner = profile?.role === "owner";
+
+    // Owner busca sem filtro de tenant, outros filtram pelo próprio id
+    let query = supabase
+      .from("doctors")
+      .select("*")
+      .eq("id", editId);
+
+    if (!isOwner) {
+      query = query.eq("tenant_id", user.id);
+    }
+
+    const { data, error } = await query.single();
+
+    if (error || !data) {
+      console.error("Erro ao carregar médico para edição:", error);
+      setMsg("Médico não encontrado ou sem permissão.");
+      setMsgType("error");
       return;
     }
 
-    if (data) {
-      setName(data.name || "");
-      setCrm(data.crm || "");
-      setCrmUf(data.crm_uf || "DF");
-      setPhone(data.phone || "");
-      setClinic(data.clinic || "");
-      setAddress(data.address || "");
-      setSpecialty(data.specialty || "");
-      setUf(data.uf || "DF");
-      setSecretaryName(data.secretary_name || "");
-      setSecretaryPhone(data.secretary_phone || "");
-      setNotes(data.notes || "");
-      const loadedCity = (data.city || "").toUpperCase();
-      setCity(loadedCity);
-      setCityQuery(loadedCity);
-      setCitySelected(!!loadedCity);
-      setCityOpen(false);
-      setWeekday(data.weekday || "Segunda");
-      setPeriod(data.period || "Manhã");
+    setName(data.name || "");
+    setCrm(data.crm || "");
+    setCrmUf(data.crm_uf || "DF");
+    setPhone(data.phone || "");
+    setClinic(data.clinic || "");
+    setAddress(data.address || "");
+    setSpecialty(data.specialty || "");
+    setUf(data.uf || "DF");
+    setSecretaryName(data.secretary_name || "");
+    setSecretaryPhone(data.secretary_phone || "");
+    setNotes(data.notes || "");
+    const loadedCity = (data.city || "").toUpperCase();
+    setCity(loadedCity);
+    setCityQuery(loadedCity);
+    setCitySelected(!!loadedCity);
+    setCityOpen(false);
+    setWeekday(data.weekday || "Segunda");
+    setPeriod(data.period || "Manha");
 
-      const { data: avail, error: avErr } = await supabase
-        .from("doctor_availability")
-        .select("slot")
-        .eq("doctor_id", editId);
-      if (avErr) {
-        console.log("erro ao buscar disponibilidade:", avErr);
-      } else if (avail) {
-        setSlotsSelected(avail.map((row: any) => row.slot));
-      }
+    const { data: avail, error: avErr } = await supabase
+      .from("doctor_availability")
+      .select("slot")
+      .eq("doctor_id", editId);
+
+    if (avErr) {
+      console.error("Erro ao buscar disponibilidade:", avErr);
+    } else if (avail) {
+      setSlotsSelected(avail.map((row: any) => row.slot));
     }
   }
 
