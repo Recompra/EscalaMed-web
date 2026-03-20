@@ -72,25 +72,79 @@ export default function PremiumPage() {
           não repetir médico e fechar mais resultados.
         </p>
 
-        {/* Preço */}
-        <div style={{
-          background: "rgba(26,107,74,0.10)",
-          border: "1.5px solid rgba(26,107,74,0.30)",
-          borderRadius: 16, padding: "24px 28px",
-          marginBottom: 40, display: "inline-block", minWidth: 260,
-        }}>
-          <div style={{ fontSize: 12, color: "#4ADE80", fontWeight: 700, letterSpacing: "0.10em", marginBottom: 8 }}>
-            ACESSO COMPLETO
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 6 }}>
-            <span style={{
-              fontFamily: "'Syne', sans-serif", fontSize: 42,
-              fontWeight: 800, color: "#F5F3EE", lineHeight: 1,
-            }}>R$&nbsp;59,90</span>
-            <span style={{ fontSize: 14, color: "#8A9BB0", paddingBottom: 6 }}>/mês</span>
-          </div>
-          <div style={{ fontSize: 12, color: "#8A9BB0" }}>Cancele quando quiser. Sem fidelidade.</div>
-        </div>
+        {/* Preços */}
+<div style={{
+  display: "grid",
+  gap: 12,
+  marginBottom: 40,
+  minWidth: 260,
+}}>
+
+  {/* Mensal */}
+  <div style={{
+    background: "rgba(26,107,74,0.10)",
+    border: "1.5px solid rgba(26,107,74,0.30)",
+    borderRadius: 16,
+    padding: "20px 24px",
+  }}>
+    <div style={{ fontSize: 11, color: "#4ADE80", fontWeight: 700, letterSpacing: "0.10em" }}>
+      MENSAL
+    </div>
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+      <span style={{
+        fontFamily: "'Syne', sans-serif",
+        fontSize: 28,
+        fontWeight: 800,
+      }}>R$ 59,90</span>
+      <span style={{ fontSize: 12, color: "#8A9BB0" }}>/mês</span>
+    </div>
+  </div>
+
+  {/* Semestral */}
+  <div style={{
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: "20px 24px",
+  }}>
+    <div style={{ fontSize: 11, color: "#FBBF24", fontWeight: 700, letterSpacing: "0.10em" }}>
+      SEMESTRAL
+    </div>
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+      <span style={{
+        fontFamily: "'Syne', sans-serif",
+        fontSize: 26,
+        fontWeight: 800,
+      }}>R$ 299,90</span>
+    </div>
+    <div style={{ fontSize: 11, color: "#8A9BB0" }}>
+      equivale a R$ 49,90/mês
+    </div>
+  </div>
+
+  {/* Anual */}
+  <div style={{
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 16,
+    padding: "20px 24px",
+  }}>
+    <div style={{ fontSize: 11, color: "#4ADE80", fontWeight: 700, letterSpacing: "0.10em" }}>
+      ANUAL
+    </div>
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+      <span style={{
+        fontFamily: "'Syne', sans-serif",
+        fontSize: 26,
+        fontWeight: 800,
+      }}>R$ 479,90</span>
+    </div>
+    <div style={{ fontSize: 11, color: "#8A9BB0" }}>
+      equivale a R$ 39,90/mês
+    </div>
+  </div>
+
+</div>
       </section>
 
       {/* ── DESTAQUE ESCALAIA ── */}
@@ -374,22 +428,111 @@ export default function PremiumPage() {
             e.currentTarget.style.transform = "translateY(0)";
             e.currentTarget.style.boxShadow = "0 8px 32px rgba(26,107,74,0.45)";
           }}
-        >ASSINAR AGORA — R$ 59,90/mês</button>
+        >ESCOLHER PLANO</button>
 
-        <button type="button"
-          onClick={() => alert("Em breve: trial gratuito.")}
-          style={{
-            padding: "14px 24px", background: "transparent",
-            color: "#8A9BB0", border: "1px solid rgba(255,255,255,0.10)",
-            borderRadius: 12, fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%",
-          }}
-        >Testar grátis por 7 dias</button>
+  {/* MENSAL */}
+  <button
+    onClick={async () => {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: "mensal" }),
+      });
 
-        <p style={{ textAlign: "center", fontSize: 11, color: "#4A5568", margin: 0 }}>
-          Pagamento seguro · Cancele quando quiser · Sem taxa de adesão
-        </p>
-      </section>
+      const data = await res.json();
+      window.location.href = data.init_point;
+    }}
+    style={{
+      padding: "16px 24px",
+      background: "linear-gradient(135deg, #1A6B4A, #145c3e)",
+      color: "white",
+      border: "none",
+      borderRadius: 12,
+      fontFamily: "'Syne', sans-serif",
+      fontWeight: 800,
+      fontSize: 14,
+      letterSpacing: "0.08em",
+      cursor: "pointer",
+      width: "100%",
+    }}
+  >
+    ASSINAR MENSAL — R$ 59,90
+  </button>
+
+  {/* SEMESTRAL */}
+  <button
+    onClick={async () => {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: "semestral" }),
+      });
+
+      const data = await res.json();
+      window.location.href = data.init_point;
+    }}
+    style={{
+      padding: "16px 24px",
+      background: "rgba(255,255,255,0.05)",
+      color: "#FBBF24",
+      border: "1px solid rgba(251,191,36,0.4)",
+      borderRadius: 12,
+      fontFamily: "'Syne', sans-serif",
+      fontWeight: 800,
+      fontSize: 14,
+      letterSpacing: "0.08em",
+      cursor: "pointer",
+      width: "100%",
+    }}
+  >
+    SEMESTRAL — R$ 299,90 (melhor custo)
+  </button>
+
+  {/* ANUAL */}
+  <button
+    onClick={async () => {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: "anual" }),
+      });
+
+      const data = await res.json();
+      window.location.href = data.init_point;
+    }}
+    style={{
+      padding: "16px 24px",
+      background: "rgba(74,222,128,0.08)",
+      color: "#4ADE80",
+      border: "1px solid rgba(74,222,128,0.4)",
+      borderRadius: 12,
+      fontFamily: "'Syne', sans-serif",
+      fontWeight: 800,
+      fontSize: 14,
+      letterSpacing: "0.08em",
+      cursor: "pointer",
+      width: "100%",
+    }}
+  >
+    ANUAL — R$ 479,90 (melhor oferta)
+  </button>
+
+  <p style={{
+    textAlign: "center",
+    fontSize: 11,
+    color: "#4A5568",
+    marginTop: 8,
+  }}>
+    Pagamento seguro · Cancele quando quiser · Sem taxa de adesão
+  </p>
+
+</section>
 
     </main>
   );
