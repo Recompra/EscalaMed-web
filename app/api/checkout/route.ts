@@ -42,6 +42,12 @@ export async function POST(req: Request) {
             currency_id: "BRL",
           },
         ],
+        back_urls: {
+  success: "https://escalamed.app.br/premium?status=success",
+  failure: "https://escalamed.app.br/premium?status=failure",
+  pending: "https://escalamed.app.br/premium?status=pending",
+},
+auto_return: "approved",
       }),
     });
 
