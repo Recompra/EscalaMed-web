@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { usePremium } from "@/lib/usePremium";
 
 type Group = {
   id: string;
@@ -22,6 +23,8 @@ export default function GroupsPage() {
   const [msgType, setMsgType] = useState<"success"|"error"|"warning"|null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
 
   const inputStyle = {
     padding: "11px 14px",

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { usePremium } from "@/lib/usePremium";
 
 type Message = {
   role: "user" | "assistant";
@@ -30,6 +31,8 @@ export default function AIAssistantPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
 
   useEffect(() => {
     if (messagesRef.current) {

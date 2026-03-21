@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { UFS, CITIES_BY_UF } from "@/data/cities";
 import { useRouter } from "next/navigation";
+import { usePremium } from "@/lib/usePremium";
 
 const SPECIALTIES = [
   "CLÍNICO GERAL","GINECOLOGISTA","PEDIATRA","CARDIOLOGISTA",
@@ -48,6 +49,8 @@ export default function VisitRequestPage() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"success"|"error"|"warning"|null>(null);
   const [loading, setLoading] = useState(false);
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
 
   const inputStyle = {
     padding: "11px 14px",

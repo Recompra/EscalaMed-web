@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { usePremium } from "@/lib/usePremium";
 
 type Row = {
   doctor_key: string;
@@ -36,6 +37,8 @@ export default function DirectoryPage() {
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState<number | null>(null);
   const router = useRouter();
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filtersOk = (
