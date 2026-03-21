@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-
   console.log("Webhook recebido:", JSON.stringify(body));
 
   const type = body.type;
@@ -13,7 +17,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Busca o pagamento no Mercado Pago
   const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
     headers: {
       Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
@@ -26,13 +29,21 @@ export async function POST(req: NextRequest) {
   if (payment.status === "approved") {
     const email = payment.payer?.email;
 
-    // Atualiza o usuário no Supabase como premium
-    const { error } = await supabase
-      .from("users")
-      .update({ is_premium: true })
-      .eq("email", email);
+    const { data: users } = await supabase.auth.admin.listUsers();
+    const user = users?.users.find(u => u.email === email);
 
-    if (error) console.error("Erro ao atualizar premium:", error);
+    if (user) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ 
+          is_premium: true,
+          premium_since: new Date().toISOString(),
+          plan: payment.description ?? "premium"
+        })
+        .eq("user_id", user.id);
+
+      if (error) console.error("Erro ao atualizar premium:", error);
+    }
   }
 
   return NextResponse.json({ ok: true });
