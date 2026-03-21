@@ -31,8 +31,7 @@ export default function AIAssistantPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
-  const isPremium = usePremium();
-  if (isPremium === null) return null;
+  
 
   useEffect(() => {
     if (messagesRef.current) {
@@ -46,6 +45,9 @@ export default function AIAssistantPage() {
     textarea.style.height = "auto";
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
   }, [input]);
+
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

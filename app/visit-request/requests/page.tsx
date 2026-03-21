@@ -28,8 +28,6 @@ export default function VisitRequestsPage() {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [filterUF, setFilterUF] = useState("");
   const [filterCity, setFilterCity] = useState("");
-  const isPremium = usePremium();
-  if (isPremium === null) return null;
 
   useEffect(() => {
     async function load() {
@@ -60,6 +58,9 @@ export default function VisitRequestsPage() {
     }
     load();
   }, []);
+
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
 
   async function markContacted(id: string) {
     await supabase
