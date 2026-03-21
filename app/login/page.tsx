@@ -144,6 +144,39 @@ export default function LoginPage() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
 
+          {/* Esqueci minha senha */}
+          <button
+            type="button"
+            onClick={async () => {
+              if (!email) {
+                setMsg("Digite seu e-mail acima primeiro.");
+                return;
+              }
+              setLoading(true);
+              const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: "https://escalamed.app.br/reset-password",
+              });
+              setLoading(false);
+              if (error) {
+                setMsg("Erro ao enviar e-mail. Tente novamente.");
+              } else {
+                setMsg("✅ E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+              }
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#8A9BB0",
+              fontSize: 12,
+              cursor: "pointer",
+              textAlign: "right" as const,
+              padding: 0,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Esqueci minha senha
+          </button>
+
           {msg && (
             <div style={{
               padding: "10px 14px",
