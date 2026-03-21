@@ -66,88 +66,14 @@ export default function PremiumPage() {
 
         <p style={{
           fontSize: 15, color: "#8A9BB0", lineHeight: 1.7,
-          margin: "0 0 40px", maxWidth: 520,
+          margin: "0 0 8px", maxWidth: 520,
         }}>
           Tudo que um propagandista precisa para não perder visita,
           não repetir médico e fechar mais resultados.
         </p>
-
-        {/* Preços */}
-<div style={{
-  display: "grid",
-  gap: 12,
-  marginBottom: 40,
-  minWidth: 260,
-}}>
-
-  {/* Mensal */}
-  <div style={{
-    background: "rgba(26,107,74,0.10)",
-    border: "1.5px solid rgba(26,107,74,0.30)",
-    borderRadius: 16,
-    padding: "20px 24px",
-  }}>
-    <div style={{ fontSize: 11, color: "#4ADE80", fontWeight: 700, letterSpacing: "0.10em" }}>
-      MENSAL
-    </div>
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
-      <span style={{
-        fontFamily: "'Syne', sans-serif",
-        fontSize: 28,
-        fontWeight: 800,
-      }}>R$ 59,90</span>
-      <span style={{ fontSize: 12, color: "#8A9BB0" }}>/mês</span>
-    </div>
-  </div>
-
-  {/* Semestral */}
-  <div style={{
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 16,
-    padding: "20px 24px",
-  }}>
-    <div style={{ fontSize: 11, color: "#FBBF24", fontWeight: 700, letterSpacing: "0.10em" }}>
-      SEMESTRAL
-    </div>
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
-      <span style={{
-        fontFamily: "'Syne', sans-serif",
-        fontSize: 26,
-        fontWeight: 800,
-      }}>R$ 299,90</span>
-    </div>
-    <div style={{ fontSize: 11, color: "#8A9BB0" }}>
-      equivale a R$ 49,90/mês
-    </div>
-  </div>
-
-  {/* Anual */}
-  <div style={{
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 16,
-    padding: "20px 24px",
-  }}>
-    <div style={{ fontSize: 11, color: "#4ADE80", fontWeight: 700, letterSpacing: "0.10em" }}>
-      ANUAL
-    </div>
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
-      <span style={{
-        fontFamily: "'Syne', sans-serif",
-        fontSize: 26,
-        fontWeight: 800,
-      }}>R$ 479,90</span>
-    </div>
-    <div style={{ fontSize: 11, color: "#8A9BB0" }}>
-      equivale a R$ 39,90/mês
-    </div>
-  </div>
-
-</div>
       </section>
 
-      {/* ── DESTAQUE ESCALAIA ── */}
+      {/* DESTAQUE ESCALAIA */}
       <section style={{
         maxWidth: 720, margin: "0 auto", padding: "0 24px 32px",
         opacity: visible ? 1 : 0, transition: "all 0.7s ease 0.10s",
@@ -159,14 +85,12 @@ export default function PremiumPage() {
           boxShadow: "0 8px 40px rgba(26,107,74,0.25)",
           position: "relative", overflow: "hidden",
         }}>
-          {/* Glow */}
           <div style={{
             position: "absolute", top: -40, right: -40,
             width: 200, height: 200, borderRadius: "50%",
             background: "rgba(74,222,128,0.07)", pointerEvents: "none",
           }} />
 
-          {/* Badge topo */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 7,
             background: "rgba(74,222,128,0.15)",
@@ -202,8 +126,7 @@ export default function PremiumPage() {
             </div>
           </div>
 
-          {/* Funcionalidades em destaque */}
-          <div style={{ display: "grid", gap: 10, marginBottom: 24 }}>
+          <div style={{ display: "grid", gap: 10 }}>
             {[
               {
                 icon: "🎯",
@@ -237,30 +160,23 @@ export default function PremiumPage() {
                 title: "Memória de Território",
                 desc: "Conta seu setor uma vez. A IA lembra dos seus médicos parceiros, difíceis, bricks fortes e fracos — e continua o papo como alguém que acompanha seu território.",
               },
-            ].map((f, i) => (
+            ].map((f) => (
               <div key={f.title} style={{
-                background: f.highlight
-                  ? "rgba(251,191,36,0.07)"
-                  : "rgba(255,255,255,0.04)",
-                border: f.highlight
-                  ? "1px solid rgba(251,191,36,0.25)"
-                  : "1px solid rgba(255,255,255,0.08)",
+                background: f.highlight ? "rgba(251,191,36,0.07)" : "rgba(255,255,255,0.04)",
+                border: f.highlight ? "1px solid rgba(251,191,36,0.25)" : "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 14, padding: "16px 18px",
                 display: "flex", gap: 14, alignItems: "flex-start",
               }}>
                 <div style={{
                   width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                  background: f.highlight
-                    ? "rgba(251,191,36,0.15)"
-                    : "rgba(74,222,128,0.10)",
+                  background: f.highlight ? "rgba(251,191,36,0.15)" : "rgba(74,222,128,0.10)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 18,
                 }}>{f.icon}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
                     <span style={{
-                      fontFamily: "'Syne', sans-serif", fontWeight: 700,
-                      fontSize: 13,
+                      fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 13,
                       color: f.highlight ? "#FBBF24" : "#F5F3EE",
                     }}>{f.title}</span>
                     {f.badge && (
@@ -280,19 +196,6 @@ export default function PremiumPage() {
               </div>
             ))}
           </div>
-
-          {/* CTA direto para IA */}
-          <button type="button" onClick={() => router.push("/ai")} style={{
-            width: "100%", padding: "14px 24px",
-            background: "linear-gradient(135deg, #1A6B4A, #4ADE80)",
-            border: "none", borderRadius: 12,
-            fontFamily: "'Syne', sans-serif", fontWeight: 800,
-            fontSize: 13, letterSpacing: "0.08em",
-            color: "#0A0F0D", cursor: "pointer",
-            boxShadow: "0 8px 32px rgba(74,222,128,0.30)",
-          }}>
-            🤖 EXPERIMENTAR ESCALAIA AGORA
-          </button>
         </div>
       </section>
 
@@ -303,40 +206,12 @@ export default function PremiumPage() {
         opacity: visible ? 1 : 0, transition: "all 0.7s ease 0.15s",
       }}>
         {[
-          {
-            icon: "📋",
-            title: "Rotina de visitação organizada",
-            desc: "Cadastre médicos por cidade, UF, dia e período. Filtros disponíveis com 1 toque. Ideal para quem atende várias regiões e cidades.",
-          },
-          {
-            icon: "📥",
-            title: "Importação via Excel",
-            desc: "Já tem uma base de médicos? Importe tudo de uma vez pelo Excel. Zero retrabalho, zero digitação manual.",
-          },
-          {
-            icon: "🔍",
-            title: "Diretório unificado de médicos",
-            desc: "Acesse todos os médicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique — sem digitar nada.",
-            badge: "PREMIUM",
-          },
-          {
-            icon: "🔔",
-            title: "Aviso de duplicidade de cadastro",
-            desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora.",
-            badge: "PREMIUM",
-          },
-          {
-            icon: "👥",
-            title: "Grupos colaborativos",
-            desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os médicos da base dos outros — sem precisar perguntar, sem perder tempo.",
-            badge: "PREMIUM",
-          },
-          {
-            icon: "📨",
-            title: "Médico solicita visita",
-            desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, telefone, cidade e os melhores dias para ir.",
-            badge: "PREMIUM",
-          },
+          { icon: "📋", title: "Rotina de visitação organizada", desc: "Cadastre médicos por cidade, UF, dia e período. Filtros disponíveis com 1 toque. Ideal para quem atende várias regiões e cidades." },
+          { icon: "📥", title: "Importação via Excel", desc: "Já tem uma base de médicos? Importe tudo de uma vez pelo Excel. Zero retrabalho, zero digitação manual." },
+          { icon: "🔍", title: "Diretório unificado de médicos", desc: "Acesse todos os médicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique — sem digitar nada.", badge: "PREMIUM" },
+          { icon: "🔔", title: "Aviso de duplicidade de cadastro", desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora.", badge: "PREMIUM" },
+          { icon: "👥", title: "Grupos colaborativos", desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os médicos da base dos outros — sem precisar perguntar, sem perder tempo.", badge: "PREMIUM" },
+          { icon: "📨", title: "Médico solicita visita", desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, telefone, cidade e os melhores dias para ir.", badge: "PREMIUM" },
         ].map((b, i) => (
           <div key={b.title} style={{
             background: "rgba(255,255,255,0.03)",
@@ -409,117 +284,41 @@ export default function PremiumPage() {
         display: "grid", gap: 12,
         opacity: visible ? 1 : 0, transition: "all 0.7s ease 0.6s",
       }}>
-        
-  {/* MENSAL */}
-  <button
-    onClick={async () => {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan: "mensal" }),
-      });
+        <button
+          type="button"
+          onClick={async () => {
+            const res = await fetch("/api/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ plan: "mensal" }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data?.init_point) {
+              alert("Erro ao criar checkout");
+              return;
+            }
+            window.location.href = data.init_point;
+          }}
+          style={{
+            padding: "18px 24px",
+            background: "linear-gradient(135deg, #1A6B4A, #4ADE80)",
+            color: "#0A0F0D", border: "none", borderRadius: 12,
+            fontFamily: "'Syne', sans-serif", fontWeight: 800,
+            fontSize: 15, letterSpacing: "0.08em",
+            cursor: "pointer", width: "100%",
+            boxShadow: "0 8px 32px rgba(74,222,128,0.30)",
+          }}
+        >
+          ⭐ ASSINAR AGORA
+        </button>
 
-      const data = await res.json();
-
-if (!res.ok || !data?.init_point) {
-  console.log("Erro checkout:", data);
-  alert("Erro ao criar checkout");
-  return;
-}
-
-window.location.href = data.init_point;
-    }}
-    style={{
-      padding: "16px 24px",
-      background: "linear-gradient(135deg, #1A6B4A, #145c3e)",
-      color: "white",
-      border: "none",
-      borderRadius: 12,
-      fontFamily: "'Syne', sans-serif",
-      fontWeight: 800,
-      fontSize: 14,
-      letterSpacing: "0.08em",
-      cursor: "pointer",
-      width: "100%",
-    }}
-  >
-    ASSINAR MENSAL — R$ 59,90
-  </button>
-
-  {/* SEMESTRAL */}
-  <button
-    onClick={async () => {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan: "semestral" }),
-      });
-
-      const data = await res.json();
-      window.location.href = data.init_point;
-    }}
-    style={{
-      padding: "16px 24px",
-      background: "rgba(255,255,255,0.05)",
-      color: "#FBBF24",
-      border: "1px solid rgba(251,191,36,0.4)",
-      borderRadius: 12,
-      fontFamily: "'Syne', sans-serif",
-      fontWeight: 800,
-      fontSize: 14,
-      letterSpacing: "0.08em",
-      cursor: "pointer",
-      width: "100%",
-    }}
-  >
-    SEMESTRAL — R$ 299,90 (melhor custo)
-  </button>
-
-  {/* ANUAL */}
-  <button
-    onClick={async () => {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan: "anual" }),
-      });
-
-      const data = await res.json();
-      window.location.href = data.init_point;
-    }}
-    style={{
-      padding: "16px 24px",
-      background: "rgba(74,222,128,0.08)",
-      color: "#4ADE80",
-      border: "1px solid rgba(74,222,128,0.4)",
-      borderRadius: 12,
-      fontFamily: "'Syne', sans-serif",
-      fontWeight: 800,
-      fontSize: 14,
-      letterSpacing: "0.08em",
-      cursor: "pointer",
-      width: "100%",
-    }}
-  >
-    ANUAL — R$ 479,90 (melhor oferta)
-  </button>
-
-  <p style={{
-    textAlign: "center",
-    fontSize: 11,
-    color: "#4A5568",
-    marginTop: 8,
-  }}>
-    Pagamento seguro · Cancele quando quiser · Sem taxa de adesão
-  </p>
-
-</section>
+        <p style={{
+          textAlign: "center", fontSize: 11,
+          color: "#4A5568", marginTop: 4,
+        }}>
+          Pagamento seguro · Cancele quando quiser · Sem taxa de adesão
+        </p>
+      </section>
 
     </main>
   );
