@@ -20,7 +20,16 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
-    if (error) { setMsg(error.message); return; }
+    if (error) {
+  if (error.message.includes("Email not confirmed")) {
+    setMsg("Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.");
+  } else if (error.message.includes("Invalid login credentials")) {
+    setMsg("E-mail ou senha incorretos.");
+  } else {
+    setMsg("Erro ao entrar. Tente novamente.");
+  }
+  return;
+}
     router.push("/home");
   }
 
