@@ -38,8 +38,7 @@ export default function DirectoryPage() {
   const [total, setTotal] = useState<number | null>(null);
   const router = useRouter();
   const isPremium = usePremium();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  if (isPremium === null) return null;
+
   const filtersOk = (
     qName.trim().length >= 2 ||
     qSpec.trim().length >= 2 ||
@@ -102,6 +101,11 @@ export default function DirectoryPage() {
     debounceRef.current = setTimeout(() => runSearch(), 350);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [qName, qSpec, qCrm, qUf]);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  if (isPremium === null) return null;
+
+
 
   async function addToMyList(r: Row) {
     setMsg("");

@@ -23,8 +23,6 @@ export default function GroupsPage() {
   const [msgType, setMsgType] = useState<"success"|"error"|"warning"|null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const isPremium = usePremium();
-  if (isPremium === null) return null;
 
   const inputStyle = {
     padding: "11px 14px",
@@ -69,6 +67,9 @@ export default function GroupsPage() {
     }
     load();
   }, []);
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
+
 
   async function createGroup() {
     if (!newName.trim()) {
