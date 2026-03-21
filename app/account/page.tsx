@@ -305,6 +305,42 @@ export default function AccountPage() {
         </button>
 
         <div style={{ height: 1, background: "rgba(13,17,23,0.07)" }} />
+      {/* Cancelar assinatura */}
+        <button
+          type="button"
+          onClick={async () => {
+            const confirmed = window.confirm(
+              "Tem certeza que deseja cancelar sua assinatura Premium? Você perderá acesso às funcionalidades exclusivas."
+            );
+            if (!confirmed) return;
+
+            const { data: authData } = await supabase.auth.getUser();
+            const user = authData?.user;
+            if (!user) return;
+
+            const { error } = await supabase
+              .from("profiles")
+              .update({ is_premium: false, plan: null })
+              .eq("user_id", user.id);
+
+            if (error) {
+              alert("Erro ao cancelar. Entre em contato com o suporte.");
+            } else {
+              alert("Assinatura cancelada. Seu acesso Premium foi removido.");
+              router.refresh();
+            }
+          }}
+          style={{
+            padding: "12px 16px", background: "transparent",
+            color: "#C0392B", borderRadius: 10,
+            border: "1.5px solid rgba(192,57,43,0.20)",
+            cursor: "pointer", fontFamily: "'Syne', sans-serif",
+            fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
+            width: "100%",
+          }}
+        >
+          Cancelar assinatura Premium
+        </button>
 
         {/* Sair */}
         <button
