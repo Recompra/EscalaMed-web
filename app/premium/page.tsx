@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 export default function PremiumPage() {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
@@ -286,19 +287,7 @@ export default function PremiumPage() {
       }}>
         <button
           type="button"
-          onClick={async () => {
-            const res = await fetch("/api/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ plan: "mensal" }),
-            });
-            const data = await res.json();
-            if (!res.ok || !data?.init_point) {
-              alert("Erro ao criar checkout");
-              return;
-            }
-            window.location.href = data.init_point;
-          }}
+          onClick={() => setModalOpen(true)}
           style={{
             padding: "18px 24px",
             background: "linear-gradient(135deg, #1A6B4A, #4ADE80)",
@@ -312,14 +301,95 @@ export default function PremiumPage() {
           ⭐ ASSINAR AGORA
         </button>
 
-        <p style={{
-          textAlign: "center", fontSize: 11,
-          color: "#4A5568", marginTop: 4,
-        }}>
+        <p style={{ textAlign: "center", fontSize: 11, color: "#4A5568", marginTop: 4 }}>
           Pagamento seguro · Cancele quando quiser · Sem taxa de adesão
         </p>
       </section>
 
-    </main>
-  );
+      {/* Modal de planos */}
+      {modalOpen && (
+        <div
+          onClick={() => setModalOpen(false)}
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(0,0,0,0.75)",
+            zIndex: 100, display: "flex",
+            alignItems: "flex-end", justifyContent: "center",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#0D1A12",
+              border: "1px solid rgba(74,222,128,0.20)",
+              borderRadius: "20px 20px 0 0",
+              padding: "32px 24px 48px",
+              width: "100%", maxWidth: 720,
+              display: "grid", gap: 12,
+            }}
+          >
+            <div style={{
+              fontFamily: "'Syne', sans-serif", fontWeight: 800,
+              fontSize: 18, color: "#F5F3EE", marginBottom: 8,
+              textAlign: "center",
+            }}>Escolha seu plano</div>
+
+            {[
+              { plan: "mensal", label: "MENSAL", price: "R$ 59,90", sub: "por mês", highlight: false },
+              { plan: "semestral", label: "SEMESTRAL", price: "R$ 299,90", sub: "equivale a R$ 49,90/mês", highlight: true, badge: "MELHOR CUSTO" },
+              { plan: "anual", label: "ANUAL", price: "R$ 479,90", sub: "equivale a R$ 39,90/mês", highlight: false, badge: "MELHOR OFERTA" },
+            ].map((p) => (
+              <button
+                key={p.plan}
+                type="button"
+                onClick={async () => {
+                  setModalOpen(false);
+                  const res = await fetch("/api/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ plan: p.plan }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok || !data?.init_point) {
+                    alert("Erro ao criar checkout");
+                    return;
+                  }
+                  window.location.href = data.init_point;
+                }}
+                style={{
+                  padding: "18px 20px",
+                  background: p.highlight ? "rgba(74,222,128,0.10)" : "rgba(255,255,255,0.04)",
+                  border: p.highlight ? "1.5px solid rgba(74,222,128,0.40)" : "1px solid rgba(255,255,255,0.10)",
+                  borderRadius: 14, cursor: "pointer",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  textAlign: "left",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, color: p.highlight ? "#4ADE80" : "#8A9BB0",
+                      letterSpacing: "0.10em",
+                    }}>{p.label}</span>
+                    {p.badge && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100,
+                        background: "rgba(74,222,128,0.15)", color: "#4ADE80",
+                        border: "1px solid rgba(74,222,128,0.30)", letterSpacing: "0.10em",
+                      }}>{p.badge}</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#8A9BB0" }}>{p.sub}</div>
+                </div>
+                <div style={{
+                  fontFamily: "'Syne', sans-serif", fontWeight: 800,
+                  fontSize: 18, color: "#F5F3EE",
+                }}>{p.price}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      </main>
+    );
 }
