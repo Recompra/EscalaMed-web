@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function onLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -112,16 +113,31 @@ export default function LoginPage() {
           </label>
 
           <label style={{ display: "grid", gap: 6 }}>
-            <span style={labelStyle}>Senha</span>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              required
-              style={inputStyle}
-            />
-          </label>
+  <span style={labelStyle}>Senha</span>
+  <div style={{ position: "relative" }}>
+    <input
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      type={showPassword ? "text" : "password"}
+      placeholder="••••••••"
+      required
+      style={{ ...inputStyle, paddingRight: 40 }}
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      style={{
+        position: "absolute", right: 12, top: "50%",
+        transform: "translateY(-50%)",
+        background: "none", border: "none",
+        cursor: "pointer", fontSize: 16,
+        color: "#8A9BB0", padding: 0,
+      }}
+    >
+      {showPassword ? "🙈" : "👁️"}
+    </button>
+  </div>
+</label>
 
           <button
             type="submit"

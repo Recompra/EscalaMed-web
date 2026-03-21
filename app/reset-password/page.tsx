@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -11,6 +11,8 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const inputStyle = {
     padding: "11px 14px",
@@ -135,28 +137,58 @@ export default function ResetPasswordPage() {
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" as const }}>
               Nova senha
             </span>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              required
-              style={inputStyle}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                style={{ ...inputStyle, paddingRight: 40 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute", right: 12, top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none", border: "none",
+                  cursor: "pointer", fontSize: 16,
+                  color: "#8A9BB0", padding: 0,
+                }}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </label>
 
           <label style={{ display: "grid", gap: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", color: "#4A5568", textTransform: "uppercase" as const }}>
               Confirmar senha
             </span>
-            <input
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              type="password"
-              placeholder="••••••••"
-              required
-              style={inputStyle}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                type={showConfirm ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                style={{ ...inputStyle, paddingRight: 40 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                style={{
+                  position: "absolute", right: 12, top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none", border: "none",
+                  cursor: "pointer", fontSize: 16,
+                  color: "#8A9BB0", padding: 0,
+                }}
+              >
+                {showConfirm ? "🙈" : "👁️"}
+              </button>
+            </div>
           </label>
 
           <button
