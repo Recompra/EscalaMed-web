@@ -315,11 +315,11 @@ useEffect(() => {
       return;
     }
 
-    if (!name || !specialty || !phone || !address || !uf || !city) {
-      setMsg("Preencha nome, especialidade, telefone, endereço, UF e cidade.");
-      setMsgType("warning");
-      return;
-    }
+   if (!name || !crm) {
+  setMsg("Preencha pelo menos o nome e o CRM.");
+  setMsgType("warning");
+  return;
+}
 
     const nameNorm = (name || "").trim().toUpperCase();
     const phoneNorm = onlyDigits(phone);
