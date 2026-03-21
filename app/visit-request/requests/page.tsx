@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { usePremium } from "@/lib/usePremium";
 
 type Request = {
   id: string;
@@ -27,6 +28,8 @@ export default function VisitRequestsPage() {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [filterUF, setFilterUF] = useState("");
   const [filterCity, setFilterCity] = useState("");
+  const isPremium = usePremium();
+  if (isPremium === null) return null;
 
   useEffect(() => {
     async function load() {
