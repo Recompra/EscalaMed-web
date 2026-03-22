@@ -92,6 +92,7 @@ export default function GroupsPage() {
       .single();
 
     if (error || !data) {
+      console.log("ERRO GRUPOS:", JSON.stringify(error));
       setMsg("Erro ao criar grupo.");
       setMsgType("error");
       setCreating(false);
