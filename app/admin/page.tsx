@@ -389,7 +389,7 @@ const { data: dupOtherUF, error: dupOtherUFErr } = await supabase
 if (dupOtherUFErr) {
   console.error("Erro ao checar duplicidade (outra UF):", dupOtherUFErr);
 } else if (dupOtherUF?.id) {
-  const ufExistente = dupOtherUF.uf
+  const ufExistente = dupOtherUF.uf;
   const ok = confirm(
     `Atenção: este médico já está cadastrado na UF ${ufExistente}. Deseja continuar mesmo assim?`
   );
@@ -398,6 +398,21 @@ if (dupOtherUFErr) {
     setMsgType("error");
     return;
   }
+
+  // Envia e-mail de alerta
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user;
+  await fetch("/api/notify-duplicate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      doctorName: nameNorm,
+      crmUf: `${crm} / ${crmUf}`,
+      existingUf: ufExistente,
+      userName: user?.user_metadata?.name ?? "Não identificado",
+      userEmail: user?.email ?? "Não identificado",
+    }),
+  });
 }
 
     const payload = {
