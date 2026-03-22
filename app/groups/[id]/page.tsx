@@ -74,8 +74,14 @@ export default function GroupDetailPage() {
         .in("tenant_id", memberIds);
 
       // Busca nomes dos membros via user_metadata
-      const memberList: Member[] = memberIds.map((id) => ({ user_id: id }));
-      setMembers(memberList);
+      const { data: memberProfiles } = await supabase
+     .rpc("get_users_names", { user_ids: memberIds });
+
+     const memberList: Member[] = memberIds.map((id) => ({
+     user_id: id,
+     name: memberProfiles?.find((p: any) => p.id === id)?.name ?? id.slice(0, 8) + "...",
+     }));
+    setMembers(memberList);
 
       const allDoctors = (doctorRows ?? []) as Doctor[];
       setDoctors(allDoctors);
@@ -136,7 +142,7 @@ export default function GroupDetailPage() {
           <option value="">Filtrar por propagandista</option>
           {members.map((m) => (
             <option key={m.user_id} value={m.user_id}>
-              {m.user_id.slice(0, 8)}...
+              {m.name ?? m.user_id.slice(0, 8) + "..."}
             </option>
           ))}
         </select>
