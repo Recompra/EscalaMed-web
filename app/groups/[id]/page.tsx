@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 type Member = {
   user_id: string;
   name?: string;
-  lab?: string;
 };
 
 type Doctor = {
@@ -18,7 +17,6 @@ type Doctor = {
   city: string | null;
   uf: string | null;
   tenant_id: string;
-  member_name?: string;
 };
 
 export default function GroupDetailPage() {
@@ -27,13 +25,16 @@ export default function GroupDetailPage() {
   const groupId = params?.id as string;
 
   const [groupName, setGroupName] = useState("");
+  const [isOwner, setIsOwner] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [filtered, setFiltered] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [qName, setQName] = useState("");
   const [qMember, setQMember] = useState("");
-  const [qCrm, setQCrm] = useState("");
+  const [msg, setMsg] = useState("");
+  const [msgType, setMsgType] = useState<"success" | "error" | null>(null);
 
   const inputStyle = {
     padding: "11px 14px", borderRadius: 10,
@@ -47,17 +48,17 @@ export default function GroupDetailPage() {
       const { data: auth } = await supabase.auth.getUser();
       const user = auth?.user;
       if (!user) { router.push("/login"); return; }
+      setCurrentUserId(user.id);
 
-      // Carrega grupo
       const { data: group } = await supabase
         .from("groups")
-        .select("name")
+        .select("name, owner_id")
         .eq("id", groupId)
         .single();
 
       setGroupName(group?.name ?? "");
+      setIsOwner(group?.owner_id === user.id);
 
-      // Carrega membros
       const { data: memberRows } = await supabase
         .from("group_members")
         .select("user_id")
@@ -65,23 +66,21 @@ export default function GroupDetailPage() {
 
       const memberIds = (memberRows ?? []).map((r: any) => r.user_id);
 
-      // Busca médicos de todos os membros
       if (memberIds.length === 0) { setLoading(false); return; }
+
+      const { data: memberProfiles } = await supabase
+        .rpc("get_users_names", { user_ids: memberIds });
+
+      const memberList: Member[] = memberIds.map((id: string) => ({
+        user_id: id,
+        name: memberProfiles?.find((p: any) => p.id === id)?.name ?? id.slice(0, 8) + "...",
+      }));
+      setMembers(memberList);
 
       const { data: doctorRows } = await supabase
         .from("doctors")
         .select("*")
         .in("tenant_id", memberIds);
-
-      // Busca nomes dos membros via user_metadata
-      const { data: memberProfiles } = await supabase
-     .rpc("get_users_names", { user_ids: memberIds });
-
-     const memberList: Member[] = memberIds.map((id) => ({
-     user_id: id,
-     name: memberProfiles?.find((p: any) => p.id === id)?.name ?? id.slice(0, 8) + "...",
-     }));
-    setMembers(memberList);
 
       const allDoctors = (doctorRows ?? []) as Doctor[];
       setDoctors(allDoctors);
@@ -97,6 +96,39 @@ export default function GroupDetailPage() {
     if (qMember) result = result.filter((d) => d.tenant_id === qMember);
     setFiltered(result);
   }, [qName, qMember, doctors]);
+
+  async function leaveGroup() {
+    if (!confirm("Tem certeza que deseja sair do grupo?")) return;
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("group_id", groupId)
+      .eq("user_id", currentUserId);
+
+    if (error) {
+      setMsg("Erro ao sair do grupo.");
+      setMsgType("error");
+      return;
+    }
+    router.push("/groups");
+  }
+
+  async function deleteGroup() {
+    if (!confirm("Tem certeza que deseja EXCLUIR o grupo? Essa ação não pode ser desfeita.")) return;
+
+    // Remove todos os membros primeiro
+    await supabase.from("group_members").delete().eq("group_id", groupId);
+
+    // Remove o grupo
+    const { error } = await supabase.from("groups").delete().eq("id", groupId);
+
+    if (error) {
+      setMsg("Erro ao excluir grupo.");
+      setMsgType("error");
+      return;
+    }
+    router.push("/groups");
+  }
 
   return (
     <main style={{
@@ -114,17 +146,54 @@ export default function GroupDetailPage() {
             {doctors.length} médicos · {members.length} membros
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => router.push("/groups")}
-          style={{
-            background: "rgba(13,17,23,0.06)", color: "#0D1117",
-            padding: "8px 14px", borderRadius: 8, border: "none",
-            cursor: "pointer", fontSize: 12,
-            fontFamily: "'Syne', sans-serif", fontWeight: 700,
-          }}
-        >← Grupos</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => router.push("/groups")}
+            style={{
+              background: "rgba(13,17,23,0.06)", color: "#0D1117",
+              padding: "8px 14px", borderRadius: 8, border: "none",
+              cursor: "pointer", fontSize: 12,
+              fontFamily: "'Syne', sans-serif", fontWeight: 700,
+            }}
+          >← Grupos</button>
+
+          {isOwner ? (
+            <button
+              type="button"
+              onClick={deleteGroup}
+              style={{
+                background: "#FFF0EE", color: "#C0392B",
+                padding: "8px 14px", borderRadius: 8,
+                border: "1.5px solid rgba(192,57,43,0.20)",
+                cursor: "pointer", fontSize: 12,
+                fontFamily: "'Syne', sans-serif", fontWeight: 700,
+              }}
+            >Excluir grupo</button>
+          ) : (
+            <button
+              type="button"
+              onClick={leaveGroup}
+              style={{
+                background: "rgba(13,17,23,0.06)", color: "#0D1117",
+                padding: "8px 14px", borderRadius: 8, border: "none",
+                cursor: "pointer", fontSize: 12,
+                fontFamily: "'Syne', sans-serif", fontWeight: 700,
+              }}
+            >Sair do grupo</button>
+          )}
+        </div>
       </div>
+
+      {msg && (
+        <div style={{
+          padding: "12px 16px", borderRadius: 10, marginBottom: 16,
+          background: msgType === "error" ? "#FFF0EE" : "rgba(26,107,74,0.10)",
+          color: msgType === "error" ? "#C0392B" : "#1A6B4A",
+          fontWeight: 600, fontSize: 13,
+          border: `1.5px solid ${msgType === "error" ? "rgba(192,57,43,0.20)" : "rgba(26,107,74,0.20)"}`,
+        }}>{msg}</div>
+      )}
 
       {/* Filtros */}
       <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
@@ -174,6 +243,13 @@ export default function GroupDetailPage() {
                   background: "#F5F3EE", color: "#4A5568",
                 }}>{tag}</span>
               ))}
+              <span style={{
+                fontSize: 10, fontWeight: 600,
+                padding: "3px 8px", borderRadius: 100,
+                background: "rgba(26,107,74,0.10)", color: "#1A6B4A",
+              }}>
+                {members.find((m) => m.user_id === d.tenant_id)?.name ?? "—"}
+              </span>
             </div>
           </div>
         ))}
