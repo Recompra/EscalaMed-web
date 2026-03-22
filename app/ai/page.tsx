@@ -17,7 +17,7 @@ const SUGGESTIONS = [
   { icon: "🎯", text: "Como se posicionar em acompanhamentos com GD/GR/GN", message: "Tenho acompanhamento chegando. Como devo me preparar e me posicionar?" },
   { icon: "🗣️", text: "Quebra gelo e relacionamento com gestores", message: "Como melhorar meu relacionamento com o GD e criar um bom clima nos acompanhamentos?" },
   { icon: "📸", text: "Manda o print do Sistema, Power BI ou MDTR que eu analiso", message: "Vou mandar um print do meu painel para você analisar." },
-  { icon: "🏆", text: "Toque em 'Entrevista GD' para simular o processo seletivo", message: "" },
+  { icon: "🎯", text: "Simular processo seletivo na indústria farmacêutica", message: "" },
 ];
 
 export default function AIAssistantPage() {
@@ -28,10 +28,10 @@ export default function AIAssistantPage() {
   const [image, setImage] = useState<string | null>(null);
   const [imageMediaType, setImageMediaType] = useState<string>("image/jpeg");
   const [mode, setMode] = useState<Mode>("normal");
+  const [isListening, setIsListening] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
-  
 
   useEffect(() => {
     if (messagesRef.current) {
@@ -71,6 +71,37 @@ export default function AIAssistantPage() {
   function handleSuggestionClick(suggestion: (typeof SUGGESTIONS)[0]) {
     if (!suggestion.message) return;
     sendMessageText(suggestion.message);
+  }
+
+  function handleVoiceInput() {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Seu navegador não suporta reconhecimento de voz. Use o Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "pt-BR";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => (prev ? prev + " " + transcript : transcript));
+    };
+
+    recognition.start();
   }
 
   async function sendMessageText(text: string) {
@@ -125,7 +156,7 @@ export default function AIAssistantPage() {
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, mode, simulationRole: "GR" }),
+        body: JSON.stringify({ messages: apiMessages, mode, simulationRole: "GD" }),
       });
 
       if (!response.body) throw new Error("Sem resposta");
@@ -151,8 +182,6 @@ export default function AIAssistantPage() {
 
           try {
             const parsed = JSON.parse(data);
-
-            // Filtra apenas eventos de delta de texto da Anthropic
             if (
               parsed?.type === "content_block_delta" &&
               parsed?.delta?.type === "text_delta"
@@ -267,13 +296,13 @@ export default function AIAssistantPage() {
                   borderRadius: 20,
                 }}
               >
-                ENTREVISTA GD
+                PROCESSO SELETIVO
               </span>
             )}
           </div>
           <p style={{ margin: 0, fontSize: 11, color: "#8A9BB0" }}>
             {isInterviewMode
-              ? "Simulando entrevista com GR"
+              ? "Simulador de processo seletivo"
               : "Assistente do propagandista médico"}
           </p>
         </div>
@@ -299,7 +328,7 @@ export default function AIAssistantPage() {
             whiteSpace: "nowrap",
           }}
         >
-          {isInterviewMode ? "✕ Sair" : "🎯 Entrevista GD"}
+          {isInterviewMode ? "✕ Sair" : "🎯 Processo Seletivo"}
         </button>
       </div>
 
@@ -326,24 +355,10 @@ export default function AIAssistantPage() {
               padding: "18px 20px",
             }}
           >
-            <p
-              style={{
-                margin: "0 0 10px",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#4ADE80",
-              }}
-            >
+            <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600, color: "#4ADE80" }}>
               👋 Fala rep! Sou a EscalaIA.
             </p>
-            <p
-              style={{
-                margin: "0 0 12px",
-                fontSize: 13,
-                color: "#8A9BB0",
-                lineHeight: 1.65,
-              }}
-            >
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>
               Tô aqui pra te ajudar no dia a dia — de Power BI a acompanhamento
               com o GD, de abordagem em drogaria a como não entrar em pânico
               antes de um acompanhamento com o GR. 😄
@@ -390,7 +405,7 @@ export default function AIAssistantPage() {
           </div>
         )}
 
-        {/* Tela inicial entrevista */}
+        {/* Tela inicial processo seletivo */}
         {messages.length === 0 && isInterviewMode && (
           <div
             style={{
@@ -400,36 +415,32 @@ export default function AIAssistantPage() {
               padding: "18px 20px",
             }}
           >
-            <p
-              style={{
-                margin: "0 0 10px",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#FBBF24",
-              }}
-            >
-              🎯 Modo Entrevista GD ativado
+            <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: "#FBBF24" }}>
+              🎯 Simulador de Processo Seletivo
             </p>
-            <p
-              style={{
-                margin: "0 0 8px",
-                fontSize: 13,
-                color: "#8A9BB0",
-                lineHeight: 1.65,
-              }}
-            >
-              Vou simular uma entrevista real conduzida por um GR para a vaga de
-              Gerente Distrital. Uma pergunta por vez, com feedback após cada
-              resposta.
+            <p style={{ margin: "0 0 4px", fontSize: 12, color: "#8A9BB0" }}>
+              Indústria Farmacêutica — 4 fases reais
             </p>
+
+            <div style={{ display: "flex", gap: 6, margin: "12px 0", flexWrap: "wrap" as const }}>
+              {["Fase 1 · GD", "Fase 2 · GD", "Fase 3 · GD", "Fase 4 · GR"].map((fase, i) => (
+                <span key={i} style={{
+                  fontSize: 10, fontWeight: 700,
+                  padding: "3px 10px", borderRadius: 20,
+                  background: i === 0 ? "rgba(251,191,36,0.20)" : "rgba(255,255,255,0.05)",
+                  border: i === 0 ? "1px solid rgba(251,191,36,0.40)" : "1px solid rgba(255,255,255,0.08)",
+                  color: i === 0 ? "#FBBF24" : "#8A9BB0",
+                }}>{fase}</span>
+              ))}
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {[
-                { label: "▶️ Começar do início", msg: "começar" },
-                { label: "🧑‍💼 Treinar apresentação pessoal", msg: "Quero treinar o bloco de apresentação pessoal" },
-                { label: "📈 Treinar trajetória e resultados", msg: "Quero treinar o bloco de trajetória e resultados" },
-                { label: "👥 Treinar liderança e gestão", msg: "Quero treinar o bloco de liderança e gestão" },
-                { label: "🔥 Treinar situações difíceis", msg: "Quero treinar o bloco de conflitos e situações difíceis" },
-                { label: "🏠 Treinar mudança de cidade", msg: "Quero treinar o bloco de mudança de cidade e disponibilidade" },
+                { label: "▶️ Iniciar processo do zero", msg: "Quero iniciar o processo seletivo do zero." },
+                { label: "⚡ Treinar só a Fase 1 — Apresentação e histórico", msg: "Quero treinar apenas a Fase 1 — apresentação e histórico profissional." },
+                { label: "🔥 Treinar só a Fase 2 — Convicção e pressão", msg: "Quero treinar apenas a Fase 2 — convicção e pressão." },
+                { label: "📊 Treinar só a Fase 3 — Execução e raciocínio", msg: "Quero treinar apenas a Fase 3 — execução e raciocínio comercial." },
+                { label: "🏆 Treinar só a Fase 4 — Entrevista com GR", msg: "Quero treinar apenas a Fase 4 — entrevista final com o GR." },
               ].map((item) => (
                 <button
                   key={item.label}
@@ -477,20 +488,14 @@ export default function AIAssistantPage() {
               style={{
                 maxWidth: "85%",
                 padding: "11px 15px",
-                borderRadius:
-                  m.role === "user"
-                    ? "14px 14px 4px 14px"
-                    : "14px 14px 14px 4px",
+                borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
                 background:
                   m.role === "user"
                     ? isInterviewMode
                       ? "linear-gradient(135deg, #92400e, #78350f)"
                       : "linear-gradient(135deg, #1A6B4A, #145c3e)"
                     : "rgba(255,255,255,0.05)",
-                border:
-                  m.role === "user"
-                    ? "none"
-                    : "1px solid rgba(255,255,255,0.08)",
+                border: m.role === "user" ? "none" : "1px solid rgba(255,255,255,0.08)",
                 fontSize: 13,
                 lineHeight: 1.65,
                 color: m.role === "user" ? "#fff" : "#D4D8E0",
@@ -498,20 +503,18 @@ export default function AIAssistantPage() {
               }}
             >
               {m.content}
-              {m.role === "assistant" &&
-                loading &&
-                i === messages.length - 1 && (
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: 2,
-                      height: 14,
-                      background: "#4ADE80",
-                      marginLeft: 2,
-                      animation: "blink 1s step-end infinite",
-                    }}
-                  />
-                )}
+              {m.role === "assistant" && loading && i === messages.length - 1 && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 2,
+                    height: 14,
+                    background: "#4ADE80",
+                    marginLeft: 2,
+                    animation: "blink 1s step-end infinite",
+                  }}
+                />
+              )}
             </div>
           </div>
         ))}
@@ -529,7 +532,7 @@ export default function AIAssistantPage() {
                 color: "#8A9BB0",
               }}
             >
-              {isInterviewMode ? "GR pensando... 🤔" : "Analisando... ⏳"}
+              {isInterviewMode ? "Avaliando... 🤔" : "Analisando... ⏳"}
             </div>
           </div>
         )}
@@ -566,13 +569,7 @@ export default function AIAssistantPage() {
                 setImage(null);
                 if (fileRef.current) fileRef.current.value = "";
               }}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#C0392B",
-                cursor: "pointer",
-                fontSize: 14,
-              }}
+              style={{ background: "none", border: "none", color: "#C0392B", cursor: "pointer", fontSize: 14 }}
             >
               ✕
             </button>
@@ -593,17 +590,11 @@ export default function AIAssistantPage() {
               <label
                 htmlFor="imageUpload"
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 10,
+                  width: 40, height: 40, borderRadius: 10,
                   background: "rgba(255,255,255,0.07)",
                   border: "1px solid rgba(255,255,255,0.10)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  fontSize: 18,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", flexShrink: 0, fontSize: 18,
                 }}
               >
                 📸
@@ -623,50 +614,54 @@ export default function AIAssistantPage() {
             }}
             placeholder={
               isInterviewMode
-                ? "Sua resposta para o GR..."
+                ? "Sua resposta..."
                 : "Pergunta, desabafo ou Power BI — pode mandar..."
             }
             rows={1}
             style={{
-              flex: 1,
-              padding: "10px 14px",
-              borderRadius: 10,
+              flex: 1, padding: "10px 14px", borderRadius: 10,
               border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.05)",
-              color: "#F5F3EE",
-              fontSize: 14,
-              fontFamily: "'DM Sans', sans-serif",
-              outline: "none",
-              resize: "none",
-              lineHeight: 1.5,
-              maxHeight: 120,
-              overflowY: "auto",
+              background: "rgba(255,255,255,0.05)", color: "#F5F3EE",
+              fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+              outline: "none", resize: "none", lineHeight: 1.5,
+              maxHeight: 120, overflowY: "auto",
             }}
           />
+
+          {/* Botão de áudio */}
+          <button
+            type="button"
+            onClick={handleVoiceInput}
+            title="Falar"
+            style={{
+              width: 40, height: 40, borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: isListening ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.07)",
+              color: isListening ? "#EF4444" : "#8A9BB0",
+              fontSize: 18, cursor: "pointer", flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: isListening ? "0 0 12px rgba(239,68,68,0.30)" : "none",
+              transition: "all 0.2s",
+            }}
+          >
+            🎙️
+          </button>
 
           <button
             type="button"
             onClick={sendMessage}
             disabled={loading || (!input.trim() && !image)}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              border: "none",
+              width: 40, height: 40, borderRadius: 10, border: "none",
               background:
                 loading || (!input.trim() && !image)
                   ? "rgba(255,255,255,0.07)"
                   : isInterviewMode
                   ? "linear-gradient(135deg, #92400e, #78350f)"
                   : "linear-gradient(135deg, #1A6B4A, #145c3e)",
-              color: "#fff",
-              fontSize: 16,
-              cursor:
-                loading || (!input.trim() && !image) ? "not-allowed" : "pointer",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              color: "#fff", fontSize: 16,
+              cursor: loading || (!input.trim() && !image) ? "not-allowed" : "pointer",
+              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
               boxShadow:
                 loading
                   ? "none"
