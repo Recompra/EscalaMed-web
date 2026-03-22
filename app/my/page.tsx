@@ -136,9 +136,10 @@ export default function MyPage() {
       return;
     }
 
-   const { data, error } = await supabase
+  const { data, error } = await supabase
   .from("doctors")
   .select("*")
+  .eq("tenant_id", user.id)  // 👈 adicionar essa linha
   .order("created_at", { ascending: false });
 
 console.log("DOCTORS TEST:", { error, data });
