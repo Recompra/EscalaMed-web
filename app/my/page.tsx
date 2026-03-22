@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabaseClient";
+const supabase = createClient();
 import { UFS, CITIES_BY_UF } from "@/data/cities";
 
 const SPECIALTIES = [
