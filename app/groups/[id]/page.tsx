@@ -17,6 +17,8 @@ type Doctor = {
   city: string | null;
   uf: string | null;
   tenant_id: string;
+  crm: string | null;
+  crm_uf: string | null;
 };
 
 export default function GroupDetailPage() {
@@ -116,10 +118,8 @@ export default function GroupDetailPage() {
   async function deleteGroup() {
     if (!confirm("Tem certeza que deseja EXCLUIR o grupo? Essa ação não pode ser desfeita.")) return;
 
-    // Remove todos os membros primeiro
     await supabase.from("group_members").delete().eq("group_id", groupId);
 
-    // Remove o grupo
     const { error } = await supabase.from("groups").delete().eq("id", groupId);
 
     if (error) {
@@ -128,6 +128,18 @@ export default function GroupDetailPage() {
       return;
     }
     router.push("/groups");
+  }
+
+  function shareDoctor(d: Doctor) {
+    const memberName = members.find((m) => m.user_id === d.tenant_id)?.name ?? "—";
+    const text = `👨‍⚕️ *${d.name}*\n🏥 ${d.specialty ?? "—"} · ${d.phone ?? "—"}\n📋 CRM: ${d.crm ?? "—"} / ${d.crm_uf ?? "—"}\n📍 ${d.city ?? "—"} - ${d.uf ?? "—"}\n👤 Cadastrado por: ${memberName}`;
+    if (navigator.share) {
+      navigator.share({ text });
+    } else {
+      navigator.clipboard.writeText(text);
+      setMsg("Copiado para a área de transferência ✅");
+      setMsgType("success");
+    }
   }
 
   return (
@@ -195,7 +207,6 @@ export default function GroupDetailPage() {
         }}>{msg}</div>
       )}
 
-      {/* Filtros */}
       <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
         <input
           placeholder="Buscar por nome do médico"
@@ -228,28 +239,51 @@ export default function GroupDetailPage() {
             borderRadius: 14, padding: 16,
             boxShadow: "0 1px 4px rgba(13,17,23,0.06)",
           }}>
-            <div style={{
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 700, fontSize: 13, color: "#0D1117", marginBottom: 4,
-            }}>{d.name}</div>
-            <div style={{ fontSize: 12, color: "#8A9BB0" }}>
-              {d.specialty} · {d.phone}
-            </div>
-            <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" as const }}>
-              {[d.city, d.uf].filter(Boolean).map((tag) => (
-                <span key={tag} style={{
-                  fontSize: 10, fontWeight: 600,
-                  padding: "3px 8px", borderRadius: 100,
-                  background: "#F5F3EE", color: "#4A5568",
-                }}>{tag}</span>
-              ))}
-              <span style={{
-                fontSize: 10, fontWeight: 600,
-                padding: "3px 8px", borderRadius: 100,
-                background: "rgba(26,107,74,0.10)", color: "#1A6B4A",
-              }}>
-                {members.find((m) => m.user_id === d.tenant_id)?.name ?? "—"}
-              </span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: "'Syne', sans-serif",
+                  fontWeight: 700, fontSize: 13, color: "#0D1117", marginBottom: 4,
+                }}>{d.name}</div>
+
+                <div style={{ fontSize: 12, color: "#8A9BB0" }}>
+                  {d.specialty} · {d.phone}
+                </div>
+
+                <div style={{ fontSize: 12, color: "#8A9BB0", marginTop: 2 }}>
+                  CRM: {d.crm ?? "—"} / {d.crm_uf ?? "—"}
+                </div>
+
+                <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" as const }}>
+                  {[d.city, d.uf].filter(Boolean).map((tag) => (
+                    <span key={tag} style={{
+                      fontSize: 10, fontWeight: 600,
+                      padding: "3px 8px", borderRadius: 100,
+                      background: "#F5F3EE", color: "#4A5568",
+                    }}>{tag}</span>
+                  ))}
+                  <span style={{
+                    fontSize: 10, fontWeight: 600,
+                    padding: "3px 8px", borderRadius: 100,
+                    background: "rgba(26,107,74,0.10)", color: "#1A6B4A",
+                  }}>
+                    {members.find((m) => m.user_id === d.tenant_id)?.name ?? "—"}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => shareDoctor(d)}
+                style={{
+                  flexShrink: 0,
+                  padding: "7px 12px", borderRadius: 8,
+                  border: "1.5px solid rgba(26,107,74,0.25)",
+                  background: "rgba(26,107,74,0.08)", color: "#1A6B4A",
+                  fontFamily: "'Syne', sans-serif", fontSize: 11,
+                  fontWeight: 700, cursor: "pointer",
+                }}
+              >Compartilhar</button>
             </div>
           </div>
         ))}
