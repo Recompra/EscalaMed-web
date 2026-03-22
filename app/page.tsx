@@ -56,7 +56,7 @@ export default function LandingPage() {
     {
       icon: "🏆",
       title: "Processo Seletivo GD — Treine",
-      desc: "Simule um processo seletivo real com 4 fases progressivas conduzidas por GD e GR. Apresentação, convicção, execução e decisão final. Feedback após cada resposta. Prepare-se de verdade antes da entrevista.",
+      desc: "Simule um processo seletivo real. Feedback após cada resposta. Prepare-se de verdade antes da entrevista.",
       highlight: true,
       badge: "Avance na carreira",
       badgeColor: "#FBBF24",
@@ -72,13 +72,13 @@ export default function LandingPage() {
     {
       icon: "📊",
       title: "Análise de Power BI e CRM",
-      desc: "Manda o print do painel. A IA identifica o que está subindo, o que está caindo, onde está a oportunidade e monta argumento pronto para sua reunião com o GD ou GR.",
+      desc: "Manda o print do painel. A IA identifica o que está subindo, o que está caindo, onde está a oportunidade e monta argumento pronto para sua reunião.",
       highlight: false,
     },
     {
       icon: "🎭",
       title: "Simulador de Acompanhamento",
-      desc: "Treine antes do acompanhamento real. A IA age como GD, GR ou médico — faz perguntas difíceis e dá feedback honesto sobre sua postura, fala e estratégia.",
+      desc: "Treine antes do acompanhamento real. A IA age como Gerente médico — faz perguntas difíceis e dá feedback honesto sobre sua postura, fala e estratégia.",
       highlight: false,
     },
     {
