@@ -17,7 +17,7 @@ const SUGGESTIONS = [
   { icon: "🎯", text: "Como se posicionar em acompanhamentos com GD/GR/GN", message: "Tenho acompanhamento chegando. Como devo me preparar e me posicionar?" },
   { icon: "🗣️", text: "Quebra gelo e relacionamento com gestores", message: "Como melhorar meu relacionamento com o GD e criar um bom clima nos acompanhamentos?" },
   { icon: "📸", text: "Manda o print do Sistema, Power BI ou MDTR que eu analiso", message: "Vou mandar um print do meu painel para você analisar." },
-  { icon: "🎯", text: "Simular processo seletivo na indústria farmacêutica", message: "" },
+  { icon: "🎯", text: "Simular processo seletivo na indústria farmacêutica propagandista", message: "" },
 ];
 
 export default function AIAssistantPage() {
