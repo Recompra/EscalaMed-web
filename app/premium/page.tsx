@@ -69,8 +69,7 @@ export default function PremiumPage() {
           fontSize: 15, color: "#8A9BB0", lineHeight: 1.7,
           margin: "0 0 8px", maxWidth: 520,
         }}>
-          Tudo que um propagandista precisa para não perder visita,
-          não repetir médico e fechar mais resultados.
+          Tudo que um propagandista precisa para ter os melhores resultados
         </p>
       </section>
 
@@ -132,7 +131,7 @@ export default function PremiumPage() {
               {
                 icon: "🏆",
                 title: "Processo Seletivo GD — Treine",
-                desc: "Simule um processo seletivo real com 4 fases progressivas conduzidas por GD e GR. Apresentação, convicção, execução e decisão final. Feedback após cada resposta. Prepare-se de verdade antes da entrevista.",
+                desc: "Simule um processo seletivo real. Feedback após cada resposta. Prepare-se de verdade antes da entrevista.",
                 highlight: true,
                 badge: "Avance na carreira",
               },
@@ -147,12 +146,12 @@ export default function PremiumPage() {
               {
                 icon: "📊",
                 title: "Análise de Power BI e CRM",
-                desc: "Manda o print do painel. A IA identifica o que está subindo, o que está caindo, onde está a oportunidade e monta argumento pronto para sua reunião com o GD ou GR.",
+                desc: "Manda o print do painel. A IA identifica o que está subindo, o que está caindo, onde está a oportunidade e monta argumento pronto para sua reunião.",
               },
               {
                 icon: "🎭",
                 title: "Simulador de Acompanhamento",
-                desc: "Treine antes do acompanhamento real. A IA age como GD, GR ou médico — faz perguntas difíceis e dá feedback honesto sobre sua postura, fala e estratégia.",
+                desc: "Treine antes do acompanhamento real. A IA age como Gerente ou médico — faz perguntas difíceis e dá feedback honesto sobre sua postura, fala e estratégia.",
               },
               {
                 icon: "💊",
