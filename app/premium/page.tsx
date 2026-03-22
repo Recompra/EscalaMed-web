@@ -130,11 +130,19 @@ export default function PremiumPage() {
           <div style={{ display: "grid", gap: 10 }}>
             {[
               {
-                icon: "🎯",
-                title: "Simulador de Entrevista para GD",
-                desc: "Simule uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. 8 blocos completos — apresentação, liderança, conflitos, verba, mudança de cidade e mais. Feedback após cada resposta.",
+                icon: "🏆",
+                title: "Processo Seletivo GD — Treine",
+                desc: "Simule um processo seletivo real com 4 fases progressivas conduzidas por GD e GR. Apresentação, convicção, execução e decisão final. Feedback após cada resposta. Prepare-se de verdade antes da entrevista.",
                 highlight: true,
                 badge: "Avance na carreira",
+              },
+              {
+                icon: "🎯",
+                title: "Simulador de Processo Seletivo — Propagandista (Neófito)",
+                desc: "Quer entrar na indústria farmacêutica mas não sabe por onde começar? Simule o processo seletivo completo para a vaga de propagandista. A IA te guia por cada etapa, avalia seu perfil e te prepara para a entrevista real.",
+                highlight: true,
+                badge: "Para quem quer entrar",
+                badgeColor: "#4ADE80",
               },
               {
                 icon: "📊",
@@ -175,7 +183,7 @@ export default function PremiumPage() {
                   fontSize: 18,
                 }}>{f.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" as const }}>
                     <span style={{
                       fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 13,
                       color: f.highlight ? "#FBBF24" : "#F5F3EE",
@@ -183,10 +191,10 @@ export default function PremiumPage() {
                     {f.badge && (
                       <span style={{
                         fontSize: 9, fontWeight: 800,
-                        background: "rgba(251,191,36,0.20)",
-                        border: "1px solid rgba(251,191,36,0.35)",
-                        color: "#FBBF24", padding: "2px 8px",
-                        borderRadius: 100, letterSpacing: "0.10em",
+                        background: f.badgeColor ? "rgba(74,222,128,0.20)" : "rgba(251,191,36,0.20)",
+                        border: f.badgeColor ? "1px solid rgba(74,222,128,0.35)" : "1px solid rgba(251,191,36,0.35)",
+                        color: f.badgeColor ?? "#FBBF24",
+                        padding: "2px 8px", borderRadius: 100, letterSpacing: "0.10em",
                       }}>{f.badge}</span>
                     )}
                   </div>
@@ -231,7 +239,7 @@ export default function PremiumPage() {
               fontSize: 20,
             }}>{b.icon}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" as const }}>
                 <span style={{
                   fontFamily: "'Syne', sans-serif", fontWeight: 700,
                   fontSize: 14, color: "#F5F3EE",
@@ -390,6 +398,6 @@ export default function PremiumPage() {
           </div>
         </div>
       )}
-      </main>
-    );
+    </main>
+  );
 }

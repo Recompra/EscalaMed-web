@@ -54,11 +54,20 @@ export default function LandingPage() {
 
   const aiFeatures = [
     {
-      icon: "🎯",
-      title: "Simulador de Entrevista para GD",
-      desc: "Simule uma entrevista real conduzida por um GR para a vaga de Gerente Distrital. 8 blocos completos — apresentação, liderança, conflitos, verba, mudança de cidade e mais. Feedback após cada resposta.",
+      icon: "🏆",
+      title: "Processo Seletivo GD — Treine",
+      desc: "Simule um processo seletivo real com 4 fases progressivas conduzidas por GD e GR. Apresentação, convicção, execução e decisão final. Feedback após cada resposta. Prepare-se de verdade antes da entrevista.",
       highlight: true,
       badge: "Avance na carreira",
+      badgeColor: "#FBBF24",
+    },
+    {
+      icon: "🎯",
+      title: "Processo Seletivo — Propagandista (Neófito)",
+      desc: "Quer entrar na indústria farmacêutica mas não sabe por onde começar? Simule o processo seletivo completo para a vaga de propagandista. A IA te guia por cada etapa, avalia seu perfil e te prepara para a entrevista real.",
+      highlight: true,
+      badge: "Para quem quer entrar",
+      badgeColor: "#4ADE80",
     },
     {
       icon: "📊",
@@ -198,7 +207,6 @@ export default function LandingPage() {
           não repetir médico e fechar mais resultados.
         </p>
 
-        {/* Stats */}
         <div style={{
           display: "flex", gap: 48, marginTop: 64,
           flexWrap: "wrap" as const, justifyContent: "center",
@@ -217,7 +225,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SEÇÃO ESCALAIA ── */}
+      {/* SEÇÃO ESCALAIA */}
       <section style={{
         padding: "80px 24px 40px",
         maxWidth: 800, margin: "0 auto",
@@ -246,7 +254,6 @@ export default function LandingPage() {
           position: "relative", overflow: "hidden",
           marginBottom: 12,
         }}>
-          {/* Glow */}
           <div style={{
             position: "absolute", top: -40, right: -40,
             width: 200, height: 200, borderRadius: "50%",
@@ -292,10 +299,10 @@ export default function LandingPage() {
                     {f.badge && (
                       <span style={{
                         fontSize: 9, fontWeight: 800,
-                        background: "rgba(251,191,36,0.20)",
-                        border: "1px solid rgba(251,191,36,0.35)",
-                        color: "#FBBF24", padding: "2px 8px",
-                        borderRadius: 100, letterSpacing: "0.10em",
+                        background: f.badgeColor === "#4ADE80" ? "rgba(74,222,128,0.20)" : "rgba(251,191,36,0.20)",
+                        border: f.badgeColor === "#4ADE80" ? "1px solid rgba(74,222,128,0.35)" : "1px solid rgba(251,191,36,0.35)",
+                        color: f.badgeColor ?? "#FBBF24",
+                        padding: "2px 8px", borderRadius: 100, letterSpacing: "0.10em",
                       }}>{f.badge}</span>
                     )}
                   </div>
