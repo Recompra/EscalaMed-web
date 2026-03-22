@@ -328,7 +328,7 @@ export default function AIAssistantPage() {
             whiteSpace: "nowrap",
           }}
         >
-          {isInterviewMode ? "✕ Sair" : "🎯 Processo Seletivo"}
+          {isInterviewMode ? "✕ Sair" : "🎯 Processo Seletivo GD - Treine"}
         </button>
       </div>
 
