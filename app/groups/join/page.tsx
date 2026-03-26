@@ -22,13 +22,22 @@ function JoinGroupContent() {
         return;
       }
 
-      const { data: group } = await supabase
-        .from("groups")
-        .select("id, name")
-        .eq("invite_code", code)
-        .single();
+      const { data: group, error: groupError } = await supabase
+  .from("groups")
+  .select("id, name, invite_code")
+  .eq("invite_code", code)
+  .single();
 
-      if (!group) { setMsg("Grupo não encontrado."); return; }
+if (groupError) {
+  console.log("GROUP FETCH ERROR:", groupError);
+  setMsg(`Grupo não encontrado: ${groupError.message}`);
+  return;
+}
+
+if (!group) {
+  setMsg("Grupo não encontrado.");
+  return;
+}
 
       const { data: existing } = await supabase
   .from("group_members")
