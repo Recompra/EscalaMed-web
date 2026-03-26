@@ -39,15 +39,32 @@ export default function MedicosPage() {
   }, []);
 
  async function loadDoctors() {
-  const { data } = await supabase
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const user = authData?.user;
+
+  if (authError || !user) {
+    console.error("Usuário não autenticado:", authError);
+    setDoctors([]);
+    setFiltered([]);
+    return;
+  }
+
+  const { data, error } = await supabase
     .from("doctors")
     .select("*")
+    .eq("tenant_id", user.id)
     .order("name");
 
-  if (data) {
-    setDoctors(data);
-    setFiltered(data);
+  if (error) {
+    console.error("Erro ao buscar médicos:", error);
+    setDoctors([]);
+    setFiltered([]);
+    return;
   }
+
+  setDoctors(data ?? []);
+  setFiltered(data ?? []);
+
 }
 
 
