@@ -164,7 +164,17 @@ export default function OwnerDashboardPage() {
       if (authError || !user) { router.push("/login"); return; }
       const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("user_id", user.id).single();
       if (profileError) { setErrorMsg("Erro ao validar acesso."); return; }
-      if (profile?.role !== "owner") { router.push("/"); return; }
+      const allowedEmails = [
+      "jr.antoniojrr@gmail.com",
+      "flavinha.q3@hotmail.com"
+      ];
+
+      const userEmail = (user.email || "").toLowerCase();
+
+      if (!allowedEmails.includes(userEmail)) {
+      router.push("/");
+      return;
+      }
 
       const days = periodDays(p);
       const periodAgo = new Date(); periodAgo.setDate(periodAgo.getDate() - days);
