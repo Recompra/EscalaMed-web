@@ -28,21 +28,78 @@ export async function POST(req: NextRequest) {
 
   if (payment.status === "approved") {
     const email = payment.payer?.email;
+    const description = (payment.description || "").toLowerCase();
 
-    const { data: users } = await supabase.auth.admin.listUsers();
-    const user = users?.users.find(u => u.email === email);
+    const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
+
+    if (usersError) {
+      console.error("Erro ao listar usuários:", usersError);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+
+    const user = usersData?.users.find((u) => u.email === email);
 
     if (user) {
-      const { error } = await supabase
+      const { data: existingPayment, error: existingPaymentError } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("payment_id", String(paymentId))
+        .maybeSingle();
+
+      if (existingPaymentError) {
+        console.error("Erro ao verificar payment_id:", existingPaymentError);
+        return NextResponse.json({ ok: false }, { status: 500 });
+      }
+
+      if (existingPayment) {
+        console.log("Pagamento já processado:", paymentId);
+        return NextResponse.json({ ok: true });
+      }
+
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+
+      let plan = "mensal";
+
+      if (description.includes("anual")) {
+        plan = "anual";
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      } else if (description.includes("semestral")) {
+        plan = "semestral";
+        endDate.setMonth(endDate.getMonth() + 6);
+      } else {
+        plan = "mensal";
+        endDate.setMonth(endDate.getMonth() + 1);
+      }
+
+      const { error: subError } = await supabase
+        .from("subscriptions")
+        .insert({
+          user_id: user.id,
+          plan,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          status: "active",
+          payment_id: String(paymentId),
+        });
+
+      if (subError) {
+        console.error("Erro ao criar subscription:", subError);
+        return NextResponse.json({ ok: false, error: "subscription_error" }, { status: 500 });
+      }
+
+      const { error: profileError } = await supabase
         .from("profiles")
-        .update({ 
+        .update({
           is_premium: true,
-          premium_since: new Date().toISOString(),
-          plan: payment.description ?? "premium"
+          premium_since: startDate.toISOString(),
+          plan: plan,
         })
         .eq("user_id", user.id);
 
-      if (error) console.error("Erro ao atualizar premium:", error);
+      if (profileError) {
+        console.error("Erro ao atualizar premium:", profileError);
+      }
     }
   }
 
