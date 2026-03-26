@@ -42,7 +42,10 @@ if (!existing) {
     .from("group_members")
     .insert({ group_id: group.id, user_id: user.id });
 
-  if (error) { setMsg("Erro ao entrar no grupo."); return; }
+ if (error) {
+  console.log("JOIN GROUP ERROR:", error);
+  setMsg(`Erro ao entrar no grupo: ${error.message}`);
+  return; }
 }
 
       setMsg(`Você entrou no grupo "${group.name}" ✅`);
