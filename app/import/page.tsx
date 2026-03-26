@@ -202,7 +202,7 @@ export default function ImportPage() {
           .insert(
             inserted.map((doc) => ({
               doctor_id: doc.id,
-              slot: null,
+              slot: "SEGUNDA_MANHA",
               tenant_id: user.id,
             }))
           );
