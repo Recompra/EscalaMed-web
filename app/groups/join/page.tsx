@@ -26,7 +26,7 @@ function JoinGroupContent() {
   .from("groups")
   .select("id, name, invite_code")
   .eq("invite_code", code)
-  .single();
+  .maybeSingle();
 
 if (groupError) {
   console.log("GROUP FETCH ERROR:", groupError);
