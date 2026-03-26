@@ -30,13 +30,20 @@ function JoinGroupContent() {
 
       if (!group) { setMsg("Grupo não encontrado."); return; }
 
-      const { error } = await supabase
-        .from("group_members")
-        .upsert([{ group_id: group.id, user_id: user.id }], {
-          onConflict: "group_id,user_id",
-        });
+      const { data: existing } = await supabase
+  .from("group_members")
+  .select("id")
+  .eq("group_id", group.id)
+  .eq("user_id", user.id)
+  .single();
 
-      if (error) { setMsg("Erro ao entrar no grupo."); return; }
+if (!existing) {
+  const { error } = await supabase
+    .from("group_members")
+    .insert({ group_id: group.id, user_id: user.id });
+
+  if (error) { setMsg("Erro ao entrar no grupo."); return; }
+}
 
       setMsg(`Você entrou no grupo "${group.name}" ✅`);
       setDone(true);
