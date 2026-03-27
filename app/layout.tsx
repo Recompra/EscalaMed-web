@@ -10,6 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "EscalaMed",
   description: "Escala médica simples e essencial.",
+  manifest: "/manifest.json",
   openGraph: {
     title: "EscalaMed",
     description: "Escala médica simples e essencial.",
@@ -26,8 +27,8 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: "/icon.png?v=3",
-    apple: "/apple-touch-icon.png?v=3",
+    icon: "/icon.png?v=4",
+    apple: "/apple-touch-icon.png?v=4",
   },
 };
 
