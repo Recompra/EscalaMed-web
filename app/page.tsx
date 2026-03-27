@@ -102,7 +102,7 @@ export default function LandingPage() {
   ];
 
   const stats = [
-    { value: "4000+", label: "Médicos no diretório" },
+    { value: "20000+", label: "Médicos no diretório" },
     { value: "27", label: "Estados cobertos" },
     { value: "100%", label: "Web + Mobile" },
   ];

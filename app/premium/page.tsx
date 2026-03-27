@@ -271,7 +271,7 @@ export default function PremiumPage() {
           gap: 12, textAlign: "center",
         }}>
           {[
-            { n: "4000+", label: "Médicos no diretório" },
+            { n: "20000+", label: "Médicos no diretório" },
             { n: "27", label: "Estados cobertos" },
             { n: "100%", label: "Web + Mobile" },
           ].map((s) => (
