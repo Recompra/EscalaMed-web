@@ -25,9 +25,10 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     type: "website",
   },
-  icons: {
-    icon: "/icon.png",
-  },
+ icons: {
+  icon: "/icon.png?v=3",
+  apple: "/apple-touch-icon.png?v=3",
+},
 };
 
 export default function RootLayout({
@@ -42,7 +43,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap"
           rel="stylesheet"
         />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
       </head>
       <body className={`${inter.className} antialiased`}>
         {children}
