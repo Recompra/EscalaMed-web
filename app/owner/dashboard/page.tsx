@@ -164,6 +164,7 @@ export default function OwnerDashboardPage() {
       if (authError || !user) { router.push("/login"); return; }
       const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("user_id", user.id).single();
       if (profileError) { setErrorMsg("Erro ao validar acesso."); return; }
+      
       const allowedEmails = [
       "jr.antoniojrr@gmail.com",
       "flavinha.q3@hotmail.com"

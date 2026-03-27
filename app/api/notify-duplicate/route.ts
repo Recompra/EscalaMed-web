@@ -1,14 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
-  const { doctorName, crmUf, existingUf, userName, userEmail } = await req.json();
+  const {
+    doctorName,
+    doctorPhone,
+    crmUf,
+    existingUf,
+    userName,
+    userEmail,
+    existingDoctorId,
+    currentDoctorId,
+    isEditing,
+  } = await req.json();
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // se estiver editando o mesmo registro, não envia e-mail
+  if (
+    isEditing === true &&
+    existingDoctorId &&
+    currentDoctorId &&
+    existingDoctorId === currentDoctorId
+  ) {
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: "same_record_edit",
+    });
+  }
+
+  // se não houver mudança real de UF, não envia
+  if (!crmUf || !existingUf || crmUf === existingUf) {
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: "same_uf",
+    });
+  }
+
+  const { data: relatedUsers, error: rpcError } = await supabase.rpc(
+    "find_users_same_doctor",
+    {
+      doctor_name: doctorName,
+      doctor_phone: doctorPhone,
+    }
+  );
+
+  if (rpcError) {
+    return NextResponse.json(
+      { error: rpcError.message },
+      { status: 500 }
+    );
+  }
+
+  if (!relatedUsers || relatedUsers.length === 0) {
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: "no_users_found",
+    });
+  }
+
+  const recipientEmails =
+    relatedUsers
+      .map((u: { email: string }) => u.email)
+      .filter((email: string) => email && email !== userEmail);
+
+  if (recipientEmails.length === 0) {
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: "no_recipients",
+    });
+  }
 
   const { error } = await resend.emails.send({
     from: "EscalaMed <noreply@escalamed.app.br>",
-    to: "jr.antoniojrr@gmail.com",
+    to: recipientEmails,
     subject: `⚠️ Alerta de Duplicidade — ${doctorName}`,
     html: `
       <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #F5F3EE; border-radius: 16px;">
@@ -52,13 +127,13 @@ export async function POST(req: NextRequest) {
           </div>
 
           <p style="font-size: 13px; color: #4A5568; line-height: 1.6; margin: 0 0 16px;">
-            O propagandista optou por prosseguir com o cadastro mesmo após o alerta exibido na plataforma. 
+            O propagandista optou por prosseguir com o cadastro mesmo após o alerta exibido na plataforma.
             Recomendamos verificar se este é um cadastro legítimo em nova região ou se trata-se de uma duplicidade que requer atenção.
           </p>
 
           <div style="border-left: 3px solid #1A6B4A; padding-left: 12px; margin-top: 16px;">
             <p style="font-size: 12px; color: #1A6B4A; margin: 0; line-height: 1.6;">
-              O EscalaMed está comprometido com a qualidade e integridade das informações da sua base. 
+              O EscalaMed está comprometido com a qualidade e integridade das informações da sua base.
               Este alerta faz parte do nosso sistema de monitoramento para garantir que você tenha sempre dados confiáveis e atualizados.
             </p>
           </div>
