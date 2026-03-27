@@ -173,8 +173,8 @@ export default function OwnerDashboardPage() {
 
       if (!allowedEmails.includes(userEmail)) {
       router.push("/");
-      return;
-      }
+     return;
+}
 
       const days = periodDays(p);
       const periodAgo = new Date(); periodAgo.setDate(periodAgo.getDate() - days);
