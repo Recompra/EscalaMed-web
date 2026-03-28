@@ -11,6 +11,7 @@ const PROTECTED_ROUTES = [
   "/import",
   "/account",
   "/visit-request/requests",
+  "/owner",
 ];
 
 const PUBLIC_ROUTES = [
