@@ -17,13 +17,12 @@ export function usePremium() {
       }
 
       const { data: subscription, error } = await supabase
-        .from("subscriptions")
-        .select("end_date, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("end_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      .from("subscriptions")
+      .select("end_date, status")
+      .eq("user_id", user.id)
+      .order("end_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
       if (error) {
         console.error("Erro ao verificar assinatura:", error);

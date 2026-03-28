@@ -30,76 +30,83 @@ export async function POST(req: NextRequest) {
     const email = payment.payer?.email;
     const description = (payment.description || "").toLowerCase();
 
-    const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
+    // ✅ Busca direta por email na tabela profiles
+    const { data: profile, error: profileLookupError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("email", email)
+      .maybeSingle();
 
-    if (usersError) {
-      console.error("Erro ao listar usuários:", usersError);
+    if (profileLookupError) {
+      console.error("Erro ao buscar usuário:", profileLookupError);
       return NextResponse.json({ ok: false }, { status: 500 });
     }
 
-    const user = usersData?.users.find((u) => u.email === email);
+    if (!profile) {
+      console.warn("Usuário não encontrado para o email:", email);
+      return NextResponse.json({ ok: true });
+    }
 
-    if (user) {
-      const { data: existingPayment, error: existingPaymentError } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("payment_id", String(paymentId))
-        .maybeSingle();
+    const userId = profile.user_id;
 
-      if (existingPaymentError) {
-        console.error("Erro ao verificar payment_id:", existingPaymentError);
-        return NextResponse.json({ ok: false }, { status: 500 });
-      }
+    // Deduplicação
+    const { data: existingPayment, error: existingPaymentError } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .eq("payment_id", String(paymentId))
+      .maybeSingle();
 
-      if (existingPayment) {
-        console.log("Pagamento já processado:", paymentId);
-        return NextResponse.json({ ok: true });
-      }
+    if (existingPaymentError) {
+      console.error("Erro ao verificar payment_id:", existingPaymentError);
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
 
-      const startDate = new Date();
-      const endDate = new Date(startDate);
+    if (existingPayment) {
+      console.log("Pagamento já processado:", paymentId);
+      return NextResponse.json({ ok: true });
+    }
 
-      let plan = "mensal";
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    let plan = "mensal";
 
-      if (description.includes("anual")) {
-        plan = "anual";
-        endDate.setFullYear(endDate.getFullYear() + 1);
-      } else if (description.includes("semestral")) {
-        plan = "semestral";
-        endDate.setMonth(endDate.getMonth() + 6);
-      } else {
-        plan = "mensal";
-        endDate.setMonth(endDate.getMonth() + 1);
-      }
+    if (description.includes("anual")) {
+      plan = "anual";
+      endDate.setFullYear(endDate.getFullYear() + 1);
+    } else if (description.includes("semestral")) {
+      plan = "semestral";
+      endDate.setMonth(endDate.getMonth() + 6);
+    } else {
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
 
-      const { error: subError } = await supabase
-        .from("subscriptions")
-        .insert({
-          user_id: user.id,
-          plan,
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-          status: "active",
-          payment_id: String(paymentId),
-        });
+    const { error: subError } = await supabase
+      .from("subscriptions")
+      .insert({
+        user_id: userId,
+        plan,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        status: "active",
+        payment_id: String(paymentId),
+      });
 
-      if (subError) {
-        console.error("Erro ao criar subscription:", subError);
-        return NextResponse.json({ ok: false, error: "subscription_error" }, { status: 500 });
-      }
+    if (subError) {
+      console.error("Erro ao criar subscription:", subError);
+      return NextResponse.json({ ok: false, error: "subscription_error" }, { status: 500 });
+    }
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          is_premium: true,
-          premium_since: startDate.toISOString(),
-          plan: plan,
-        })
-        .eq("user_id", user.id);
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        is_premium: true,
+        premium_since: startDate.toISOString(),
+        plan: plan,
+      })
+      .eq("user_id", userId);
 
-      if (profileError) {
-        console.error("Erro ao atualizar premium:", profileError);
-      }
+    if (profileError) {
+      console.error("Erro ao atualizar premium:", profileError);
     }
   }
 
