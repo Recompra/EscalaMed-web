@@ -8,31 +8,6 @@ type Message = { role: "user" | "assistant"; content: string };
 type Mode = "normal" | "interview_propagandista" | "interview_gd";
 type SimulationPhase = 1 | 2 | 3 | 4;
 
-const SUGGESTIONS = [
-  { icon: "📊", text: "Analisar Power BI e preparar argumentos", message: "Quero analisar meu Power BI. Vou te mandar o print agora." },
-  { icon: "💊", text: "Dicas de abordagem com médicos e drogarias", message: "Me da dicas de abordagem com medicos dificeis e estrategias para drogaria." },
-  { icon: "🎯", text: "Como se posicionar em acompanhamentos com GD/GR/GN", message: "Tenho acompanhamento chegando. Como devo me preparar?" },
-  { icon: "🗣️", text: "Relacionamento com gestores", message: "Como melhorar meu relacionamento com o GD nos acompanhamentos?" },
-  { icon: "📸", text: "Manda print do Power BI ou MDTR que eu analiso", message: "Vou mandar um print do meu painel para voce analisar." },
-  { icon: "🏃", text: "Simular processo seletivo — propagandista", message: null, targetMode: "interview_propagandista" as Mode },
-];
-
-const PROPAGANDISTA_OPTIONS = [
-  { label: "Iniciar processo completo do zero", msg: "Quero iniciar o processo seletivo completo do zero.", phase: 1 as SimulationPhase },
-  { label: "Treinar Fase 1 — Primeiro encontro com GD", msg: "Quero treinar a Fase 1 — primeiro encontro com o GD.", phase: 1 as SimulationPhase },
-  { label: "Treinar Fase 2 — Convicção e pressão", msg: "Quero treinar a Fase 2 — convicção e pressão psicológica.", phase: 2 as SimulationPhase },
-  { label: "Treinar Fase 3 — Análise de mercado e propaganda", msg: "Quero treinar a Fase 3 — análise de mercado e propaganda no iPad.", phase: 3 as SimulationPhase },
-  { label: "Treinar Fase 4 — Entrevista final com GR", msg: "Quero treinar a Fase 4 — entrevista final com o GR.", phase: 4 as SimulationPhase },
-];
-
-const GD_OPTIONS = [
-  { label: "Iniciar processo completo para GD", msg: "Quero iniciar o processo seletivo completo para GD." },
-  { label: "Treinar apresentação e motivação", msg: "Quero treinar minha apresentação pessoal e motivação para ser GD." },
-  { label: "Treinar perguntas de liderança e gestão", msg: "Quero treinar as perguntas de liderança e gestão para GD." },
-  { label: "Treinar pressão sobre mudança de cidade", msg: "Quero treinar como responder sobre mudança de cidade para GD." },
-  { label: "Treinar etapa final com GN", msg: "Quero treinar a etapa final com o Gerente Nacional." },
-];
-
 export default function AIAssistantPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -79,11 +54,6 @@ export default function AIAssistantPage() {
     setMode(newMode);
     setShowModeMenu(false);
     resetChat();
-  }
-
-  function handleSuggestionClick(s: (typeof SUGGESTIONS)[0]) {
-    if (!s.message && s.targetMode) { activateMode(s.targetMode); return; }
-    if (s.message) sendMessageText(s.message);
   }
 
   function detectPhaseAdvance(content: string, currentPhase: SimulationPhase) {
@@ -216,8 +186,6 @@ export default function AIAssistantPage() {
   const isProp = mode === "interview_propagandista";
 
   const accentColor = isGD ? "#818CF8" : isProp ? "#FBBF24" : "#4ADE80";
-  const cardBg = isGD ? "rgba(129,140,248,0.07)" : isProp ? "rgba(251,191,36,0.07)" : "rgba(26,107,74,0.10)";
-  const cardBorder = isGD ? "1px solid rgba(129,140,248,0.25)" : isProp ? "1px solid rgba(251,191,36,0.25)" : "1px solid rgba(26,107,74,0.25)";
   const btnGrad = isGD ? "linear-gradient(135deg, #4338ca, #3730a3)" : isProp ? "linear-gradient(135deg, #92400e, #78350f)" : "linear-gradient(135deg, #1A6B4A, #145c3e)";
   const badgeColor = isGD ? "#818CF8" : "#FBBF24";
   const badgeBg = isGD ? "rgba(129,140,248,0.15)" : "rgba(251,191,36,0.15)";
@@ -254,10 +222,10 @@ export default function AIAssistantPage() {
           </button>
           {showModeMenu && !isInterview && (
             <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", background: "#141A17", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 10, padding: 8, zIndex: 100, minWidth: 230, display: "flex", flexDirection: "column", gap: 6 }}>
-              <button type="button" onClick={() => activateMode("interview_propagandista")} style={{ fontSize: 12, color: "#FBBF24", padding: "10px 12px", background: "rgba(251,191,36,0.08)", borderRadius: 8, border: "1px solid rgba(251,191,36,0.20)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+              <button type="button" onClick={() => { activateMode("interview_propagandista"); sendMessageText("Quero iniciar o simulador de processo seletivo para propagandista."); }} style={{ fontSize: 12, color: "#FBBF24", padding: "10px 12px", background: "rgba(251,191,36,0.08)", borderRadius: 8, border: "1px solid rgba(251,191,36,0.20)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
                 Processo para Propagandista
               </button>
-              <button type="button" onClick={() => activateMode("interview_gd")} style={{ fontSize: 12, color: "#818CF8", padding: "10px 12px", background: "rgba(129,140,248,0.08)", borderRadius: 8, border: "1px solid rgba(129,140,248,0.20)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+              <button type="button" onClick={() => { activateMode("interview_gd"); sendMessageText("Quero iniciar o simulador de processo seletivo para GD."); }} style={{ fontSize: 12, color: "#818CF8", padding: "10px 12px", background: "rgba(129,140,248,0.08)", borderRadius: 8, border: "1px solid rgba(129,140,248,0.20)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
                 Processo para GD
               </button>
             </div>
@@ -268,64 +236,12 @@ export default function AIAssistantPage() {
       {/* Área de mensagens */}
       <div ref={messagesRef} style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14, WebkitOverflowScrolling: "touch" }}>
 
-        {/* Tela inicial normal */}
-        {messages.length === 0 && !isInterview && (
-          <div style={{ background: cardBg, border: cardBorder, borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: accentColor }}>Fala rep! Sou a EscalaIA.</p>
-            <p style={{ margin: "0 0 14px", fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>To aqui pra te ajudar no dia a dia — Power BI, acompanhamento com GD, médico difícil, processo seletivo. So chamar.</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {SUGGESTIONS.map((s) => (
-                <button key={s.text} type="button" onClick={() => handleSuggestionClick(s)} style={{ fontSize: 12, color: "#8A9BB0", padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(74,222,128,0.08)"; e.currentTarget.style.borderColor = "rgba(74,222,128,0.20)"; e.currentTarget.style.color = "#C8D8C0"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#8A9BB0"; }}>
-                  {s.icon} {s.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tela inicial propagandista */}
-        {messages.length === 0 && isProp && (
-          <div style={{ background: cardBg, border: cardBorder, borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: accentColor }}>Simulador — Propagandista</p>
-            <p style={{ margin: "0 0 12px", fontSize: 12, color: "#8A9BB0", lineHeight: 1.6 }}>4 fases reais da industria farmaceutica. Conduzo como entrevistador de verdade — com pressão, perguntas difíceis e veredito em cada fase.</p>
-            <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" as const }}>
-              {["Fase 1 GD", "Fase 2 GD", "Fase 3 GD", "Fase 4 GR"].map((f, i) => (
-                <span key={i} style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: i === 0 ? "rgba(251,191,36,0.20)" : "rgba(255,255,255,0.05)", border: i === 0 ? "1px solid rgba(251,191,36,0.40)" : "1px solid rgba(255,255,255,0.08)", color: i === 0 ? "#FBBF24" : "#8A9BB0" }}>{f}</span>
-              ))}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {PROPAGANDISTA_OPTIONS.map((item) => (
-                <button key={item.label} type="button" onClick={() => { setSimulationPhase(item.phase); sendMessageText(item.msg); }} style={{ fontSize: 12, color: "#8A9BB0", padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(251,191,36,0.08)"; e.currentTarget.style.borderColor = "rgba(251,191,36,0.20)"; e.currentTarget.style.color = "#FBBF24"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#8A9BB0"; }}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tela inicial GD */}
-        {messages.length === 0 && isGD && (
-          <div style={{ background: cardBg, border: cardBorder, borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: accentColor }}>Simulador — Promoção para GD</p>
-            <p style={{ margin: "0 0 12px", fontSize: 12, color: "#8A9BB0", lineHeight: 1.6 }}>Processo conduzido por GRs com validação final pelo GN. Pressão real, perguntas difíceis, foco em liderança, mudança de cidade e gestão de equipe.</p>
-            <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" as const }}>
-              {["Entrevistas com GRs", "Validação com GN"].map((f, i) => (
-                <span key={i} style={{ fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: i === 0 ? "rgba(129,140,248,0.20)" : "rgba(255,255,255,0.05)", border: i === 0 ? "1px solid rgba(129,140,248,0.40)" : "1px solid rgba(255,255,255,0.08)", color: i === 0 ? "#818CF8" : "#8A9BB0" }}>{f}</span>
-              ))}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {GD_OPTIONS.map((item) => (
-                <button key={item.label} type="button" onClick={() => sendMessageText(item.msg)} style={{ fontSize: 12, color: "#8A9BB0", padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", textAlign: "left", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(129,140,248,0.08)"; e.currentTarget.style.borderColor = "rgba(129,140,248,0.20)"; e.currentTarget.style.color = "#818CF8"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#8A9BB0"; }}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
+        {/* Tela inicial limpa */}
+        {messages.length === 0 && (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <p style={{ color: "#3a4a40", fontSize: 13, textAlign: "center" }}>
+              {isGD ? "Simulador de GD pronto. Pode começar." : isProp ? "Simulador de propagandista pronto. Pode começar." : "Fala rep. To aqui."}
+            </p>
           </div>
         )}
 
@@ -335,7 +251,7 @@ export default function AIAssistantPage() {
             <div style={{ maxWidth: "85%", padding: "11px 15px", borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: m.role === "user" ? btnGrad : "rgba(255,255,255,0.05)", border: m.role === "user" ? "none" : "1px solid rgba(255,255,255,0.08)", fontSize: 13, lineHeight: 1.65, color: m.role === "user" ? "#fff" : "#D4D8E0", whiteSpace: "pre-wrap" }}>
               {m.content}
               {m.role === "assistant" && loading && i === messages.length - 1 && (
-                <span style={{ display: "inline-block", width: 2, height: 14, background: "#4ADE80", marginLeft: 2, animation: "blink 1s step-end infinite" }} />
+                <span style={{ display: "inline-block", width: 2, height: 14, background: accentColor, marginLeft: 2, animation: "blink 1s step-end infinite" }} />
               )}
             </div>
           </div>
@@ -365,10 +281,14 @@ export default function AIAssistantPage() {
               <label htmlFor="imageUpload" style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontSize: 18 }}>📸</label>
             </>
           )}
-          <textarea ref={textareaRef} value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             placeholder={isGD ? "Sua resposta para o GR..." : isProp ? "Sua resposta para o GD..." : "Pergunta, dúvida ou Power BI — pode mandar..."}
-            rows={1} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "#F5F3EE", fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: "none", resize: "none", lineHeight: 1.5, maxHeight: 120, overflowY: "auto" }} />
+            rows={1}
+            style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "#F5F3EE", fontSize: 14, fontFamily: "'DM Sans', sans-serif", outline: "none", resize: "none", lineHeight: 1.5, maxHeight: 120, overflowY: "auto" }}
+          />
           <button type="button" onClick={handleVoiceInput} style={{ width: 40, height: 40, borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)", background: isListening ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.07)", color: isListening ? "#EF4444" : "#8A9BB0", fontSize: 16, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: isListening ? "0 0 12px rgba(239,68,68,0.30)" : "none", transition: "all 0.2s" }}>
             {isListening ? "⏹" : "🎙️"}
           </button>
