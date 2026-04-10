@@ -354,7 +354,7 @@ export default function PremiumPage() {
                     alert("Erro ao criar checkout");
                     return;
                   }
-                  window.location.replace( data.init_point);
+                  window.open(data.init_point, "_blank");
                 }}
                 style={{
                   padding: "18px 20px",
