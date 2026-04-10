@@ -205,9 +205,9 @@ export default function HomeClient() {
             {[
               { href: "/medicos", icon: "👥", label: "Médicos cadastrados" },
               { href: "/import", icon: "⬆️", label: "Importar escala (Excel)" },
-              { href: "/groups", icon: "👥", label: "Grupos", badge: "PREMIUM" },
-              { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)", badge: "PREMIUM" },
-              { href: "/visit-request/requests", icon: "✉️", label: "Médico solicitou visita", badge: "PREMIUM" },
+              { href: "/groups", icon: "👥", label: "Grupos"},
+              { href: "/directory", icon: "🔍", label: "Buscar médico (diretório)"},
+              { href: "/visit-request/requests", icon: "✉️", label: "Médico solicitou visita"},
               { href: "/ai", icon: "🤖", label: "EscalaIA", badge: "PREMIUM" },
               { href: "/premium", icon: "⭐", label: "Plano Premium" },
             ].map((item) => (

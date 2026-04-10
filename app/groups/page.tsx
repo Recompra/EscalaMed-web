@@ -174,16 +174,6 @@ export default function GroupsPage() {
         </div>
       </div>
 
-      {/* Badge Premium */}
-      <div style={{
-        display: "inline-flex", alignItems: "center", gap: 7,
-        background: "rgba(212,130,10,0.12)",
-        border: "1px solid rgba(212,130,10,0.30)",
-        borderRadius: 100, padding: "5px 14px",
-        fontSize: 11, fontWeight: 700, color: "#D4820A",
-        letterSpacing: "0.10em", marginBottom: 20,
-      }}>⭐ FUNCIONALIDADE PREMIUM</div>
-
       {/* Criar grupo */}
       {showCreate && (
         <div style={{
