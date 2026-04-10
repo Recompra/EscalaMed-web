@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePremium } from "@/lib/usePremium";
+import { useAiLimit } from "@/lib/useAiLimit";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Mode = "normal" | "interview_propagandista" | "interview_gd";
@@ -24,6 +25,7 @@ export default function AIAssistantPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const { remaining, limitReached } = useAiLimit();
 
   useEffect(() => {
     if (messagesRef.current) messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
