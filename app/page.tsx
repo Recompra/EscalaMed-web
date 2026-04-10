@@ -312,10 +312,10 @@ export default function LandingPage() {
   const features = [
     { icon: "📋", tag: null, title: "Rotina de visitacao organizada", desc: "Cadastre medicos por cidade, UF, dia e periodo. Filtros disponiveis com 1 toque. Ideal para quem atende varias regioes e cidades." },
     { icon: "📥", tag: null, title: "Importacao via Excel", desc: "Ja tem uma base de medicos? Importe tudo de uma vez pelo Excel. Zero retrabalho, zero digitacao manual." },
-    { icon: "🔍", tag: "PREMIUM", title: "Diretorio unificado de medicos", desc: "Acesse todos os medicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique." },
-    { icon: "🔔", tag: "PREMIUM", title: "Aviso de duplicidade de cadastro", desc: "Monitoramos nome e telefone de cada medico da sua base. Se outro propagandista cadastrar o mesmo medico em outra UF - o sistema avisa na hora." },
-    { icon: "👥", tag: "PREMIUM", title: "Grupos colaborativos", desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os medicos da base dos outros." },
-    { icon: "✉️", tag: "PREMIUM", title: "Medico solicita visita", desc: "Medicos podem solicitar sua visita diretamente pelo app. Voce recebe nome, CRM, clinica, telefone, cidade e os melhores dias para ir." },
+    { icon: "🔍", tag: null, title: "Diretorio unificado de medicos", desc: "Acesse todos os medicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique." },
+    { icon: "🔔", tag: null, title: "Aviso de duplicidade de cadastro", desc: "Monitoramos nome e telefone de cada medico da sua base. Se outro propagandista cadastrar o mesmo medico em outra UF - o sistema avisa na hora." },
+    { icon: "👥", tag: null, title: "Grupos colaborativos", desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os medicos da base dos outros." },
+    { icon: "✉️", tag: null, title: "Medico solicita visita", desc: "Medicos podem solicitar sua visita diretamente pelo app. Voce recebe nome, CRM, clinica, telefone, cidade e os melhores dias para ir." },
   ];
 
   const aiFeatures = [
@@ -355,7 +355,7 @@ export default function LandingPage() {
         </h1>
 
         <p style={{ fontSize: "clamp(15px, 2.5vw, 18px)", color: "rgba(240,237,230,0.60)", maxWidth: 520, lineHeight: 1.7, margin: "0 0 36px" }}>
-          Tudo que um propagandista precisa para nao perder visita, nao repetir medico e fechar mais resultados.
+          Crie sua conta e experimente GRATUITAMENTE a IA que vai impulsinar sua aprovação e acelerar sua promoção"
         </p>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" as const, justifyContent: "center", marginBottom: 56 }}>
@@ -454,7 +454,7 @@ export default function LandingPage() {
             Comece agora, <span style={{ color: "#1A6B4A" }}>gratuitamente</span>
           </h2>
           <p style={{ fontSize: 14, color: "#8A9BB0", lineHeight: 1.65, margin: "0 0 24px" }}>
-            Crie sua conta e organize sua escala hoje mesmo. Plano Premium disponivel por apenas <strong style={{ color: "#0D1117" }}>R$59,90/mes</strong>. Cancele quando quiser.
+            Crie sua conta e organize sua escala hoje mesmo. Plano Premium disponivel por apenas <strong style={{ color: "#0D1117" }}>R$29,90/mes</strong>. Cancele quando quiser.
           </p>
           <button type="button" onClick={() => router.push("/signup")} style={{ width: "100%", padding: "14px 24px", background: "linear-gradient(135deg, #1A6B4A, #22c55e)", border: "none", borderRadius: 12, fontWeight: 800, fontSize: 15, color: "white", cursor: "pointer", boxShadow: "0 8px 32px rgba(26,107,74,0.30)" }}>
             Criar conta gratis agora
