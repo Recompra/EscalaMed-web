@@ -9,15 +9,15 @@ export async function POST(req: Request) {
     const plans = {
       mensal: {
         title: "EscalaMed Premium - Mensal",
-        price: 59.9,
+        price: 29.90,
       },
       semestral: {
         title: "EscalaMed Premium - Semestral",
-        price: 299.9,
+        price: 131.90,
       },
       anual: {
         title: "EscalaMed Premium - Anual",
-        price: 479.9,
+        price: 239.90,
       },
     };
 

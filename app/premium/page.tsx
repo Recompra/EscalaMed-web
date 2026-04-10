@@ -335,9 +335,9 @@ export default function PremiumPage() {
             }}>Escolha seu plano</div>
 
             {[
-              { plan: "mensal", label: "MENSAL", price: "R$ 59,90", sub: "por mês", highlight: false },
-              { plan: "semestral", label: "SEMESTRAL", price: "R$ 299,90", sub: "equivale a R$ 49,90/mês", highlight: true, badge: "MELHOR CUSTO" },
-              { plan: "anual", label: "ANUAL", price: "R$ 479,90", sub: "equivale a R$ 39,90/mês", highlight: false, badge: "MELHOR OFERTA" },
+              { plan: "mensal", label: "MENSAL", price: "R$ 29,90", sub: "por mês", highlight: false },
+              { plan: "semestral", label: "SEMESTRAL", price: "R$ 131,90", sub: "equivale a R$ 21,98/mês", highlight: true, badge: "MELHOR CUSTO" },
+              { plan: "anual", label: "ANUAL", price: "R$ 239,90", sub: "equivale a R$ 19,99/mês", highlight: false, badge: "MELHOR OFERTA" },
             ].map((p) => (
               <button
                 key={p.plan}
