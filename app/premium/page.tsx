@@ -343,19 +343,21 @@ export default function PremiumPage() {
                 key={p.plan}
                 type="button"
                 onClick={async () => {
-                  setModalOpen(false);
-                  const res = await fetch("/api/checkout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ plan: p.plan }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok || !data?.init_point) {
-                    alert("Erro ao criar checkout");
-                    return;
-                  }
-                  window.open(data.init_point, "_blank");
-                }}
+  setModalOpen(false);
+  const win = window.open("", "_blank");
+  const res = await fetch("/api/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan: p.plan }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data?.init_point) {
+    win?.close();
+    alert("Erro ao criar checkout");
+    return;
+  }
+  win!.location.href = data.init_point;
+}}
                 style={{
                   padding: "18px 20px",
                   background: p.highlight ? "rgba(74,222,128,0.10)" : "rgba(255,255,255,0.04)",
