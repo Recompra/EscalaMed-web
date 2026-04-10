@@ -216,10 +216,10 @@ export default function PremiumPage() {
         {[
           { icon: "📋", title: "Rotina de visitação organizada", desc: "Cadastre médicos por cidade, UF, dia e período. Filtros disponíveis com 1 toque. Ideal para quem atende várias regiões e cidades." },
           { icon: "📥", title: "Importação via Excel", desc: "Já tem uma base de médicos? Importe tudo de uma vez pelo Excel. Zero retrabalho, zero digitação manual." },
-          { icon: "🔍", title: "Diretório unificado de médicos", desc: "Acesse todos os médicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique — sem digitar nada.", badge: "PREMIUM" },
-          { icon: "🔔", title: "Aviso de duplicidade de cadastro", desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora.", badge: "PREMIUM" },
-          { icon: "👥", title: "Grupos colaborativos", desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os médicos da base dos outros — sem precisar perguntar, sem perder tempo.", badge: "PREMIUM" },
-          { icon: "📨", title: "Médico solicita visita", desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, telefone, cidade e os melhores dias para ir.", badge: "PREMIUM" },
+          { icon: "🔍", title: "Diretório unificado de médicos", desc: "Acesse todos os médicos cadastrados na base EscalaMed. Encontre e importe para sua escala com 1 clique — sem digitar nada."},
+          { icon: "🔔", title: "Aviso de duplicidade de cadastro", desc: "Monitoramos nome e telefone de cada médico da sua base. Se outro propagandista cadastrar o mesmo médico em outra UF — o sistema avisa na hora."},
+          { icon: "👥", title: "Grupos colaborativos", desc: "Crie um grupo fechado com sua equipe. Cada membro visualiza os médicos da base dos outros — sem precisar perguntar, sem perder tempo."},
+          { icon: "📨", title: "Médico solicita visita", desc: "Médicos podem solicitar sua visita diretamente pelo app. Você recebe nome, CRM, clínica, telefone, cidade e os melhores dias para ir."},
         ].map((b, i) => (
           <div key={b.title} style={{
             background: "rgba(255,255,255,0.03)",
@@ -243,14 +243,7 @@ export default function PremiumPage() {
                   fontFamily: "'Syne', sans-serif", fontWeight: 700,
                   fontSize: 14, color: "#F5F3EE",
                 }}>{b.title}</span>
-                {b.badge && (
-                  <span style={{
-                    fontSize: 9, fontWeight: 800, padding: "2px 8px",
-                    borderRadius: 100, background: "rgba(212,130,10,0.20)",
-                    color: "#D4820A", border: "1px solid rgba(212,130,10,0.30)",
-                    letterSpacing: "0.10em",
-                  }}>{b.badge}</span>
-                )}
+               
               </div>
               <p style={{ margin: 0, fontSize: 13, color: "#8A9BB0", lineHeight: 1.65 }}>{b.desc}</p>
             </div>
