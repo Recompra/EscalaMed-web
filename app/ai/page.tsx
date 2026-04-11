@@ -123,6 +123,12 @@ export default function AIAssistantPage() {
         }
         return { role: m.role, content: m.content };
       });
+      // 🔒 Bloqueio por limite mensal da IA
+       if (!isPremium && limitReached) {
+       alert("Você atingiu o limite de uso da IA. Faça upgrade para o Plano Premium.");
+       router.push("/premium");
+       return;
+       }
 
       const response = await fetch("/api/ai", {
         method: "POST",

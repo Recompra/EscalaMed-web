@@ -5,8 +5,8 @@ const FREE_LIMIT = 30;
 
 export function useAiLimit() {
   const [loading, setLoading] = useState(true);
-  const [remaining, setRemaining] = useState(0);
-  const [isPremium, setIsPremium] = useState(false);
+  const [used, setUsed] = useState(0);
+  const [remaining, setRemaining] = useState(FREE_LIMIT);
   const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
@@ -31,35 +31,14 @@ export function useAiLimit() {
         return;
       }
 
-      const today = new Date();
-      const resetDate = new Date(profile.ai_requests_reset_at);
-
-      // Reinicia o contador a cada mês
-      if (
-        today.getMonth() !== resetDate.getMonth() ||
-        today.getFullYear() !== resetDate.getFullYear()
-      ) {
-        await supabase
-          .from("profiles")
-          .update({
-            ai_requests_used: 0,
-            ai_requests_reset_at: today.toISOString(),
-          })
-          .eq("id", user.id);
-
-        profile.ai_requests_used = 0;
-      }
-
-      const used = profile.ai_requests_used || 0;
-      const premium = profile.plan === "premium";
-
-      setIsPremium(premium);
-
-      if (premium) {
+      if (profile.plan === "premium") {
+        setUsed(0);
         setRemaining(Infinity);
         setLimitReached(false);
       } else {
-        const remainingRequests = FREE_LIMIT - used;
+        const currentUsed = profile.ai_requests_used || 0;
+        setUsed(currentUsed);
+        const remainingRequests = FREE_LIMIT - currentUsed;
         setRemaining(remainingRequests);
         setLimitReached(remainingRequests <= 0);
       }
@@ -72,8 +51,8 @@ export function useAiLimit() {
 
   return {
     loading,
+    used,
     remaining,
-    isPremium,
     limitReached,
     FREE_LIMIT,
   };

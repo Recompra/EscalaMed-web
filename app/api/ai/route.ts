@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const SYSTEM_PROMPT = `Você é a EscalaIA — uma colega experiente do universo farmacêutico que já passou por tudo e entende as dores do propagandista médico brasileiro. Você não é um assistente formal. Você conversa. Você é direta, leve, humana — e quando o momento pede, séria e estratégica.
 
@@ -235,6 +237,63 @@ CRITÉRIOS CRÍTICOS:
 - Nunca alimente desespero — sempre ofereça saída prática`;
 
 export async function POST(req: NextRequest) {
+  // ── Auth + Limite server-side ──────────────────────────────────────
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: () => {},
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Não autorizado" }), { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("ai_requests_used, ai_requests_reset_at, plan")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    return new Response(JSON.stringify({ error: "Perfil não encontrado" }), { status: 403 });
+  }
+
+  const FREE_LIMIT = 30;
+  const isPremium = profile.plan === "premium";
+
+  if (!isPremium) {
+    const today = new Date();
+    const resetDate = new Date(profile.ai_requests_reset_at);
+    const needsReset =
+      today.getMonth() !== resetDate.getMonth() ||
+      today.getFullYear() !== resetDate.getFullYear();
+
+    const currentUsed = needsReset ? 0 : (profile.ai_requests_used || 0);
+
+    if (currentUsed >= FREE_LIMIT) {
+      return new Response(
+        JSON.stringify({ error: "Limite mensal de usos da IA atingido." }),
+        { status: 429 }
+      );
+    }
+
+    await supabase
+      .from("profiles")
+      .update({
+        ai_requests_used: currentUsed + 1,
+        ...(needsReset ? { ai_requests_reset_at: today.toISOString() } : {}),
+      })
+      .eq("id", user.id);
+  }
+  // ── Fim Auth + Limite ──────────────────────────────────────────────
+
   const { messages, mode, simulationRole, simulationPhase } = await req.json();
 
   const interviewContext =

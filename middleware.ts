@@ -23,12 +23,7 @@ const PUBLIC_ROUTES = [
   "/visit-request",
 ];
 
-const PREMIUM_ROUTES = [
-  "/groups",
-  "/directory",
-  "/visit-request/requests",
-  "/ai",
-];
+const PREMIUM_ROUTES: string[] = [];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
