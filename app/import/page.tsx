@@ -2,6 +2,7 @@
 
 import * as XLSX from "xlsx";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -100,6 +101,7 @@ function parseCrm(raw: string | number | null | undefined, fallbackUf = "") {
 }
 
 export default function ImportPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
@@ -228,15 +230,27 @@ export default function ImportPage() {
       margin: "0 auto",
       padding: 24,
     }}>
-      <h1 style={{
-        fontFamily: "'Syne', sans-serif",
-        fontWeight: 800,
-        fontSize: 22,
-        color: "#0D1117",
-        margin: "0 0 4px",
-      }}>
-        Importar Médicos via Excel
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <h1 style={{
+          fontFamily: "'Syne', sans-serif",
+          fontWeight: 800,
+          fontSize: 22,
+          color: "#0D1117",
+          margin: 0,
+        }}>
+          Importar Médicos via Excel
+        </h1>
+        <button
+          type="button"
+          onClick={() => router.push("/home")}
+          style={{
+            background: "rgba(13,17,23,0.06)", color: "#0D1117",
+            padding: "8px 14px", borderRadius: 8, border: "none",
+            cursor: "pointer", fontSize: 12,
+            fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          }}
+        >Voltar</button>
+      </div>
       <p style={{ margin: "0 0 20px", fontSize: 13, color: "#8A9BB0" }}>
         Selecione um arquivo
       </p>

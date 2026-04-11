@@ -106,15 +106,27 @@ export default function MedicosPage() {
     }}>
 
       {/* Título */}
-      <h1 style={{
-        fontFamily: "'Syne', sans-serif",
-        fontWeight: 800,
-        fontSize: 22,
-        color: "#0D1117",
-        marginBottom: 16,
-      }}>
-        Médicos cadastrados ({doctors.length})
-      </h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h1 style={{
+          fontFamily: "'Syne', sans-serif",
+          fontWeight: 800,
+          fontSize: 22,
+          color: "#0D1117",
+          margin: 0,
+        }}>
+          Médicos cadastrados ({doctors.length})
+        </h1>
+        <button
+          type="button"
+          onClick={() => router.push("/home")}
+          style={{
+            background: "rgba(13,17,23,0.06)", color: "#0D1117",
+            padding: "8px 14px", borderRadius: 8, border: "none",
+            cursor: "pointer", fontSize: 12,
+            fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          }}
+        >Voltar</button>
+      </div>
 
       {/* Filtros */}
       <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>

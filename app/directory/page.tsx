@@ -180,15 +180,27 @@ export default function DirectoryPage() {
       margin: "0 auto",
       padding: 24,
     }}>
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <h2 style={{
-          fontFamily: "'Syne', sans-serif",
-          fontWeight: 800,
-          fontSize: 22,
-          color: "#1A6B4A",
-          margin: 0,
-        }}>Buscar Médico</h2>
-        <p style={{ marginTop: 4, fontSize: 13, color: "#8A9BB0" }}>Diretório</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div>
+          <h2 style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 22,
+            color: "#1A6B4A",
+            margin: 0,
+          }}>Buscar Médico</h2>
+          <p style={{ marginTop: 4, fontSize: 13, color: "#8A9BB0", margin: "4px 0 0" }}>Diretório</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/home")}
+          style={{
+            background: "rgba(13,17,23,0.06)", color: "#0D1117",
+            padding: "8px 14px", borderRadius: 8, border: "none",
+            cursor: "pointer", fontSize: 12,
+            fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          }}
+        >Voltar</button>
       </div>
 
       {/* Filtros */}
