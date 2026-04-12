@@ -48,6 +48,7 @@ export async function POST(req: Request) {
   pending: "https://escalamed.app.br/home?status=pending",
 },
 auto_return: "approved",
+        notification_url: "https://escalamed.app.br/api/webhook",
       }),
     });
 
