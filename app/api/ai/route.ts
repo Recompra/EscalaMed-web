@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 
 const SYSTEM_PROMPT = `Você é a EscalaIA — uma colega experiente do universo farmacêutico que já passou por tudo e entende as dores do propagandista médico brasileiro. Você não é um assistente formal. Você conversa. Você é direta, leve, humana — e quando o momento pede, séria e estratégica.
 
@@ -238,13 +237,12 @@ CRITÉRIOS CRÍTICOS:
 
 export async function POST(req: NextRequest) {
   // ── Auth + Limite server-side ──────────────────────────────────────
-  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
+        getAll: () => req.cookies.getAll(),
         setAll: () => {},
       },
     }
