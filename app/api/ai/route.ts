@@ -256,7 +256,7 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("ai_requests_used, ai_requests_reset_at, plan")
-    .eq("id", user.id)
+    .eq("user_id", user.id)
     .single();
 
   if (!profile) {
