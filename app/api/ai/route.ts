@@ -312,94 +312,71 @@ export async function POST(req: NextRequest) {
     "anthropic-beta": "web-search-2025-03-05",
   };
 
-  const controller = new AbortController();
-  const abortTimeout = setTimeout(() => controller.abort(), 45_000);
+  const firstResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      system: systemWithContext,
+      messages,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+    }),
+  });
 
-  try {
-    const firstResponse = await fetch("https://api.anthropic.com/v1/messages", {
+  if (!firstResponse.ok) {
+    const error = await firstResponse.text();
+    return new Response(JSON.stringify({ error }), { status: firstResponse.status });
+  }
+
+  const firstData = await firstResponse.json();
+  const usedSearch = firstData.content?.some((block: { type: string }) => block.type === "tool_use");
+
+  if (!usedSearch) {
+    const streamResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers,
-      signal: controller.signal,
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 4096,
-        temperature: 0.7,
+        max_tokens: 2048,
+        stream: true,
         system: systemWithContext,
         messages,
         tools: [{ type: "web_search_20250305", name: "web_search" }],
       }),
     });
-
-    if (!firstResponse.ok) {
-      clearTimeout(abortTimeout);
-      const error = await firstResponse.text();
-      return new Response(JSON.stringify({ error }), { status: firstResponse.status });
-    }
-
-    const firstData = await firstResponse.json();
-    const usedSearch = firstData.content?.some((block: { type: string }) => block.type === "tool_use");
-
-    if (!usedSearch) {
-      const streamResponse = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers,
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4096,
-          temperature: 0.7,
-          stream: true,
-          system: systemWithContext,
-          messages,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-        }),
-      });
-      clearTimeout(abortTimeout);
-      return new Response(streamResponse.body, {
-        headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
-      });
-    }
-
-    const toolResultBlocks = firstData.content.filter((block: { type: string }) => block.type === "tool_result");
-    const toolResults = toolResultBlocks.map((block: { tool_use_id: string; content: unknown }) => ({
-      type: "tool_result",
-      tool_use_id: block.tool_use_id,
-      content: block.content ?? "",
-    }));
-
-    const messagesWithSearch = [
-      ...messages,
-      { role: "assistant", content: firstData.content },
-      { role: "user", content: toolResults },
-    ];
-
-    const finalStream = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers,
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4096,
-        temperature: 0.7,
-        stream: true,
-        system: systemWithContext,
-        messages: messagesWithSearch,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
-      }),
-    });
-
-    clearTimeout(abortTimeout);
-    return new Response(finalStream.body, {
+    return new Response(streamResponse.body, {
       headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
     });
-  } catch (err: any) {
-    clearTimeout(abortTimeout);
-    if (err.name === "AbortError") {
-      return new Response(
-        JSON.stringify({ error: "Tempo limite atingido (45s)." }),
-        { status: 504 }
-      );
-    }
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
+
+  const toolResultBlocks = firstData.content.filter((block: { type: string }) => block.type === "tool_result");
+  const toolResults = toolResultBlocks.map((block: { tool_use_id: string; content: unknown }) => ({
+    type: "tool_result",
+    tool_use_id: block.tool_use_id,
+    content: block.content ?? "",
+  }));
+
+  const messagesWithSearch = [
+    ...messages,
+    { role: "assistant", content: firstData.content },
+    { role: "user", content: toolResults },
+  ];
+
+  const finalStream = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2048,
+      stream: true,
+      system: systemWithContext,
+      messages: messagesWithSearch,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+    }),
+  });
+
+  return new Response(finalStream.body, {
+    headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
+  });
 }
