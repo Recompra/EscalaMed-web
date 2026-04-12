@@ -93,6 +93,11 @@ export default function AIAssistantPage() {
 
   async function sendMessageText(text: string) {
     if (!text.trim() || loading) return;
+    if (!isPremium && limitReached) {
+      alert("Você atingiu o limite de uso da IA. Faça upgrade para o Plano Premium.");
+      router.push("/premium");
+      return;
+    }
     setLoading(true);
     const newMessages = [...messages, { role: "user" as const, content: text }];
     setMessages(newMessages);
@@ -102,6 +107,11 @@ export default function AIAssistantPage() {
 
   async function sendMessage() {
     if ((!input.trim() && !image) || loading) return;
+    if (!isPremium && limitReached) {
+      alert("Você atingiu o limite de uso da IA. Faça upgrade para o Plano Premium.");
+      router.push("/premium");
+      return;
+    }
     setLoading(true);
     const newMessages = [...messages, { role: "user" as const, content: input.trim() }];
     setMessages(newMessages);
@@ -123,12 +133,6 @@ export default function AIAssistantPage() {
         }
         return { role: m.role, content: m.content };
       });
-      // 🔒 Bloqueio por limite mensal da IA
-       if (!isPremium && limitReached) {
-       alert("Você atingiu o limite de uso da IA. Faça upgrade para o Plano Premium.");
-       router.push("/premium");
-       return;
-       }
 
       const response = await fetch("/api/ai", {
         method: "POST",
