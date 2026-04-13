@@ -10,34 +10,23 @@ const PLAN_IDS: Record<string, string> = {
 
 export async function POST(req: Request) {
   try {
-    const { plan, payer_email } = await req.json();
+    const { plan } = await req.json();
 
     if (!PLAN_IDS[plan]) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
 
-    if (!payer_email) {
-      return NextResponse.json({ error: "Email do pagador é obrigatório" }, { status: 400 });
-    }
-
-    const response = await fetch("https://api.mercadopago.com/preapproval", {
-      method: "POST",
+    const response = await fetch(`https://api.mercadopago.com/preapproval_plan/${PLAN_IDS[plan]}`, {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        preapproval_plan_id: PLAN_IDS[plan],
-        payer_email,
-        back_url: "https://escalamed.app.br/home?status=success",
-        notification_url: "https://escalamed.app.br/api/webhook",
-      }),
     });
 
     const data = await response.json();
-    console.log("MP RESPONSE:", data);
+    console.log("MP PLAN RESPONSE:", data);
 
-    if (!response.ok) {
+    if (!response.ok || !data?.init_point) {
       return NextResponse.json(
         { error: "Erro Mercado Pago", details: data },
         { status: 500 }
@@ -46,6 +35,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ init_point: data.init_point });
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao criar assinatura" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar plano" }, { status: 500 });
   }
 }
