@@ -288,7 +288,7 @@ export async function POST(req: NextRequest) {
         ai_requests_used: currentUsed + 1,
         ...(needsReset ? { ai_requests_reset_at: today.toISOString() } : {}),
       })
-      .eq("id", user.id);
+      .eq("user_id", user.id);
   }
   // ── Fim Auth + Limite ──────────────────────────────────────────────
 
@@ -358,7 +358,7 @@ export async function POST(req: NextRequest) {
   const messagesWithSearch = [
     ...messages,
     { role: "assistant", content: firstData.content },
-    { role: "user", content: toolResults },
+    ...(toolResults.length > 0 ? [{ role: "user", content: toolResults }] : []),
   ];
 
   const finalStream = await fetch("https://api.anthropic.com/v1/messages", {
