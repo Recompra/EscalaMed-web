@@ -12,7 +12,9 @@ type Counts = {
   users: number; premiumUsers: number; doctors: number; directory: number;
   userDoctors: number; groups: number; feedback: number; visits: number;
 };
-type ProfileRow  = { id: string; user_id: string; plan: string | null; role: string | null; created_at: string };
+type ProfileRow  = { id: string; user_id: string; email: string | null; plan: string | null; role: string | null; created_at: string };
+type ExpiringRow = { user_id: string; plan: string | null; end_date: string; email: string | null };
+type MrrPoint    = { month: string; mrr: number };
 type DoctorRow   = { id?: string; name: string | null; city: string | null; uf: string | null; specialty?: string | null; created_at: string };
 type FeedbackRow = { id: string; user_name: string | null; user_email: string | null; tipo: string | null; mensagem: string | null; created_at: string };
 type VisitRow    = { id: string; name: string | null; city: string | null; uf: string | null; specialty: string | null; status: string | null; created_at: string };
@@ -145,11 +147,13 @@ export default function OwnerDashboardPage() {
   const [sparkVisits, setSparkVisits]     = useState<SparkPoint[]>([]);
   const [sparkFeedback, setSparkFeedback] = useState<SparkPoint[]>([]);
 
-  const [partners, setPartners]       = useState<PartnerRow[]>([]);
-  const [couponUses, setCouponUses]   = useState<CouponUse[]>([]);
-  const [navLogs, setNavLogs]         = useState<NavLog[]>([]);
-  const [aiQuestions, setAiQuestions] = useState<AIRow[]>([]);
-  const [ufRanking, setUfRanking]     = useState<UfRow[]>([]);
+  const [partners, setPartners]           = useState<PartnerRow[]>([]);
+  const [couponUses, setCouponUses]       = useState<CouponUse[]>([]);
+  const [navLogs, setNavLogs]             = useState<NavLog[]>([]);
+  const [aiQuestions, setAiQuestions]     = useState<AIRow[]>([]);
+  const [ufRanking, setUfRanking]         = useState<UfRow[]>([]);
+  const [expiringRows, setExpiringRows]   = useState<ExpiringRow[]>([]);
+  const [mrrData, setMrrData]             = useState<MrrPoint[]>([]);
 
   const loadDashboard = useCallback(async (p: Period = period, isRefresh = false) => {
     try {
@@ -183,7 +187,7 @@ export default function OwnerDashboardPage() {
         recentFeedbackRes, recentVisitsRes, periodUsersRes, periodDoctorsRes,
         periodVisitsRes, periodFeedbackRes, pendingRes, approvedRes, rejectedRes,
         sparkUsersRes, sparkDoctorsRes, sparkVisitsRes, sparkFeedbackRes,
-        partnersRes, couponUsesRes, navLogsRes, aiRes,
+        partnersRes, couponUsesRes, navLogsRes, aiRes, expiringSubs, couponMrrRes,
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }).eq("plan", "premium"),
@@ -193,7 +197,7 @@ export default function OwnerDashboardPage() {
         supabase.from("groups").select("*", { count: "exact", head: true }),
         supabase.from("feedback").select("*", { count: "exact", head: true }),
         supabase.from("visit_requests").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("id,user_id,plan,role,created_at").order("created_at", { ascending: false }).limit(8),
+        supabase.from("profiles").select("id,user_id,email,plan,role,created_at").order("created_at", { ascending: false }).limit(8),
         supabase.from("doctors").select("id,name,city,uf,specialty,created_at").order("created_at", { ascending: false }).limit(8),
         supabase.from("feedback").select("id,user_name,user_email,tipo,mensagem,created_at").order("created_at", { ascending: false }).limit(8),
         supabase.from("visit_requests").select("id,name,city,uf,specialty,status,created_at").order("created_at", { ascending: false }).limit(8),
@@ -212,6 +216,8 @@ export default function OwnerDashboardPage() {
         supabase.from("coupon_uses").select("id,code,partner_id,user_id,plan,value_brl,created_at").order("created_at", { ascending: false }).limit(200),
         supabase.from("navigation_logs").select("tab_name").gte("created_at", isoPeriod),
         supabase.from("ai_conversations").select("id,question,created_at").order("created_at", { ascending: false }).limit(50),
+        supabase.from("subscriptions").select("user_id,plan,end_date").eq("status", "active").lte("end_date", new Date(Date.now() + 15 * 86400000).toISOString()),
+        supabase.from("coupon_uses").select("value_brl,plan,created_at").order("created_at", { ascending: true }),
       ]);
 
       setCounts({ users: profilesRes.count??0, premiumUsers: premiumRes.count??0, doctors: doctorsRes.count??0, directory: directoryRes.count??0, userDoctors: userDoctorsRes.count??0, groups: groupsRes.count??0, feedback: feedbackRes.count??0, visits: visitsRes.count??0 });
@@ -234,6 +240,39 @@ export default function OwnerDashboardPage() {
       setNavLogs(Object.entries(navCount).sort((a, b) => b[1] - a[1]).map(([tab_name, count]) => ({ tab_name, count })));
 
       setAiQuestions((aiRes.data as AIRow[]) ?? []);
+
+      // ── ADIÇÃO 1: assinaturas vencendo ───────────────────────────────
+      const expiringRaw = (expiringSubs.data ?? []) as { user_id: string; plan: string | null; end_date: string }[];
+      if (expiringRaw.length > 0) {
+        const expUserIds = expiringRaw.map((r) => r.user_id);
+        const { data: expProfiles } = await supabase.from("profiles").select("user_id,email").in("user_id", expUserIds);
+        const emailMap: Record<string, string> = {};
+        for (const p of (expProfiles ?? []) as { user_id: string; email: string | null }[]) {
+          if (p.email) emailMap[p.user_id] = p.email;
+        }
+        setExpiringRows(expiringRaw.map((r) => ({ ...r, email: emailMap[r.user_id] ?? null })));
+      } else {
+        setExpiringRows([]);
+      }
+
+      // ── ADIÇÃO 2: MRR mensal ─────────────────────────────────────────
+      const PLAN_PRICE: Record<string, number> = { mensal: 29.90, semestral: 131.90 / 6, anual: 239.90 / 12 };
+      const mrrRaw = (couponMrrRes.data ?? []) as { value_brl: number | null; plan: string | null; created_at: string }[];
+      const mrrMap: Record<string, number> = {};
+      const now6 = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now6.getFullYear(), now6.getMonth() - i, 1);
+        const key = d.toISOString().slice(0, 7);
+        mrrMap[key] = 0;
+      }
+      for (const r of mrrRaw) {
+        const key = r.created_at.slice(0, 7);
+        if (key in mrrMap) {
+          const val = r.value_brl ?? (r.plan ? PLAN_PRICE[r.plan] ?? 0 : 0);
+          mrrMap[key] += val;
+        }
+      }
+      setMrrData(Object.entries(mrrMap).map(([month, mrr]) => ({ month, mrr: parseFloat(mrr.toFixed(2)) })));
 
       const { data: ufData } = await supabase.from("profiles").select("uf").not("uf", "is", null);
       const ufCount: Record<string, number> = {};
@@ -339,6 +378,31 @@ export default function OwnerDashboardPage() {
         {/* ── TAB: OVERVIEW ─────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
+            {/* ADIÇÃO 1 — Alerta assinaturas vencendo */}
+            {expiringRows.length > 0 && (
+              <section style={{ background:"#1C0A0A", border:"1px solid #7F1D1D", borderLeft:"4px solid #EF4444", borderRadius:14, padding:"18px 22px" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+                  <span style={{ fontSize:16 }}>⚠️</span>
+                  <span style={{ fontWeight:800, color:"#FCA5A5", fontSize:14 }}>
+                    {expiringRows.length} assinatura{expiringRows.length > 1 ? "s" : ""} vencendo nos próximos 15 dias
+                  </span>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  {expiringRows.map((r) => (
+                    <div key={r.user_id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.18)", borderRadius:10, padding:"10px 14px", flexWrap:"wrap", gap:8 }}>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#F9FAFB" }}>{r.email ?? r.user_id.slice(0,20)+"..."}</div>
+                        <div style={{ fontSize:11, color:"#6B7280", marginTop:2 }}>Plano: {r.plan ?? "-"}</div>
+                      </div>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#FCA5A5" }}>
+                        Vence em {new Date(r.end_date).toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"numeric" })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section style={D.kpiGrid}>
               <KpiCard label="Usuarios"     value={counts.users}       delta={newPeriod.users}    period={period} color="#3B82F6" spark={<Sparkline data={sparkUsers}   color="#3B82F6" />} />
               <KpiCard label="Premium"      value={counts.premiumUsers} badge={premiumRate+"%"}   badgeLabel="conversao"  color="#8B5CF6" accent spark={<Sparkline data={sparkUsers}   color="#8B5CF6" />} />
@@ -410,12 +474,20 @@ export default function OwnerDashboardPage() {
               </div>
             </section>
 
+            {/* ADIÇÃO 2 — Gráfico MRR mensal */}
+            {mrrData.length > 0 && (
+              <section style={{ ...D.card, padding:24 }}>
+                <SectionHeader title="Receita mensal (MRR)" sub="Últimos 6 meses · baseado em coupon_uses" />
+                <MrrChart data={mrrData} />
+              </section>
+            )}
+
             <section>
               <SectionHeader title="Atividade recente" sub="Ultimos registros" />
               <div style={D.tableGrid}>
                 <ActivityTable title="Usuarios recentes" count={recentUsers.length}>
                   {recentUsers.length === 0 ? <EmptyRow /> : recentUsers.map((u) => (
-                    <ActivityRow key={u.id} primary={u.user_id.slice(0,16)+"..."} secondary={"Plano: "+(u.plan??"-")+" | "+(u.role??"-")} time={timeAgo(u.created_at)} tag={u.plan==="premium"?{label:"premium",color:"#8B5CF6"}:undefined} />
+                    <ActivityRow key={u.id} primary={u.email ?? u.user_id.slice(0,16)+"..."} secondary={"Plano: "+(u.plan??"-")+" | "+(u.role??"-")} time={timeAgo(u.created_at)} tag={u.plan==="premium"?{label:"premium",color:"#8B5CF6"}:undefined} />
                   ))}
                 </ActivityTable>
                 <ActivityTable title="Medicos recentes" count={recentDoctors.length}>
@@ -736,6 +808,66 @@ function FeedbackExpandRow({ item, expanded, onToggle }: { item:FeedbackRow; exp
 
 function EmptyRow() {
   return <div style={{ fontSize:13, color:"#374151", paddingTop:12 }}>Nenhum registro ainda.</div>;
+}
+
+function MrrChart({ data }: { data: MrrPoint[] }) {
+  const W = 600; const H = 120; const PAD = { t:10, r:16, b:32, l:56 };
+  const iW = W - PAD.l - PAD.r;
+  const iH = H - PAD.t - PAD.b;
+  const maxVal = Math.max(...data.map((d) => d.mrr), 1);
+  const xs = data.map((_, i) => PAD.l + (i / Math.max(data.length - 1, 1)) * iW);
+  const ys = data.map((d) => PAD.t + iH - (d.mrr / maxVal) * iH);
+  const polyline = xs.map((x, i) => x + "," + ys[i]).join(" ");
+  const area = "M" + xs[0] + "," + ys[0] + " L" + xs.map((x, i) => x + "," + ys[i]).join(" L") +
+    " L" + xs[xs.length - 1] + "," + (PAD.t + iH) + " L" + xs[0] + "," + (PAD.t + iH) + " Z";
+  const totalMrr = data.reduce((s, d) => s + d.mrr, 0);
+  const formatMonth = (m: string) => {
+    const [y, mo] = m.split("-");
+    return ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][parseInt(mo) - 1] + "/" + y.slice(2);
+  };
+  return (
+    <div>
+      <div style={{ display:"flex", gap:24, marginBottom:16, flexWrap:"wrap" }}>
+        <div>
+          <div style={{ fontSize:11, color:"#4B5563", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em" }}>Total 6 meses</div>
+          <div style={{ fontSize:26, fontWeight:800, color:"#10B981" }}>R$ {totalMrr.toLocaleString("pt-BR", { minimumFractionDigits:2 })}</div>
+        </div>
+        <div>
+          <div style={{ fontSize:11, color:"#4B5563", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em" }}>Último mês</div>
+          <div style={{ fontSize:26, fontWeight:800, color:"#F9FAFB" }}>R$ {(data[data.length - 1]?.mrr ?? 0).toLocaleString("pt-BR", { minimumFractionDigits:2 })}</div>
+        </div>
+      </div>
+      <svg viewBox={"0 0 " + W + " " + H} style={{ width:"100%", height:"auto", overflow:"visible" }}>
+        <defs>
+          <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#10B981" stopOpacity={0.25} />
+            <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        {/* grid lines */}
+        {[0, 0.5, 1].map((f) => {
+          const y = PAD.t + iH - f * iH;
+          return (
+            <g key={f}>
+              <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1F2937" strokeWidth={1} />
+              <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#4B5563">
+                R${(maxVal * f).toFixed(0)}
+              </text>
+            </g>
+          );
+        })}
+        <path d={area} fill="url(#mrrGrad)" />
+        <polyline points={polyline} fill="none" stroke="#10B981" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        {/* dots + labels */}
+        {data.map((d, i) => (
+          <g key={d.month}>
+            <circle cx={xs[i]} cy={ys[i]} r={4} fill="#10B981" stroke="#111827" strokeWidth={2} />
+            <text x={xs[i]} y={H - 6} textAnchor="middle" fontSize={10} fill="#6B7280">{formatMonth(d.month)}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
 }
 
 const D: Record<string, React.CSSProperties> = {
