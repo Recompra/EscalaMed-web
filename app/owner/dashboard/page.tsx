@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 
 
 type Period = "7d" | "30d" | "90d";
-type Tab = "overview" | "partners" | "analytics" | "ai";
+type Tab = "overview" | "partners" | "analytics" | "ai" | "subscriptions";
+type SubRow = { id: string; user_id: string; plan: string | null; status: string | null; start_date: string | null; end_date: string | null; mp_subscription_id: string | null; email: string | null };
+type AiUserRow = { user_id: string; total: number; email: string | null };
 
 type Counts = {
   users: number; premiumUsers: number; doctors: number; directory: number;
@@ -154,6 +156,9 @@ export default function OwnerDashboardPage() {
   const [ufRanking, setUfRanking]         = useState<UfRow[]>([]);
   const [expiringRows, setExpiringRows]   = useState<ExpiringRow[]>([]);
   const [mrrData, setMrrData]             = useState<MrrPoint[]>([]);
+  const [allSubs, setAllSubs]             = useState<SubRow[]>([]);
+  const [aiUserRanking, setAiUserRanking] = useState<AiUserRow[]>([]);
+  const [userGrowth, setUserGrowth]       = useState<MrrPoint[]>([]);
 
   const loadDashboard = useCallback(async (p: Period = period, isRefresh = false) => {
     try {
@@ -187,7 +192,7 @@ export default function OwnerDashboardPage() {
         recentFeedbackRes, recentVisitsRes, periodUsersRes, periodDoctorsRes,
         periodVisitsRes, periodFeedbackRes, pendingRes, approvedRes, rejectedRes,
         sparkUsersRes, sparkDoctorsRes, sparkVisitsRes, sparkFeedbackRes,
-        partnersRes, couponUsesRes, navLogsRes, aiRes, expiringSubs, couponMrrRes,
+        partnersRes, couponUsesRes, navLogsRes, aiRes, expiringSubs, couponMrrRes, allSubsRes, aiUsersRes, allProfilesRes,
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }).eq("plan", "premium"),
@@ -218,6 +223,9 @@ export default function OwnerDashboardPage() {
         supabase.from("ai_conversations").select("id,question,created_at").order("created_at", { ascending: false }).limit(50),
         supabase.from("subscriptions").select("user_id,plan,end_date").eq("status", "active").lte("end_date", new Date(Date.now() + 15 * 86400000).toISOString()),
         supabase.from("coupon_uses").select("value_brl,plan,created_at").order("created_at", { ascending: true }),
+        supabase.from("subscriptions").select("id,user_id,plan,status,start_date,end_date,mp_subscription_id").order("start_date", { ascending: false }).limit(200),
+        supabase.from("ai_conversations").select("user_id,created_at").not("user_id", "is", null),
+        supabase.from("profiles").select("user_id,created_at"),
       ]);
 
       setCounts({ users: profilesRes.count??0, premiumUsers: premiumRes.count??0, doctors: doctorsRes.count??0, directory: directoryRes.count??0, userDoctors: userDoctorsRes.count??0, groups: groupsRes.count??0, feedback: feedbackRes.count??0, visits: visitsRes.count??0 });
@@ -274,6 +282,51 @@ export default function OwnerDashboardPage() {
       }
       setMrrData(Object.entries(mrrMap).map(([month, mrr]) => ({ month, mrr: parseFloat(mrr.toFixed(2)) })));
 
+      // ── MELHORIA 1: todas as assinaturas com email ───────────────────
+      const subsRaw = (allSubsRes.data ?? []) as Omit<SubRow, "email">[];
+      if (subsRaw.length > 0) {
+        const subUserIds = [...new Set(subsRaw.map((r) => r.user_id))];
+        const { data: subProfiles } = await supabase.from("profiles").select("user_id,email").in("user_id", subUserIds);
+        const subEmailMap: Record<string, string> = {};
+        for (const p of (subProfiles ?? []) as { user_id: string; email: string | null }[]) {
+          if (p.email) subEmailMap[p.user_id] = p.email;
+        }
+        setAllSubs(subsRaw.map((r) => ({ ...r, email: subEmailMap[r.user_id] ?? null })));
+      } else {
+        setAllSubs([]);
+      }
+
+      // ── MELHORIA 2: ranking de usuários mais ativos na IA ────────────
+      const aiUsersRaw = (aiUsersRes.data ?? []) as { user_id: string }[];
+      const aiCount: Record<string, number> = {};
+      for (const r of aiUsersRaw) aiCount[r.user_id] = (aiCount[r.user_id] ?? 0) + 1;
+      const topAiUsers = Object.entries(aiCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      if (topAiUsers.length > 0) {
+        const aiUserIds = topAiUsers.map(([uid]) => uid);
+        const { data: aiProfiles } = await supabase.from("profiles").select("user_id,email").in("user_id", aiUserIds);
+        const aiEmailMap: Record<string, string> = {};
+        for (const p of (aiProfiles ?? []) as { user_id: string; email: string | null }[]) {
+          if (p.email) aiEmailMap[p.user_id] = p.email;
+        }
+        setAiUserRanking(topAiUsers.map(([uid, total]) => ({ user_id: uid, total, email: aiEmailMap[uid] ?? null })));
+      } else {
+        setAiUserRanking([]);
+      }
+
+      // ── MELHORIA 4: crescimento de usuários por mês ──────────────────
+      const allProfilesRaw = (allProfilesRes.data ?? []) as { created_at: string }[];
+      const growthMap: Record<string, number> = {};
+      const now6g = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now6g.getFullYear(), now6g.getMonth() - i, 1);
+        growthMap[d.toISOString().slice(0, 7)] = 0;
+      }
+      for (const r of allProfilesRaw) {
+        const key = r.created_at.slice(0, 7);
+        if (key in growthMap) growthMap[key]++;
+      }
+      setUserGrowth(Object.entries(growthMap).map(([month, mrr]) => ({ month, mrr })));
+
       const { data: ufData } = await supabase.from("profiles").select("uf").not("uf", "is", null);
       const ufCount: Record<string, number> = {};
       for (const r of (ufData ?? []) as { uf: string | null }[]) {
@@ -318,10 +371,11 @@ export default function OwnerDashboardPage() {
   const maxUfCount      = ufRanking[0]?.count ?? 1;
 
   const TABS: { id: Tab; label: string }[] = [
-    { id: "overview",  label: "Visao geral" },
-    { id: "partners",  label: "Parceiros e cupons" },
-    { id: "analytics", label: "Uso e UF" },
-    { id: "ai",        label: "Perguntas IA" },
+    { id: "overview",       label: "Visao geral" },
+    { id: "partners",       label: "Parceiros e cupons" },
+    { id: "analytics",      label: "Uso e UF" },
+    { id: "ai",             label: "Perguntas IA" },
+    { id: "subscriptions",  label: "Assinaturas" },
   ];
 
   if (loading) {
@@ -442,6 +496,43 @@ export default function OwnerDashboardPage() {
                 </div>
               </div>
 
+              {/* MELHORIA 3 — Breakdown feedbacks por tipo */}
+              <div style={{ ...D.card, flex:"0 1 260px", padding:24 }}>
+                <SectionHeader title="Feedbacks por tipo" sub="Distribuição" />
+                {(() => {
+                  const tipoMap: Record<string, number> = {};
+                  for (const f of recentFeedback) {
+                    const t = (f.tipo ?? "outro").toLowerCase();
+                    tipoMap[t] = (tipoMap[t] ?? 0) + 1;
+                  }
+                  const tipoColors: Record<string, string> = { bug:"#EF4444", sugestão:"#10B981", sugestao:"#10B981", dúvida:"#3B82F6", duvida:"#3B82F6", outro:"#6B7280" };
+                  const total = Object.values(tipoMap).reduce((s, v) => s + v, 0) || 1;
+                  const entries = Object.entries(tipoMap).sort((a, b) => b[1] - a[1]);
+                  if (entries.length === 0) return <EmptyRow />;
+                  return entries.map(([tipo, count]) => {
+                    const color = tipoColors[tipo] ?? "#6B7280";
+                    const pct = Math.round((count / total) * 100);
+                    return (
+                      <div key={tipo} style={{ marginBottom:14 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:7 }}>
+                            <span style={{ width:8, height:8, borderRadius:"50%", background:color, display:"inline-block", flexShrink:0 }} />
+                            <span style={{ fontSize:13, color:"#9CA3AF", textTransform:"capitalize" }}>{tipo}</span>
+                          </div>
+                          <div style={{ display:"flex", gap:8, alignItems:"baseline" }}>
+                            <span style={{ fontSize:18, fontWeight:800, color:"#F9FAFB" }}>{count}</span>
+                            <span style={{ fontSize:11, color:"#4B5563" }}>{pct}%</span>
+                          </div>
+                        </div>
+                        <div style={{ height:6, borderRadius:999, background:"#1F2937", overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:pct+"%", background:color, borderRadius:999, transition:"width 0.6s ease" }} />
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
               <div style={{ ...D.card, flex:"1 1 360px", padding:24 }}>
                 <SectionHeader title="Saude do produto" sub="Indicadores de adocao" />
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:12 }}>
@@ -479,6 +570,14 @@ export default function OwnerDashboardPage() {
               <section style={{ ...D.card, padding:24 }}>
                 <SectionHeader title="Receita mensal (MRR)" sub="Últimos 6 meses · baseado em coupon_uses" />
                 <MrrChart data={mrrData} />
+              </section>
+            )}
+
+            {/* MELHORIA 4 — Crescimento de usuários por mês */}
+            {userGrowth.length > 0 && (
+              <section style={{ ...D.card, padding:24 }}>
+                <SectionHeader title="Novos usuários por mês" sub="Últimos 6 meses · cadastros em profiles" />
+                <UserGrowthChart data={userGrowth} />
               </section>
             )}
 
@@ -668,31 +767,131 @@ export default function OwnerDashboardPage() {
 
         {/* ── TAB: AI ───────────────────────────────────────────────────── */}
         {activeTab === "ai" && (
-          <div style={{ ...D.card, padding:24 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
-              <SectionHeader title="Perguntas feitas para a IA" sub={"Ultimas "+aiQuestions.length+" perguntas"} />
-              <button type="button" onClick={() => {
-                const csv = ["Pergunta,Data", ...aiQuestions.map((a) => [(a.question??"-").replace(/,/g," "), fmt(a.created_at)].join(","))].join("\n");
-                const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a"); a.href=url; a.download="perguntas-ia-escalamed.csv"; a.click();
-                URL.revokeObjectURL(url);
-              }} style={D.btnExport}>
-                Exportar CSV
-              </button>
+          <>
+            <div style={{ ...D.card, padding:24 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+                <SectionHeader title="Perguntas feitas para a IA" sub={"Ultimas "+aiQuestions.length+" perguntas"} />
+                <button type="button" onClick={() => {
+                  const csv = ["Pergunta,Data", ...aiQuestions.map((a) => [(a.question??"-").replace(/,/g," "), fmt(a.created_at)].join(","))].join("\n");
+                  const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a"); a.href=url; a.download="perguntas-ia-escalamed.csv"; a.click();
+                  URL.revokeObjectURL(url);
+                }} style={D.btnExport}>
+                  Exportar CSV
+                </button>
+              </div>
+              {aiQuestions.length === 0 ? <EmptyRow /> : (
+                <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                  {aiQuestions.map((a) => (
+                    <div key={a.id} style={{ padding:"12px 0", borderTop:"1px solid #1F2937", display:"flex", justifyContent:"space-between", gap:16, alignItems:"flex-start" }}>
+                      <div style={{ flex:1, fontSize:13, color:"#D1D5DB", lineHeight:1.6 }}>{a.question ?? "-"}</div>
+                      <span style={{ fontSize:11, color:"#374151", flexShrink:0 }}>{timeAgo(a.created_at)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            {aiQuestions.length === 0 ? <EmptyRow /> : (
-              <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
-                {aiQuestions.map((a) => (
-                  <div key={a.id} style={{ padding:"12px 0", borderTop:"1px solid #1F2937", display:"flex", justifyContent:"space-between", gap:16, alignItems:"flex-start" }}>
-                    <div style={{ flex:1, fontSize:13, color:"#D1D5DB", lineHeight:1.6 }}>{a.question ?? "-"}</div>
-                    <span style={{ fontSize:11, color:"#374151", flexShrink:0 }}>{timeAgo(a.created_at)}</span>
-                  </div>
-                ))}
+
+            {/* MELHORIA 2 — Ranking usuários mais ativos na IA */}
+            {aiUserRanking.length > 0 && (
+              <div style={{ ...D.card, padding:24 }}>
+                <SectionHeader title="Usuários mais ativos na EscalaIA" sub={"Top "+aiUserRanking.length+" por volume de perguntas"} />
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                    <thead>
+                      <tr>
+                        {["#","Email","Total de perguntas","Atividade"].map((h) => (
+                          <th key={h} style={{ textAlign:"left", padding:"8px 12px", borderBottom:"1px solid #1F2937", color:"#4B5563", fontWeight:600, fontSize:11, textTransform:"uppercase", letterSpacing:"0.06em", whiteSpace:"nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aiUserRanking.map((u, i) => {
+                        const maxTotal = aiUserRanking[0]?.total ?? 1;
+                        const pct = Math.round((u.total / maxTotal) * 100);
+                        return (
+                          <tr key={u.user_id} style={{ borderBottom:"1px solid #1F2937" }}>
+                            <td style={{ padding:"10px 12px", color:"#4B5563", fontWeight:700, width:32 }}>#{i+1}</td>
+                            <td style={{ padding:"10px 12px", color:"#E5E7EB", fontWeight:600 }}>{u.email ?? u.user_id.slice(0,20)+"..."}</td>
+                            <td style={{ padding:"10px 12px", color:"#4ADE80", fontWeight:800, textAlign:"center", width:140 }}>{u.total}</td>
+                            <td style={{ padding:"10px 12px", minWidth:160 }}>
+                              <div style={{ height:6, borderRadius:999, background:"#1F2937", overflow:"hidden" }}>
+                                <div style={{ height:"100%", width:pct+"%", background:"linear-gradient(90deg,#10B981,#4ADE80)", borderRadius:999, transition:"width 0.6s ease" }} />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
-          </div>
+          </>
         )}
+
+        {/* ── TAB: SUBSCRIPTIONS ────────────────────────────────────────── */}
+        {activeTab === "subscriptions" && (() => {
+          const active    = allSubs.filter((s) => s.status === "active").length;
+          const cancelled = allSubs.filter((s) => s.status === "cancelled").length;
+          const suspended = allSubs.filter((s) => s.status === "suspended").length;
+          const soon15    = new Date(Date.now() + 15 * 86400000).toISOString();
+          return (
+            <>
+              <section style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:12 }}>
+                {[
+                  { label:"Ativas",     value:active,    color:"#10B981" },
+                  { label:"Canceladas", value:cancelled, color:"#EF4444" },
+                  { label:"Suspensas",  value:suspended, color:"#F59E0B" },
+                  { label:"Total",      value:allSubs.length, color:"#3B82F6" },
+                ].map((k) => (
+                  <div key={k.label} style={{ ...D.card, padding:"18px 22px", borderLeft:"3px solid "+k.color }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:"#4B5563", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:8 }}>{k.label}</div>
+                    <div style={{ fontSize:28, fontWeight:800, color:"#F9FAFB" }}>{k.value}</div>
+                  </div>
+                ))}
+              </section>
+
+              <div style={{ ...D.card, padding:24 }}>
+                <SectionHeader title="Todas as assinaturas" sub={allSubs.length+" registros · vermelho = vence em ≤ 15 dias"} />
+                {allSubs.length === 0 ? <EmptyRow /> : (
+                  <div style={{ overflowX:"auto" }}>
+                    <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                      <thead>
+                        <tr>
+                          {["Email","Plano","Status","Início","Vencimento","ID MP"].map((h) => (
+                            <th key={h} style={{ textAlign:"left", padding:"8px 12px", borderBottom:"1px solid #1F2937", color:"#4B5563", fontWeight:600, fontSize:11, textTransform:"uppercase", letterSpacing:"0.06em", whiteSpace:"nowrap" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allSubs.map((s) => {
+                          const expiring = s.status === "active" && s.end_date != null && s.end_date <= soon15;
+                          const statusColor2 = s.status === "active" ? "#10B981" : s.status === "cancelled" ? "#EF4444" : "#F59E0B";
+                          return (
+                            <tr key={s.id} style={{ borderBottom:"1px solid #1F2937", background: expiring ? "rgba(239,68,68,0.05)" : "transparent" }}>
+                              <td style={{ padding:"10px 12px", color: expiring ? "#FCA5A5" : "#E5E7EB", fontWeight:600 }}>{s.email ?? s.user_id.slice(0,18)+"..."}</td>
+                              <td style={{ padding:"10px 12px", color:"#9CA3AF", textTransform:"capitalize" }}>{s.plan ?? "-"}</td>
+                              <td style={{ padding:"10px 12px" }}>
+                                <span style={{ fontSize:10, fontWeight:700, color:statusColor2, background:statusColor2+"20", border:"1px solid "+statusColor2+"40", borderRadius:999, padding:"2px 8px", textTransform:"uppercase" }}>{s.status ?? "-"}</span>
+                              </td>
+                              <td style={{ padding:"10px 12px", color:"#4B5563", whiteSpace:"nowrap" }}>{fmt(s.start_date)}</td>
+                              <td style={{ padding:"10px 12px", whiteSpace:"nowrap", color: expiring ? "#FCA5A5" : "#4B5563", fontWeight: expiring ? 700 : 400 }}>
+                                {fmt(s.end_date)}{expiring ? " ⚠️" : ""}
+                              </td>
+                              <td style={{ padding:"10px 12px", color:"#374151", fontFamily:"monospace", fontSize:11 }}>{s.mp_subscription_id ? s.mp_subscription_id.slice(0,18)+"..." : "-"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
 
       </div>
     </main>
@@ -865,6 +1064,58 @@ function MrrChart({ data }: { data: MrrPoint[] }) {
             <text x={xs[i]} y={H - 6} textAnchor="middle" fontSize={10} fill="#6B7280">{formatMonth(d.month)}</text>
           </g>
         ))}
+      </svg>
+    </div>
+  );
+}
+
+function UserGrowthChart({ data }: { data: MrrPoint[] }) {
+  const W = 600; const H = 120; const PAD = { t:10, r:16, b:32, l:44 };
+  const iW = W - PAD.l - PAD.r;
+  const iH = H - PAD.t - PAD.b;
+  const maxVal = Math.max(...data.map((d) => d.mrr), 1);
+  const barW = Math.floor(iW / data.length) - 6;
+  const formatMonth = (m: string) => {
+    const [y, mo] = m.split("-");
+    return ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][parseInt(mo) - 1] + "/" + y.slice(2);
+  };
+  const totalNew = data.reduce((s, d) => s + d.mrr, 0);
+  return (
+    <div>
+      <div style={{ display:"flex", gap:24, marginBottom:16, flexWrap:"wrap" }}>
+        <div>
+          <div style={{ fontSize:11, color:"#4B5563", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em" }}>Novos nos últimos 6 meses</div>
+          <div style={{ fontSize:26, fontWeight:800, color:"#3B82F6" }}>{totalNew.toLocaleString("pt-BR")}</div>
+        </div>
+        <div>
+          <div style={{ fontSize:11, color:"#4B5563", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.07em" }}>Último mês</div>
+          <div style={{ fontSize:26, fontWeight:800, color:"#F9FAFB" }}>{data[data.length - 1]?.mrr ?? 0}</div>
+        </div>
+      </div>
+      <svg viewBox={"0 0 " + W + " " + H} style={{ width:"100%", height:"auto", overflow:"visible" }}>
+        {[0, 0.5, 1].map((f) => {
+          const y = PAD.t + iH - f * iH;
+          return (
+            <g key={f}>
+              <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#1F2937" strokeWidth={1} />
+              <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize={10} fill="#4B5563">
+                {Math.round(maxVal * f)}
+              </text>
+            </g>
+          );
+        })}
+        {data.map((d, i) => {
+          const barH = maxVal ? (d.mrr / maxVal) * iH : 0;
+          const x = PAD.l + (i / data.length) * iW + (iW / data.length - barW) / 2;
+          const y = PAD.t + iH - barH;
+          return (
+            <g key={d.month}>
+              <rect x={x} y={y} width={barW} height={barH} rx={4} fill="#3B82F6" opacity={0.85} />
+              <text x={x + barW / 2} y={H - 6} textAnchor="middle" fontSize={10} fill="#6B7280">{formatMonth(d.month)}</text>
+              {d.mrr > 0 && <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize={10} fill="#93C5FD" fontWeight="700">{d.mrr}</text>}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
