@@ -263,7 +263,7 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: "Perfil não encontrado" }), { status: 403 });
   }
 
-  const FREE_LIMIT = 30;
+  const FREE_LIMIT = 10;
   const isPremium = profile.plan === "premium";
 
   if (!isPremium) {
