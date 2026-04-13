@@ -20,6 +20,7 @@ export default function AIAssistantPage() {
   const [simulationPhase, setSimulationPhase] = useState<SimulationPhase>(1);
   const [isListening, setIsListening] = useState(false);
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -39,6 +40,11 @@ export default function AIAssistantPage() {
   }, [input]);
 
   const isPremium = usePremium();
+
+  useEffect(() => {
+    if (!isPremium && limitReached) setShowLimitModal(true);
+  }, [limitReached, isPremium]);
+
   if (isPremium === null) return null;
 
   function getSimulationRole(phase: SimulationPhase): string {
@@ -93,11 +99,7 @@ export default function AIAssistantPage() {
 
   async function sendMessageText(text: string) {
     if (!text.trim() || loading) return;
-    if (!isPremium && limitReached) {
-      alert("Você atingiu o limite de uso da IA. Faça upgrade para o Plano Premium.");
-      router.push("/premium");
-      return;
-    }
+    if (!isPremium && limitReached) { setShowLimitModal(true); return; }
     setLoading(true);
     const newMessages = [...messages, { role: "user" as const, content: text }];
     setMessages(newMessages);
@@ -107,11 +109,7 @@ export default function AIAssistantPage() {
 
   async function sendMessage() {
     if ((!input.trim() && !image) || loading) return;
-    if (!isPremium && limitReached) {
-      alert("Você atingiu o limite de uso da IA. Faça upgrade para o Plano Premium.");
-      router.push("/premium");
-      return;
-    }
+    if (!isPremium && limitReached) { setShowLimitModal(true); return; }
     setLoading(true);
     const newMessages = [...messages, { role: "user" as const, content: input.trim() }];
     setMessages(newMessages);
@@ -311,6 +309,90 @@ export default function AIAssistantPage() {
       </div>
 
       <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
+
+      {/* Modal de limite atingido */}
+      {showLimitModal && (
+        <div
+          onClick={() => setShowLimitModal(false)}
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(0,0,0,0.80)",
+            zIndex: 200, display: "flex",
+            alignItems: "center", justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#141A17",
+              border: "1px solid rgba(255,255,255,0.10)",
+              borderRadius: 20,
+              padding: "32px 28px",
+              maxWidth: 420, width: "100%",
+              display: "flex", flexDirection: "column", gap: 18,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🎯</div>
+              <h2 style={{
+                fontFamily: "'Syne', sans-serif", fontWeight: 800,
+                fontSize: 18, color: "#F5F3EE", margin: "0 0 14px",
+              }}>
+                Você usou seus 10 acessos do mês
+              </h2>
+              <p style={{ fontSize: 13, color: "#8A9BB0", lineHeight: 1.75, margin: 0 }}>
+                A EscalaIA já te ajudou bastante esse mês — e tem muito mais pela frente.
+                <br /><br />
+                Por <strong style={{ color: "#4ADE80" }}>R$29,90/mês</strong> você tem acesso ilimitado: preparo para acompanhamento, análise de painel, simulador de processo seletivo e muito mais.
+                <br /><br />
+                Menos que um almoço. Do tamanho do que você precisa.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { setShowLimitModal(false); router.push("/premium"); }}
+              style={{
+                padding: "14px 20px",
+                background: "linear-gradient(135deg, #1A6B4A, #4ADE80)",
+                color: "#0A0F0D", border: "none", borderRadius: 12,
+                fontFamily: "'Syne', sans-serif", fontWeight: 800,
+                fontSize: 14, letterSpacing: "0.05em",
+                cursor: "pointer", width: "100%",
+                boxShadow: "0 6px 24px rgba(74,222,128,0.25)",
+              }}
+            >
+              Quero acesso ilimitado
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowLimitModal(false)}
+              style={{
+                padding: "11px 20px",
+                background: "transparent",
+                color: "#4B5563", border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 12,
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                fontSize: 13, cursor: "pointer", width: "100%",
+              }}
+            >
+              Agora não
+            </button>
+
+            <p style={{ textAlign: "center", fontSize: 11, color: "#374151", margin: 0 }}>
+              {(() => {
+                const next = new Date();
+                next.setMonth(next.getMonth() + 1);
+                next.setDate(1);
+                return `Seus acessos renovam em 1º de ${next.toLocaleDateString("pt-BR", { month: "long" })}.`;
+              })()}
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
