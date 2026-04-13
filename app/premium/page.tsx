@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function PremiumPage() {
   const router = useRouter();
@@ -345,10 +346,12 @@ export default function PremiumPage() {
                 onClick={async () => {
   setModalOpen(false);
   const win = window.open("", "_blank");
+  const { data: authData } = await supabase.auth.getUser();
+  const payer_email = authData?.user?.email ?? "";
   const res = await fetch("/api/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan: p.plan }),
+    body: JSON.stringify({ plan: p.plan, payer_email }),
   });
   const data = await res.json();
   if (!res.ok || !data?.init_point) {
