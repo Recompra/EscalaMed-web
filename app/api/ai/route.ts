@@ -292,7 +292,46 @@ export async function POST(req: NextRequest) {
   }
   // ── Fim Auth + Limite ──────────────────────────────────────────────
 
-  const { messages, mode, simulationRole, simulationPhase } = await req.json();
+  const { messages: rawMessages, mode, simulationRole, simulationPhase } = await req.json();
+
+  // Sanitiza o histórico antes de qualquer chamada à Anthropic
+  type AnyMsg = { role: string; content: unknown };
+  function sanitizeMessages(msgs: AnyMsg[]): AnyMsg[] {
+    return msgs
+      // 1. Remove mensagens com content vazio / null / undefined
+      .filter((m) => {
+        if (m.content === null || m.content === undefined) return false;
+        if (typeof m.content === "string" && m.content.trim() === "") return false;
+        if (Array.isArray(m.content) && m.content.length === 0) return false;
+        return true;
+      })
+      // 2. Em mensagens com content array, mantém apenas blocos text e image
+      //    (remove tool_use, tool_result, server_tool_use, web_search_tool_result)
+      .map((m) => {
+        if (!Array.isArray(m.content)) return m;
+        const kept = (m.content as { type: string }[]).filter(
+          (b) => b.type === "text" || b.type === "image"
+        );
+        if (kept.length > 0) return { ...m, content: kept };
+        // Se sobrou só blocos de tool, converte para string vazia e será filtrado abaixo
+        return { ...m, content: "" };
+      })
+      // Re-filtra content vazio gerado pelo passo anterior
+      .filter((m) => !(typeof m.content === "string" && m.content.trim() === ""))
+      // 3. Remove mensagens consecutivas com o mesmo role (mantém a última)
+      .reduce((acc: AnyMsg[], m) => {
+        if (acc.length > 0 && acc[acc.length - 1].role === m.role) {
+          acc[acc.length - 1] = m;
+        } else {
+          acc.push(m);
+        }
+        return acc;
+      }, [])
+      // 4. Garante que começa com role "user"
+      .filter((_, i, arr) => !(i === 0 && arr[0].role !== "user"));
+  }
+
+  const messages = sanitizeMessages(rawMessages ?? []);
 
   const interviewContext =
     mode === "interview_propagandista"
@@ -373,6 +412,11 @@ export async function POST(req: NextRequest) {
       tools: [{ type: "web_search_20250305", name: "web_search" }],
     }),
   });
+
+  if (!finalStream.ok) {
+    const finalErr = await finalStream.text();
+    return new Response(JSON.stringify({ error: finalErr }), { status: finalStream.status });
+  }
 
   return new Response(finalStream.body, {
     headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
