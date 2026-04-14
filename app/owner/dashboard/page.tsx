@@ -270,7 +270,7 @@ export default function OwnerDashboardPage() {
       const now6 = new Date();
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now6.getFullYear(), now6.getMonth() - i, 1);
-        const key = d.toISOString().slice(0, 7);
+        const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
         mrrMap[key] = 0;
       }
       for (const r of mrrRaw) {
@@ -319,7 +319,8 @@ export default function OwnerDashboardPage() {
       const now6g = new Date();
       for (let i = 5; i >= 0; i--) {
         const d = new Date(now6g.getFullYear(), now6g.getMonth() - i, 1);
-        growthMap[d.toISOString().slice(0, 7)] = 0;
+        const gKey = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+        growthMap[gKey] = 0;
       }
       for (const r of allProfilesRaw) {
         const key = r.created_at.slice(0, 7);
