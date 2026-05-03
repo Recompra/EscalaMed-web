@@ -337,8 +337,8 @@ export default function PremiumPage() {
 
             {[
               { plan: "mensal", label: "MENSAL", price: "R$ 59,90", sub: "por mês", highlight: false },
-              { plan: "semestral", label: "SEMESTRAL", price: "R$ 309,90", sub: "equivale a R$ 51,65/mês", highlight: true, badge: "MELHOR CUSTO" },
-              { plan: "anual", label: "ANUAL", price: "R$ 539,90", sub: "equivale a R$ 44,99/mês", highlight: false, badge: "MELHOR OFERTA" },
+              { plan: "semestral", label: "SEMESTRAL", price: "R$ 309,00", sub: "equivale a R$ 51,50/mês", highlight: true, badge: "MELHOR CUSTO" },
+              { plan: "anual", label: "ANUAL", price: "R$ 539,00", sub: "equivale a R$ 44,92/mês", highlight: false, badge: "MELHOR OFERTA" },
             ].map((p) => (
               <button
                 key={p.plan}
