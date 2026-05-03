@@ -264,7 +264,7 @@ export default function OwnerDashboardPage() {
       }
 
       // ── ADIÇÃO 2: MRR mensal ─────────────────────────────────────────
-      const PLAN_PRICE: Record<string, number> = { mensal: 29.90, semestral: 131.90 / 6, anual: 239.90 / 12 };
+      const PLAN_PRICE: Record<string, number> = { mensal: 59.90, semestral: 309.90 / 6, anual: 539.90 / 12 };
       const mrrRaw = (couponMrrRes.data ?? []) as { value_brl: number | null; plan: string | null; created_at: string }[];
       const mrrMap: Record<string, number> = {};
       const now6 = new Date();
