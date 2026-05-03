@@ -454,7 +454,7 @@ export default function LandingPage() {
             Comece agora, <span style={{ color: "#1A6B4A" }}>gratuitamente</span>
           </h2>
           <p style={{ fontSize: 14, color: "#8A9BB0", lineHeight: 1.65, margin: "0 0 24px" }}>
-            Crie sua conta e organize sua escala hoje mesmo. Plano Premium disponivel por apenas <strong style={{ color: "#0D1117" }}>R$29,90/mes</strong>. Cancele quando quiser.
+            Crie sua conta e organize sua escala hoje mesmo. Plano Premium disponivel por apenas <strong style={{ color: "#0D1117" }}>R$59,90/mes</strong>. Cancele quando quiser.
           </p>
           <button type="button" onClick={() => router.push("/signup")} style={{ width: "100%", padding: "14px 24px", background: "linear-gradient(135deg, #1A6B4A, #22c55e)", border: "none", borderRadius: 12, fontWeight: 800, fontSize: 15, color: "white", cursor: "pointer", boxShadow: "0 8px 32px rgba(26,107,74,0.30)" }}>
             Criar conta gratis agora
